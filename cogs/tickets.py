@@ -75,31 +75,31 @@ class FecharTicketView(discord.ui.View):
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(
-                label="Tira Duvidas",
-                description="Tem duvidas sobre algo? Abre um ticket para que possamos te ajudar..",
-                emoji="❓",
-                value="duvidas"
-            ),
-            discord.SelectOption(
-                label="Desejo fazer uma denuncia de alguém!",
-                description="Abra um ticket e nos forneça as provas.",
-                emoji="🚨",
-                value="denuncia"
-            ),
-            discord.SelectOption(
-                label="Compre a sua vaga na Família Sant's",
-                description="Cada vaga custa R$80,00.",
-                emoji="💰",
-                value="comprar vaga"
-            ),
-            discord.SelectOption(
-                label="Solicite seu cargo Exclusivo",
-                description="Abra um ticket para poder preencher o modelo",
-                emoji="📝",
-                value="Cargo Exclusivo"
-            ),    
-        ]
+    discord.SelectOption(
+        label="Tira Duvidas",
+        description="Tem duvidas sobre algo? Abre um ticket para que possamos te ajudar..",
+        emoji="❓",
+        value="duvidas"
+    ),
+    discord.SelectOption(
+        label="Desejo fazer uma denuncia de alguém!",
+        description="Abra um ticket e nos forneça as provas.",
+        emoji="🚨",
+        value="denuncia"
+    ),
+    discord.SelectOption(
+        label="Compre a sua vaga na Família Sant's",
+        description="Cada vaga custa R$80,00.",
+        emoji="💰",
+        value="comprar_vaga"
+    ),
+    discord.SelectOption(
+        label="Solicite seu cargo Exclusivo",
+        description="Abra um ticket para poder preencher o modelo",
+        emoji="📝",
+        value="cargo_exclusivo"
+    )
+]
 
         super().__init__(
             placeholder="Selecione uma opção...",
@@ -134,39 +134,39 @@ class TicketSelect(discord.ui.Select):
         tipo_ticket = self.values[0]
 
         tipos_ticket = {
-            "duvidas": {
-                "nome": "duvida",
-                "titulo": "❓ Tirar dúvidas",
-                "descricao": "Tem alguma dúvida sobre algo? Abra um ticket e nossa equipe irá te ajudar.",
-                "cor": discord.Color.blue(),
-                "imagem": "https://i.imgur.com/PSKO7LM.png",
-                "thumbnail": "https://i.imgur.com/3m531pJ.png"
-            },
-            "denuncia": {
-                "nome": "denuncia",
-                "titulo": "🚨 Fazer uma denúncia",
-                "descricao": "Abra um ticket e nos envie as provas necessárias.",
-                "cor": discord.Color.red(),
-                "imagem": "https://i.imgur.com/D8fWYgP.png",
-                "thumbnail": "https://i.imgur.com/jUvYKor.png"
-            },
-            "Cargo Exlusivo": {
-                "nome": "Cargo Exlusivo",
-                "titulo": "Solicitação de Cargo Exclusivo",
-                "descricao": "Abra um ticket para poder preencher o modelo",
-                "cor": discord.Color.red(),
-                "imagem": "https://i.imgur.com/vCwH82v.png",
-                "thumbnail": "https://i.imgur.com/14EGYq9.png"
-            },
-            "comprar vaga": {
-                "nome": "comprar-vaga",
-                "titulo": "💰 Comprar uma vaga",
-                "descricao": "Cada vaga custa R$80,00. Abra o ticket para realizar a compra.",
-                "cor": discord.Color.green(),
-                "imagem": "https://i.imgur.com/8DAE2eE.png",
-                "thumbnail": "https://i.imgur.com/9ZN2LJl.png"
-            },
-        }
+    "duvidas": {
+        "nome": "duvida",
+        "titulo": "❓ Tirar dúvidas",
+        "descricao": "Tem alguma dúvida sobre algo? Abra um ticket e nossa equipe irá te ajudar.",
+        "cor": discord.Color.blue(),
+        "imagem": "https://i.imgur.com/PSKO7LM.png",
+        "thumbnail": "https://i.imgur.com/3m531pJ.png"
+    },
+    "denuncia": {
+        "nome": "denuncia",
+        "titulo": "🚨 Fazer uma denúncia",
+        "descricao": "Abra um ticket e nos envie as provas necessárias.",
+        "cor": discord.Color.red(),
+        "imagem": "https://i.imgur.com/D8fWYgP.png",
+        "thumbnail": "https://i.imgur.com/jUvYKor.png"
+    },
+    "cargo_exclusivo": {
+        "nome": "cargo-exclusivo",
+        "titulo": "Solicitação de Cargo Exclusivo",
+        "descricao": "Abra um ticket para poder preencher o modelo",
+        "cor": discord.Color.red(),
+        "imagem": "https://i.imgur.com/vCwH82v.png",
+        "thumbnail": "https://i.imgur.com/l4EGYq9.png"
+    },
+    "comprar_vaga": {
+        "nome": "comprar-vaga",
+        "titulo": "💰 Comprar uma vaga",
+        "descricao": "Cada vaga custa R$80,00. Abra o ticket para realizar a compra.",
+        "cor": discord.Color.green(),
+        "imagem": "https://i.imgur.com/8DAE2eE.png",
+        "thumbnail": "https://i.imgur.com/9ZN2LJl.png"
+    }
+}
 
         if tipo_ticket not in tipos_ticket:
             await interaction.response.send_message(
