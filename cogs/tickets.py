@@ -79,20 +79,25 @@ class TicketSelect(discord.ui.Select):
                 label="Tira Duvidas",
                 description="Tem duvidas sobre algo? Abre um ticket para que possamos te ajudar..",
                 emoji="❓",
-                value="duvidas"
+                value="Duvidas"
             ),
             discord.SelectOption(
                 label="Desejo fazer uma denuncia de alguém!",
                 description="Abra um ticket e nos forneça as provas.",
                 emoji="🚨",
-                value="denuncia"
+                value="Denuncia"
             ),
             discord.SelectOption(
                 label="Compre a sua vaga na Família Sant's",
                 description="Cada vaga custa R$80,00.",
                 emoji="💰",
-                value="comprar vaga"
+                value="Comprar Vaga"
             ),
+            discord.SelectOption(
+                label="Solicite seu cargo Exclusivo",
+                description="abra um ticket e daremos o modelo para você preencher",
+                emoji="📝",
+                value="Cargo Exclusivo"
         ]
 
         super().__init__(
