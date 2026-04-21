@@ -146,7 +146,7 @@ class TicketSelect(discord.ui.Select):
         "nome": "denuncia",
         "titulo": "🚨 Fazer uma denúncia",
         "descricao": "Abra um ticket e nos envie as provas necessárias.",
-        "cor": discord.Color.red(),
+        "cor": discord.Color.dark_red(),
         "imagem": "https://i.imgur.com/D8fWYgP.png",
         "thumbnail": "https://i.imgur.com/jUvYKor.png"
     },
@@ -154,9 +154,9 @@ class TicketSelect(discord.ui.Select):
         "nome": "cargo-exclusivo",
         "titulo": "Solicitação de Cargo Exclusivo",
         "descricao": "Abra um ticket para poder preencher o modelo",
-        "cor": discord.Color.red(),
+        "cor": discord.Color.dark_blue(),
         "imagem": "https://i.imgur.com/vCwH82v.png",
-        "thumbnail": "https://i.imgur.com/l4EGYq9.png"
+        "thumbnail": "https://i.imgur.com/14EGYq9.png"
     },
     "comprar_vaga": {
         "nome": "comprar-vaga",
