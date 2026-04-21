@@ -264,7 +264,7 @@ class TicketCog(commands.Cog):
             color=discord.Color.from_rgb(30, 35, 60)
         )
 
-        embed.set_image(url="https://i.imgur.com/OJ1KJz5.png")
+        embed.set_image(url="https://i.imgur.com/BItqGWY.png")
         embed.set_footer(text="Painel oficial de atendimento.")
 
         await interaction.channel.send(
