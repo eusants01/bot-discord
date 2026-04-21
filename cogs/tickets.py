@@ -150,6 +150,14 @@ class TicketSelect(discord.ui.Select):
                 "imagem": "https://i.imgur.com/D8fWYgP.png",
                 "thumbnail": "https://i.imgur.com/jUvYKor.png"
             },
+            "Cargo Exlusivo": {
+                "nome": "Cargo Exlusivo",
+                "titulo": "Solicitação de Cargo Exclusivo",
+                "descricao": "Abra um ticket para poder preencher o modelo",
+                "cor": discord.Color.red(),
+                "imagem": "https://i.imgur.com/vCwH82v.png",
+                "thumbnail": "https://i.imgur.com/14EGYq9.png"
+            },
             "comprar vaga": {
                 "nome": "comprar-vaga",
                 "titulo": "💰 Comprar uma vaga",
@@ -157,7 +165,7 @@ class TicketSelect(discord.ui.Select):
                 "cor": discord.Color.green(),
                 "imagem": "https://i.imgur.com/8DAE2eE.png",
                 "thumbnail": "https://i.imgur.com/9ZN2LJl.png"
-            }
+            },
         }
 
         if tipo_ticket not in tipos_ticket:
