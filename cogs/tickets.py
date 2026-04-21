@@ -260,22 +260,21 @@ class TicketCog(commands.Cog):
     async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
             title="Central de Atendimentos da Família Sant's",
-            description=(
-                "Selecione uma das opções abaixo para abrir um ticket.\n\n"
-                
-            ),
+            description="Selecione uma das opções abaixo para abrir um ticket.\n\n",
             color=discord.Color.from_rgb(30, 35, 60)
         )
 
-
-
-        embed.set_image(url="https://i.imgur.com/oJ1KJz5.png")
+        embed.set_image(url="https://i.imgur.com/OJ1KJz5.png")
         embed.set_footer(text="Painel oficial de atendimento.")
 
-
-        await interaction.response.send_message(
+        await interaction.channel.send(
             embed=embed,
             view=TicketView()
+        )
+
+        await interaction.response.send_message(
+            "✅ Painel enviado com sucesso.",
+            ephemeral=True
         )
 
     @ticket.error
