@@ -1,14 +1,38 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from io import BytesIO
 
-
-# =========================
+# ================================
 # CONFIGURAÇÕES
-# =========================
+# ================================
 CATEGORIA_TICKETS_ID = 1495288098010169574
 CARGO_STAFF_ID = 1487560221202321600
 CANAL_LOG_ID = 1495272331558391818
+
+# ================================
+# 📄 FUNÇÃO DE TRANSCRIÇÃO
+# ================================
+async def gerar_transcricao(channel):
+    mensagens = []
+
+    async for msg in channel.history(limit=None, oldest_first=True):
+        autor = f"{msg.author} ({msg.author.id})"
+        data = msg.created_at.strftime("%d/%m/%Y %H:%M")
+        conteudo = msg.content if msg.content else "[Sem texto]"
+
+        if msg.attachments:
+            anexos = "\n".join([a.url for a in msg.attachments])
+            conteudo += f"\nAnexos:\n{anexos}"
+
+        mensagens.append(f"[{data}] {autor}: {conteudo}")
+
+    texto = "\n".join(mensagens)
+
+    arquivo = BytesIO(texto.encode("utf-8"))
+    arquivo.seek(0)
+
+    return discord.File(arquivo, filename=f"{channel.name}.txt")
 
 
 # =========================
@@ -22,7 +46,6 @@ class ConfirmarFechamento(discord.ui.View):
     async def confirmar(self, interaction: discord.Interaction, button: discord.ui.Button):
         log = interaction.guild.get_channel(CANAL_LOG_ID)
 
-        # 🔒 LOG BONITO
         if log:
             embed_log = discord.Embed(
                 title="<a:D1_blue_check:1485361075930136847> Ticket Encerrado",
@@ -34,17 +57,17 @@ class ConfirmarFechamento(discord.ui.View):
                 color=discord.Color.red()
             )
 
-            # 🖼️ Banner (troca pelo seu)
             embed_log.set_image(url="https://i.imgur.com/ynK8fwA.png")
-
-            # 👤 Avatar
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
-
             embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
 
-            await log.send(embed=embed_log)
+            arquivo = await gerar_transcricao(interaction.channel)
 
-        # 🔒 FECHAR TICKET
+            await log.send(
+                embed=embed_log,
+                file=arquivo
+            )
+
         await interaction.response.send_message("🔒 Fechando ticket...", ephemeral=True)
         await interaction.channel.delete()
 
@@ -62,6 +85,18 @@ class FecharTicketView(discord.ui.View):
 
     @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.red, emoji="🔒")
     async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        # 🔒 PERMISSÃO AQUI
+        cargo_id = 1487560221202321600
+
+        if not any(role.id == cargo_id for role in interaction.user.roles):
+            await interaction.response.send_message(
+                "❌ Você não tem permissão para fechar tickets.",
+                ephemeral=True
+            )
+            return
+
+        # ✅ se tiver permissão, continua normal
         await interaction.response.send_message(
             "Tem certeza que deseja fechar este ticket?",
             view=ConfirmarFechamento(),
