@@ -319,12 +319,12 @@ class TicketCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="Escola jujutsu Atendimentos",
-            description="Selecione uma das opções abaixo para abrir um ticket.\n\n",
-            color=discord.Color.from_rgb(30, 35, 60)
+            title="Escola Jujutsu Atendimentos",
+            description="Canalize sua energia amaldiçoada e escolha seu destino...\n\n",
+            color=discord.Color.from_rgb(60, 0, 100)
         )
 
-        embed.set_image(url="https://i.imgur.com/oQPnGVV.png")
+        embed.set_image(url="https://i.imgur.com/oQPnGW.png")
         embed.set_footer(text="Painel oficial da escola de feiticeiros.")
 
         await interaction.channel.send(
@@ -343,6 +343,10 @@ class TicketCog(commands.Cog):
             "❌ Você não tem um grau especial para usar esse comando.",
             ephemeral=True
         )
+
+
+async def setup(bot):
+    await bot.add_cog(TicketCog(bot))
 
 
 # 👇 setup correto
