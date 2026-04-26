@@ -158,31 +158,31 @@ class FecharTicketView(discord.ui.View):
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
-    discord.SelectOption(
-        label="❓ Domínio de Dúvidas",
-        description="Tem incertezas? Abra um chamado e obtenha respostas.",
-        emoji="❓",
-        value="duvida"
-    ),
-    discord.SelectOption(
-        label="🚨 Relatório de Maldição",
-        description="Presenciou algo suspeito? Traga provas da maldição.",
-        emoji="🚨",
-        value="denuncia"
-    ),
-    discord.SelectOption(
-        label="💰 Ritual de Acesso",
-        description="Deseja ingressar na Família Sant's? Valor: R$80,00.",
-        emoji="💰",
-        value="comprar_vaga"
-    ),
-    discord.SelectOption(
-        label="📜 Protocolo Especial",
-        description="Solicite seu cargo exclusivo preenchendo o modelo.",
-        emoji="📜",
-        value="cargo_exclusivo"
-    )
-]
+            discord.SelectOption(
+                label="❓ Domínio de Dúvidas",
+                description="Tem incertezas? Abra um chamado e obtenha respostas.",
+                emoji="❓",
+                value="duvida"
+            ),
+            discord.SelectOption(
+                label="🚨 Relatório de Maldição",
+                description="Presenciou algo suspeito? Traga provas da maldição.",
+                emoji="🚨",
+                value="denuncia"
+            ),
+            discord.SelectOption(
+                label="💰 Ritual de Acesso",
+                description="Deseja ingressar na Família Sant's? Valor: R$80,00.",
+                emoji="💰",
+                value="comprar_vaga"
+            ),
+            discord.SelectOption(
+                label="📜 Protocolo Especial",
+                description="Solicite seu cargo exclusivo preenchendo o modelo.",
+                emoji="📜",
+                value="cargo_exclusivo"
+            )
+        ]
 
         super().__init__(
             placeholder="Selecione uma opção...",
@@ -192,24 +192,27 @@ class TicketSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+
         guild = interaction.guild
         user = interaction.user
 
         categoria = guild.get_channel(CATEGORIA_TICKETS_ID)
         cargo_staff = guild.get_role(CARGO_STAFF_ID)
-        canal_log = guild.get_channel(CANAL_LOG_ID)
 
+        # ❌ categoria não existe
         if categoria is None:
-            await interaction.response.send_message(
-                "❌ A categoria de tickets não foi encontrada. Verifique o ID.",
+            await interaction.followup.send(
+                "❌ Categoria de tickets não encontrada.",
                 ephemeral=True
             )
             return
 
+        # ❌ já tem ticket aberto
         for channel in guild.text_channels:
             if channel.topic and str(user.id) in channel.topic:
-                await interaction.response.send_message(
-                    f"❌ Você já possui um ticket aberto: {channel.mention}",
+                await interaction.followup.send(
+                    f"❌ Você já possui um ticket: {channel.mention}",
                     ephemeral=True
                 )
                 return
@@ -217,46 +220,43 @@ class TicketSelect(discord.ui.Select):
         tipo_ticket = self.values[0]
 
         tipos_ticket = {
-    "duvida": {
-        "nome": "duvida",
-        "titulo": "❓ Domínio de Dúvidas",
-        "descricao": "Tem incertezas? Abra um chamado e obtenha respostas no mundo das maldições.",
-        "cor": discord.Color.from_rgb(100, 0, 160),
-        "imagem": "https://i.imgur.com/4GQjoSb.png",
-        "thumbnail": "https://i.imgur.com/AYs4N07.png"
-    },
-
-    "denuncia": {
-        "nome": "denuncia",
-        "titulo": "🚨 Relatório de Maldição",
-        "descricao": "Presenciou algo suspeito? Traga provas e denuncie a maldição.",
-        "cor": discord.Color.from_rgb(140, 0, 0),
-        "imagem": "https://i.imgur.com/Bl79W4Y.png",
-        "thumbnail": "https://i.imgur.com/zkIgP83.png"
-    },
-
-    "cargo_exclusivo": {
-        "nome": "cargo-exclusivo",
-        "titulo": "📜 Protocolo Especial",
-        "descricao": "Solicite seu cargo exclusivo realizando o ritual necessário.",
-        "cor": discord.Color.from_rgb(80, 0, 140),
-        "imagem": "https://i.imgur.com/UP1k58c.png",
-        "thumbnail": "https://i.imgur.com/4ZnTLm3.png"
-    },
-
-    "comprar_vaga": {
-        "nome": "comprar-vaga",
-        "titulo": "💰 Ritual de Acesso",
-        "descricao": "Deseja ingressar na Família Sant's? O custo do pacto é R$80,00.",
-        "cor": discord.Color.from_rgb(120, 0, 180),
-        "imagem": "https://i.imgur.com/pB3mL7E.png",
-        "thumbnail": "https://i.imgur.com/yw1FDpN.png"
-    }
-}
+            "duvida": {
+                "nome": "duvida",
+                "titulo": "❓ Domínio de Dúvidas",
+                "descricao": "Tem incertezas? Abra um chamado e obtenha respostas.",
+                "cor": discord.Color.from_rgb(100, 0, 160),
+                "imagem": "https://i.imgur.com/4GQjoSb.png",
+                "thumbnail": "https://i.imgur.com/AYs4N07.png"
+            },
+            "denuncia": {
+                "nome": "denuncia",
+                "titulo": "🚨 Relatório de Maldição",
+                "descricao": "Traga provas e denuncie a maldição.",
+                "cor": discord.Color.from_rgb(140, 0, 0),
+                "imagem": "https://i.imgur.com/Bl79W4Y.png",
+                "thumbnail": "https://i.imgur.com/zkIgP83.png"
+            },
+            "cargo_exclusivo": {
+                "nome": "cargo-exclusivo",
+                "titulo": "📜 Protocolo Especial",
+                "descricao": "Solicite seu cargo exclusivo.",
+                "cor": discord.Color.from_rgb(80, 0, 140),
+                "imagem": "https://i.imgur.com/UP1k58c.png",
+                "thumbnail": "https://i.imgur.com/4ZnTLm3.png"
+            },
+            "comprar_vaga": {
+                "nome": "comprar-vaga",
+                "titulo": "💰 Ritual de Acesso",
+                "descricao": "Custo do pacto: R$80,00.",
+                "cor": discord.Color.from_rgb(120, 0, 180),
+                "imagem": "https://i.imgur.com/pB3mL7E.png",
+                "thumbnail": "https://i.imgur.com/yw1FDpN.png"
+            }
+        }
 
         if tipo_ticket not in tipos_ticket:
-            await interaction.response.send_message(
-                "❌ Tipo de ticket inválido.",
+            await interaction.followup.send(
+                "❌ Tipo inválido.",
                 ephemeral=True
             )
             return
@@ -270,24 +270,19 @@ class TicketSelect(discord.ui.Select):
             user: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True,
-                read_message_history=True,
-                attach_files=True,
-                embed_links=True
+                read_message_history=True
             ),
             guild.me: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True,
-                read_message_history=True,
-                manage_channels=True,
-                manage_messages=True
+                manage_channels=True
             ),
         }
 
         if cargo_staff:
             overwrites[cargo_staff] = discord.PermissionOverwrite(
                 view_channel=True,
-                send_messages=True,
-                read_message_history=True
+                send_messages=True
             )
 
         canal = await guild.create_text_channel(
@@ -298,19 +293,18 @@ class TicketSelect(discord.ui.Select):
         )
 
         embed_ticket = discord.Embed(
-            
             description=(
-                f"Olá {user.mention}, tudo bem? Agradecemos pelo seu ticket. Aguarde um momento enquanto algum de nosso atendentes venha te ajudar.\n\n"
+                f"👁️ {user.mention}, você entrou em um domínio.\n\n"
                 f"**Categoria:** {info['titulo']}\n"
                 f"**Detalhes:** {info['descricao']}\n\n"
-                f"<@&1487560221202321600>."
+                f"<@&{CARGO_STAFF_ID}>"
             ),
             color=info["cor"]
         )
 
         embed_ticket.set_thumbnail(url=info["thumbnail"])
         embed_ticket.set_image(url=info["imagem"])
-        embed_ticket.set_footer(text="Use o botão abaixo para fechar o ticket quando finalizar.")
+        embed_ticket.set_footer(text="Finalize o ritual quando terminar.")
 
         await canal.send(
             content=user.mention,
@@ -318,15 +312,14 @@ class TicketSelect(discord.ui.Select):
             view=FecharTicketView()
         )
 
-        await interaction.response.send_message(
-            f"✅ Seu ticket foi criado: {canal.mention}",
+        await interaction.followup.send(
+            f"✅ Ticket criado: {canal.mention}",
             ephemeral=True
         )
 
-       
 
 # =========================
-# VIEW DO PAINEL
+# VIEW
 # =========================
 class TicketView(discord.ui.View):
     def __init__(self):
