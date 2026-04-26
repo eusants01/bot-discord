@@ -319,13 +319,13 @@ class TicketCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="Central de Atendimentos da Família Sant's",
+            title="Escola jujutsu Atendimentos",
             description="Selecione uma das opções abaixo para abrir um ticket.\n\n",
             color=discord.Color.from_rgb(30, 35, 60)
         )
 
-        embed.set_image(url="https://i.imgur.com/BItqGWY.png")
-        embed.set_footer(text="Painel oficial de atendimento.")
+        embed.set_image(url="https://i.imgur.com/oQPnGVV.png")
+        embed.set_footer(text="Painel oficial da escola de feiticeiros.")
 
         await interaction.channel.send(
             embed=embed,
@@ -340,7 +340,7 @@ class TicketCog(commands.Cog):
     @ticket.error
     async def ticket_error(self, interaction: discord.Interaction, error):
         await interaction.response.send_message(
-            "❌ Você não tem permissão para usar este comando.",
+            "❌ Você não tem um grau especial para usar esse comando.",
             ephemeral=True
         )
 
