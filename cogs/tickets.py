@@ -122,9 +122,11 @@ class FecharTicketView(discord.ui.View):
     @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.red, emoji="🔒")
     async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
 
+        await interaction.response.defer(ephemeral=True)
+
         # 🔒 admin ignora tudo
         if interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "Tem certeza que deseja encerrar este domínio?",
                 view=ConfirmarFechamento(),
                 ephemeral=True
@@ -138,14 +140,14 @@ class FecharTicketView(discord.ui.View):
         ]
 
         if not any(role.id in cargos_permitidos for role in interaction.user.roles):
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Você não tem permissão para fechar tickets.",
                 ephemeral=True
             )
             return
 
         # ✅ confirmação
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "Tem certeza que deseja encerrar este domínio?",
             view=ConfirmarFechamento(),
             ephemeral=True
