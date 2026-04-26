@@ -38,6 +38,16 @@ async def gerar_transcricao(channel):
 # =========================
 # BOTÃO DE CONFIRMAR FECHAMENTO
 # =========================
+class BotaoDownload(discord.ui.View):
+    def __init__(self, url):
+        super().__init__(timeout=None)
+
+        self.add_item(
+            discord.ui.Button(
+                label="📥 Baixar Ticket",
+                url=url
+            )
+        )
 class ConfirmarFechamento(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -61,20 +71,14 @@ class ConfirmarFechamento(discord.ui.View):
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
             embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
 
-            # 📄 gerar arquivo
             arquivo = await gerar_transcricao(interaction.channel)
 
-            # 📥 botão de download dentro do embed
-            embed_log.add_field(
-                name="📥 Download",
-                value=f"[Clique aqui para baixar o ticket](attachment://{interaction.channel.name}.txt)",
-                inline=False
-            )
+            msg = await log.send(file=arquivo)
+            link = msg.attachments[0].url
 
-            # 📤 enviar tudo
             await log.send(
                 embed=embed_log,
-                file=arquivo
+                view=BotaoDownload(link)
             )
 
         await interaction.response.send_message("🔒 Fechando ticket...", ephemeral=True)
@@ -341,5 +345,3 @@ class TicketCog(commands.Cog):
         )
 
 
-async def setup(bot):
-    await bot.add_cog(TicketCog(bot))
