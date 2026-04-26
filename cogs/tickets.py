@@ -345,3 +345,6 @@ class TicketCog(commands.Cog):
         )
 
 
+# 👇 setup correto
+async def setup(bot):
+    await bot.add_cog(TicketCog(bot))
