@@ -324,7 +324,7 @@ class TicketCog(commands.Cog):
             color=discord.Color.from_rgb(60, 0, 100)
         )
 
-        embed.set_image(url="https://i.imgur.com/oQPnGW.png")
+        embed.set_image(url="https://i.imgur.com/oQPnGVV.png")
         embed.set_footer(text="Painel oficial da escola de feiticeiros.")
 
         await interaction.channel.send(
