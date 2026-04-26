@@ -61,8 +61,17 @@ class ConfirmarFechamento(discord.ui.View):
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
             embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
 
+            # 📄 gerar arquivo
             arquivo = await gerar_transcricao(interaction.channel)
 
+            # 📥 botão de download dentro do embed
+            embed_log.add_field(
+                name="📥 Download",
+                value=f"[Clique aqui para baixar o ticket](attachment://{interaction.channel.name}.txt)",
+                inline=False
+            )
+
+            # 📤 enviar tudo
             await log.send(
                 embed=embed_log,
                 file=arquivo
