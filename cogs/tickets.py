@@ -76,10 +76,10 @@ class ConfirmarFechamento(discord.ui.View):
             msg = await log.send(file=arquivo)
             link = msg.attachments[0].url
 
-            await log.send(
-                embed=embed_log,
-                view=BotaoDownload(link)
-            )
+            await msg.edit(
+    embed=embed_log,
+    view=BotaoDownload(link)
+)
 
         await interaction.response.send_message("🔒 Fechando ticket...", ephemeral=True)
         await interaction.channel.delete()
