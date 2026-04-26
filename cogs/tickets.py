@@ -64,7 +64,7 @@ class ConfirmarFechamento(discord.ui.View):
                     f"📁 **Canal:** `{interaction.channel.name}`\n"
                     f"🕒 **Data:** <t:{int(interaction.created_at.timestamp())}:f>"
                 ),
-                color=discord.Color.red()
+                color=discord.Color.dark_blue()
             )
 
             embed_log.set_image(url="https://i.imgur.com/ynK8fwA.png")
