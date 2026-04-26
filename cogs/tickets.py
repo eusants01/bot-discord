@@ -38,6 +38,8 @@ async def gerar_transcricao(channel):
 # =========================
 # BOTÃO DE CONFIRMAR FECHAMENTO
 # =========================
+import asyncio
+
 class BotaoDownload(discord.ui.View):
     def __init__(self, url):
         super().__init__(timeout=None)
@@ -48,6 +50,8 @@ class BotaoDownload(discord.ui.View):
                 url=url
             )
         )
+
+
 class ConfirmarFechamento(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -77,16 +81,35 @@ class ConfirmarFechamento(discord.ui.View):
             link = msg.attachments[0].url
 
             await msg.edit(
-    embed=embed_log,
-    view=BotaoDownload(link)
-)
+                embed=embed_log,
+                view=BotaoDownload(link)
+            )
 
-        await interaction.response.send_message("🔒 Fechando ticket...", ephemeral=True)
+        # 🔥 EFEITO JUJUTSU
+        await interaction.response.send_message(
+            "🔒 Iniciando encerramento do domínio...",
+            ephemeral=True
+        )
+
+        await asyncio.sleep(2)
+        await interaction.followup.send("⚡ A energia amaldiçoada está se dissipando...")
+
+        await asyncio.sleep(2)
+        await interaction.followup.send("🌑 O domínio está colapsando...")
+
+        await asyncio.sleep(2)
+        await interaction.followup.send("💀 Domínio encerrado.")
+
+        await asyncio.sleep(1)
+
         await interaction.channel.delete()
 
-    @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.gray, emoji="❌")
+    @discord.ui.button(label="Cancelar Ritual", style=discord.ButtonStyle.gray, emoji="🛑")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("Operação cancelada.", ephemeral=True)
+        await interaction.response.send_message(
+            "🛑 O ritual foi interrompido. O domínio permanece ativo.",
+            ephemeral=True
+        )
 
 
 # =========================
@@ -99,10 +122,10 @@ class FecharTicketView(discord.ui.View):
     @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.red, emoji="🔒")
     async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-        # 🔒 se for admin, ignora tudo
+        # 🔒 admin ignora tudo
         if interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
-                "Tem certeza que deseja fechar este ticket?",
+                "Tem certeza que deseja encerrar este domínio?",
                 view=ConfirmarFechamento(),
                 ephemeral=True
             )
@@ -121,9 +144,9 @@ class FecharTicketView(discord.ui.View):
             )
             return
 
-        # ✅ continua normal
+        # ✅ confirmação
         await interaction.response.send_message(
-            "Tem certeza que deseja fechar este ticket?",
+            "Tem certeza que deseja encerrar este domínio?",
             view=ConfirmarFechamento(),
             ephemeral=True
         )
@@ -218,7 +241,7 @@ class TicketSelect(discord.ui.Select):
         "descricao": "Solicite seu cargo exclusivo realizando o ritual necessário.",
         "cor": discord.Color.from_rgb(80, 0, 140),
         "imagem": "https://i.imgur.com/UP1k58c.png",
-        "thumbnail": "https://i.imgur.com/RzJitUS.png"
+        "thumbnail": "https://i.imgur.com/4ZnTLm3.png"
     },
 
     "comprar_vaga": {
@@ -227,7 +250,7 @@ class TicketSelect(discord.ui.Select):
         "descricao": "Deseja ingressar na Família Sant's? O custo do pacto é R$80,00.",
         "cor": discord.Color.from_rgb(120, 0, 180),
         "imagem": "https://i.imgur.com/pB3mL7E.png",
-        "thumbnail": "https://i.imgur.com/NltvZrt.png"
+        "thumbnail": "https://i.imgur.com/yw1FDpN.png"
     }
 }
 
