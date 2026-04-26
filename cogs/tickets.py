@@ -136,27 +136,27 @@ class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
     discord.SelectOption(
-        label="Tira Duvidas",
-        description="Tem duvidas sobre algo? Abre um ticket para que possamos te ajudar..",
+        label="❓ Domínio de Dúvidas",
+        description="Tem incertezas? Abra um chamado e obtenha respostas.",
         emoji="❓",
-        value="duvidas"
+        value="duvida"
     ),
     discord.SelectOption(
-        label="Desejo fazer uma denuncia de alguém!",
-        description="Abra um ticket e nos forneça as provas.",
+        label="🚨 Relatório de Maldição",
+        description="Presenciou algo suspeito? Traga provas da maldição.",
         emoji="🚨",
         value="denuncia"
     ),
     discord.SelectOption(
-        label="Compre a sua vaga na Família Sant's",
-        description="Cada vaga custa R$80,00.",
+        label="💰 Ritual de Acesso",
+        description="Deseja ingressar na Família Sant's? Valor: R$80,00.",
         emoji="💰",
         value="comprar_vaga"
     ),
     discord.SelectOption(
-        label="Solicite seu cargo Exclusivo",
-        description="Abra um ticket para poder preencher o modelo",
-        emoji="📝",
+        label="📜 Protocolo Especial",
+        description="Solicite seu cargo exclusivo preenchendo o modelo.",
+        emoji="📜",
         value="cargo_exclusivo"
     )
 ]
@@ -194,37 +194,40 @@ class TicketSelect(discord.ui.Select):
         tipo_ticket = self.values[0]
 
         tipos_ticket = {
-    "duvidas": {
+    "duvida": {
         "nome": "duvida",
-        "titulo": "❓ Tirar dúvidas",
-        "descricao": "Tem alguma dúvida sobre algo? Abra um ticket e nossa equipe irá te ajudar.",
-        "cor": discord.Color.blue(),
-        "imagem": "https://i.imgur.com/PSKO7LM.png",
-        "thumbnail": "https://i.imgur.com/3m531pJ.png"
+        "titulo": "❓ Domínio de Dúvidas",
+        "descricao": "Tem incertezas? Abra um chamado e obtenha respostas no mundo das maldições.",
+        "cor": discord.Color.from_rgb(100, 0, 160),
+        "imagem": "https://i.imgur.com/4GQjoSb.png",
+        "thumbnail": "https://i.imgur.com/AYs4N07.png"
     },
+
     "denuncia": {
         "nome": "denuncia",
-        "titulo": "🚨 Fazer uma denúncia",
-        "descricao": "Abra um ticket e nos envie as provas necessárias.",
-        "cor": discord.Color.dark_red(),
-        "imagem": "https://i.imgur.com/D8fWYgP.png",
-        "thumbnail": "https://i.imgur.com/jUvYKor.png"
+        "titulo": "🚨 Relatório de Maldição",
+        "descricao": "Presenciou algo suspeito? Traga provas e denuncie a maldição.",
+        "cor": discord.Color.from_rgb(140, 0, 0),
+        "imagem": "https://i.imgur.com/Bl79W4Y.png",
+        "thumbnail": "https://i.imgur.com/zkIgP83.png"
     },
+
     "cargo_exclusivo": {
         "nome": "cargo-exclusivo",
-        "titulo": "Solicitação de Cargo Exclusivo",
-        "descricao": "Abra um ticket para poder preencher o modelo",
-        "cor": discord.Color.dark_blue(),
-        "imagem": "https://i.imgur.com/vCwH82v.png",
-        "thumbnail": "https://i.imgur.com/14EGYq9.png"
+        "titulo": "📜 Protocolo Especial",
+        "descricao": "Solicite seu cargo exclusivo realizando o ritual necessário.",
+        "cor": discord.Color.from_rgb(80, 0, 140),
+        "imagem": "https://i.imgur.com/UP1k58c.png",
+        "thumbnail": "https://i.imgur.com/RzJitUS.png"
     },
+
     "comprar_vaga": {
         "nome": "comprar-vaga",
-        "titulo": "💰 Comprar uma vaga",
-        "descricao": "Cada vaga custa R$80,00. Abra o ticket para realizar a compra.",
-        "cor": discord.Color.green(),
-        "imagem": "https://i.imgur.com/8DAE2eE.png",
-        "thumbnail": "https://i.imgur.com/9ZN2LJl.png"
+        "titulo": "💰 Ritual de Acesso",
+        "descricao": "Deseja ingressar na Família Sant's? O custo do pacto é R$80,00.",
+        "cor": discord.Color.from_rgb(120, 0, 180),
+        "imagem": "https://i.imgur.com/pB3mL7E.png",
+        "thumbnail": "https://i.imgur.com/NltvZrt.png"
     }
 }
 
