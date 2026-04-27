@@ -28,22 +28,32 @@ async def trocar_status():
         )
         await asyncio.sleep(15)
 
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
 
+    # 🔥 sincroniza slash commands
+    await bot.tree.sync()
+    print("✅ Slash commands sincronizados")
+
+    # 🔥 inicia status
     if not trocar_status.is_running():
         trocar_status.start()
+
 
 async def main():
     async with bot:
         print("Iniciando bot...")
+
+        # 🔥 carregando cogs
         await bot.load_extension("cogs.tickets")
+        await bot.load_extension("cogs.parceiros")
 
         token = os.getenv("DISCORD_TOKEN")
-        print("DISCORD_TOKEN:", token)
         print("Token encontrado:", bool(token))
 
         await bot.start(token)
+
 
 asyncio.run(main())
