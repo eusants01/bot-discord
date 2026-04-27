@@ -136,7 +136,8 @@ class FecharTicketView(discord.ui.View):
         # 🔒 cargos permitidos
         cargos_permitidos = [
             1487560221202321600,
-            123456789012345678
+            1480381506064093225,
+        
         ]
 
         if not any(role.id in cargos_permitidos for role in interaction.user.roles):
@@ -345,7 +346,7 @@ class TicketCog(commands.Cog):
             color=discord.Color.from_rgb(60, 0, 100)
         )
 
-        embed.set_image(url="https://i.imgur.com/oQPnGVV.png")
+        embed.set_image(url="https://i.imgur.com/s3Qvs9x.png")
         embed.set_footer(text="Painel oficial da escola de feiticeiros.")
 
         await interaction.channel.send(
