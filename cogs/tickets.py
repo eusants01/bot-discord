@@ -282,11 +282,20 @@ class TicketSelect(discord.ui.Select):
             ),
         }
 
-        if cargo_staff:
-            overwrites[cargo_staff] = discord.PermissionOverwrite(
-                view_channel=True,
-                send_messages=True
-            )
+                        # cargos permitidos
+        cargos_permitidos = [
+            1487560221202321600,
+            1480381506064093225,
+        ]
+
+        for cargo_id in cargos_permitidos:
+            cargo = guild.get_role(cargo_id)
+            if cargo:
+                overwrites[cargo] = discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    read_message_history=True
+                )
 
         canal = await guild.create_text_channel(
             name=nome_canal,
