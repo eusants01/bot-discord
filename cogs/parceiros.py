@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+GUILD_ID = 1480334256763961465  # coloque aqui o ID do seu servidor
+
 PARCEIROS = [
     {
         "nome": "Família Celeste",
@@ -54,11 +56,17 @@ class SelectParceiros(discord.ui.Select):
 
         embed = discord.Embed(
             title=f"{parceiro['emoji']} {parceiro['nome']}",
-            description=f"{parceiro['descricao']}\n\n🔗 **Link:** {parceiro['link']}",
+            description=(
+                f"{parceiro['descricao']}\n\n"
+                f"🔗 **Link:** {parceiro['link']}"
+            ),
             color=discord.Color.purple()
         )
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
 
 
 class ViewParceiros(discord.ui.View):
@@ -71,6 +79,7 @@ class Parceiros(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.command(name="parceiros", description="Ver servidores parceiros")
     async def parceiros(self, interaction: discord.Interaction):
         embed = discord.Embed(
