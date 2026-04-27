@@ -87,7 +87,7 @@ class Parceiros(commands.Cog):
         description="Abrir o domínio dos servidores parceiros"
     )
     async def parceiros(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         embed = discord.Embed(
             title="⛩️ DOMÍNIO DOS PARCEIROS",
@@ -99,11 +99,12 @@ class Parceiros(commands.Cog):
         )
 
         embed.set_image(url="https://i.imgur.com/aINwFAT.png")
-        embed.set_footer(text="領域展開 • Escolha seu destino")
+        embed.set_footer(text="Escolha seu destino ou sofra")
 
         await interaction.followup.send(
             embed=embed,
-            view=ViewParceiros()
+            view=ViewParceiros(),
+            ephemeral=True
         )
 
 
