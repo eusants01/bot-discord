@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-GUILD_ID = 1480334256763961465
-
 PARCEIROS = [
     {
         "nome": "Família Celeste",
@@ -79,7 +77,6 @@ class Parceiros(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.command(name="parceiros", description="Ver servidores parceiros")
     async def parceiros(self, interaction: discord.Interaction):
         await interaction.response.defer()
