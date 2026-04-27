@@ -33,11 +33,11 @@ async def trocar_status():
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
 
-    # 🔥 sincroniza slash commands
-    await bot.tree.sync()
-    print("✅ Slash commands sincronizados")
+    GUILD_ID = 1480334256763961465  # coloque aqui o ID do seu servidor
 
-    # 🔥 inicia status
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    print("✅ Slash commands sincronizados no servidor")
+
     if not trocar_status.is_running():
         trocar_status.start()
 
