@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
 
 COR_ROXA_JUJUTSU = 0x7B2CFF
 
@@ -64,8 +63,6 @@ class SelectParceiros(discord.ui.Select):
             color=COR_ROXA_JUJUTSU
         )
 
-        embed.set_footer(text="Família Sant's • Alianças além do domínio")
-
         await interaction.response.send_message(
             embed=embed,
             ephemeral=True
@@ -82,13 +79,9 @@ class Parceiros(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(
-        name="parceiros",
-        description="Abrir o domínio dos servidores parceiros"
-    )
-    async def parceiros(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
-
+    @commands.command(name="painel_parceiros")
+    @commands.has_permissions(administrator=True)
+    async def painel_parceiros(self, ctx):
         embed = discord.Embed(
             title="⛩️ DOMÍNIO DOS PARCEIROS",
             description=(
@@ -98,15 +91,13 @@ class Parceiros(commands.Cog):
             color=COR_ROXA_JUJUTSU
         )
 
-
         embed.set_image(url="https://i.imgur.com/aINwFAT.png")
-        embed.set_footer(text="Escolha seu destino ou sofra")
+        embed.set_footer(text="領域展開 • Escolha seu destino")
 
-        await interaction.followup.send(
-            embed=embed,
-            view=ViewParceiros(),
-            ephemeral=True
-        )
+        await ctx.send(embed=embed, view=ViewParceiros())
+
+        # apaga o comando pra ninguém ver
+        await ctx.message.delete()
 
 
 async def setup(bot):
