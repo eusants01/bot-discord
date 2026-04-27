@@ -98,6 +98,7 @@ class Parceiros(commands.Cog):
             color=COR_ROXA_JUJUTSU
         )
 
+
         embed.set_image(url="https://i.imgur.com/aINwFAT.png")
         embed.set_footer(text="Escolha seu destino ou sofra")
 
