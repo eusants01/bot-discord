@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-GUILD_ID = 1480334256763961465  # coloque aqui o ID do seu servidor
+GUILD_ID = 1480334256763961465
 
 PARCEIROS = [
     {
@@ -82,15 +82,19 @@ class Parceiros(commands.Cog):
     @app_commands.guilds(discord.Object(id=GUILD_ID))
     @app_commands.command(name="parceiros", description="Ver servidores parceiros")
     async def parceiros(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
         embed = discord.Embed(
             title="🤝 SERVIDORES PARCEIROS",
             description="Escolha um servidor parceiro abaixo.",
             color=discord.Color.purple()
         )
 
-        embed.set_image(url="LINK_DO_SEU_BANNER_AQUI")
+        embed.set_image(
+            url="https://i.pinimg.com/originals/0e/03/f8/0e03f8e389b7a3b8ee4b5670cabb1975.gif"
+        )
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=embed,
             view=ViewParceiros()
         )
