@@ -2,28 +2,30 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+COR_ROXA_JUJUTSU = 0x7B2CFF
+
 PARCEIROS = [
     {
         "nome": "Família Celeste",
-        "descricao": "Parceiro oficial",
+        "descricao": "Aliança reconhecida dentro do domínio.",
         "emoji": "🌥️",
         "link": "https://discord.gg/TsUKsMgsz"
     },
     {
         "nome": "Time Anti Praças",
-        "descricao": "Comunidade parceira",
+        "descricao": "Pacto firmado sob energia amaldiçoada.",
         "emoji": "⚔️",
         "link": "https://discord.gg/4yaUuGCuG"
     },
     {
         "nome": "Família Shelby",
-        "descricao": "Comunidade parceira",
+        "descricao": "Aliados marcados pelo selo da Família Sant's.",
         "emoji": "🐦‍⬛",
         "link": "https://discord.gg/5kd5mpyt"
     },
     {
         "nome": "Polícia Militar",
-        "descricao": "Comunidade parceira",
+        "descricao": "Ordem aliada dentro deste território.",
         "emoji": "🚓",
         "link": "https://discord.gg/8HzSqvJju"
     }
@@ -42,7 +44,7 @@ class SelectParceiros(discord.ui.Select):
         ]
 
         super().__init__(
-            placeholder="Selecione um servidor parceiro...",
+            placeholder="Escolha uma aliança dentro do domínio...",
             min_values=1,
             max_values=1,
             options=options
@@ -55,11 +57,14 @@ class SelectParceiros(discord.ui.Select):
         embed = discord.Embed(
             title=f"{parceiro['emoji']} {parceiro['nome']}",
             description=(
-                f"{parceiro['descricao']}\n\n"
-                f"🔗 **Link:** {parceiro['link']}"
+                "☯️ **Aliança invocada com sucesso.**\n\n"
+                f"**Descrição:** {parceiro['descricao']}\n\n"
+                f"🔗 **Portal do servidor:**\n{parceiro['link']}"
             ),
-            color=discord.Color.purple()
+            color=COR_ROXA_JUJUTSU
         )
+
+        embed.set_footer(text="Família Sant's • Alianças além do domínio")
 
         await interaction.response.send_message(
             embed=embed,
@@ -77,19 +82,24 @@ class Parceiros(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="parceiros", description="Ver servidores parceiros")
+    @app_commands.command(
+        name="parceiros",
+        description="Abrir o domínio dos servidores parceiros"
+    )
     async def parceiros(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
         embed = discord.Embed(
-            title="🤝 SERVIDORES PARCEIROS",
-            description="Escolha um servidor parceiro abaixo.",
-            color=discord.Color.purple()
+            title="⛩️ DOMÍNIO DOS PARCEIROS",
+            description=(
+                "A energia amaldiçoada revela as alianças oficiais da **Família Sant's**.\n\n"
+                "Escolha abaixo qual portal deseja acessar."
+            ),
+            color=COR_ROXA_JUJUTSU
         )
 
-        embed.set_image(
-            url="https://i.pinimg.com/originals/0e/03/f8/0e03f8e389b7a3b8ee4b5670cabb1975.gif"
-        )
+        embed.set_image(url="https://i.imgur.com/aINwFAT.png")
+        embed.set_footer(text="領域展開 • Escolha seu destino")
 
         await interaction.followup.send(
             embed=embed,
