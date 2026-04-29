@@ -64,22 +64,20 @@ def centralizar_texto(draw, texto, x1, y1, x2, y2, fonte, fill):
 
 async def criar_banner(membro, conquistas_user):
     base = Image.open(BANNER_BASE).convert("RGBA")
-    draw = ImageDraw.Draw(base, "RGBA")
+    draw = ImageDraw.Draw(base)
 
-    fonte_nome = get_font("arialbd.ttf", 48)
-    fonte_id = get_font("arial.ttf", 28)
-    fonte_pequena = get_font("arialbd.ttf", 22)
+    fonte_nome = get_font("arialbd.ttf", 42)
+    fonte_id = get_font("arial.ttf", 24)
+    fonte_pequena = get_font("arialbd.ttf", 20)
 
     nome = membro.display_name[:18]
 
-    # ===== CORRIGE TEXTO SEM DESTRUIR O BANNER =====
-    draw.rectangle((760, 545, 1300, 640), fill=(5, 3, 12, 120))
+    # ===== TEXTO (SEM CAIXA) =====
+    draw.text((830, 560), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235))
+    draw.text((1010, 550), nome, font=fonte_nome, fill=(210, 90, 255))
+    draw.text((900, 610), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225))
 
-    draw.text((770, 560), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235, 255))
-    draw.text((950, 548), nome, font=fonte_nome, fill=(210, 90, 255, 255))
-    draw.text((830, 605), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225, 255))
-
-    # ===== POSIÇÃO REAL DOS ÍCONES DO SEU BANNER =====
+    # ===== ÍCONES =====
     centros_x = [110, 270, 430, 590, 750, 910, 1070, 1230, 1390, 1550, 1710, 1870, 2030]
     y_icon = 835
     y_nome = 1005
@@ -90,34 +88,32 @@ async def criar_banner(membro, conquistas_user):
         if desbloqueada:
             icon_path = f"{PASTA_ICONES}/{i}.png"
 
-            # glow suave
+            # glow leve
             glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
             gd = ImageDraw.Draw(glow)
-            gd.ellipse((cx - 65, y_icon - 20, cx + 65, y_icon + 120), fill=(170, 45, 255, 70))
-            glow = glow.filter(ImageFilter.GaussianBlur(14))
+            gd.ellipse((cx - 55, y_icon - 10, cx + 55, y_icon + 110), fill=(170, 45, 255, 60))
+            glow = glow.filter(ImageFilter.GaussianBlur(10))
             base.alpha_composite(glow)
 
             nome_conq = CONQUISTAS[i].split()[0].upper()
-            cor_nome = (210, 120, 255, 255)
+            cor_nome = (210, 120, 255)
         else:
             icon_path = LOCK_ICON
             nome_conq = "???"
-            cor_nome = (170, 75, 210, 255)
+            cor_nome = (170, 75, 210)
 
         try:
             icon = Image.open(icon_path).convert("RGBA")
-            icon = icon.resize((95, 95), Image.LANCZOS)
-            base.paste(icon, (cx - 47, y_icon), icon)
+            icon = icon.resize((85, 85))
+            base.paste(icon, (cx - 42, y_icon), icon)
         except:
             pass
 
-        # cobre nome antigo
-        draw.rectangle((cx - 60, y_nome - 5, cx + 60, y_nome + 35), fill=(5, 3, 12, 100))
-
+        # escreve direto (sem fundo)
         centralizar_texto(
             draw,
             nome_conq,
-            cx - 60, y_nome, cx + 60, y_nome + 35,
+            cx - 60, y_nome, cx + 60, y_nome + 30,
             fonte_pequena,
             cor_nome
         )
