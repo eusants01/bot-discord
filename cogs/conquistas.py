@@ -66,83 +66,116 @@ async def criar_banner(membro, conquistas_user):
     base = Image.open(BANNER_BASE).convert("RGBA")
     draw = ImageDraw.Draw(base, "RGBA")
 
-    fonte_nome = get_font("arialbd.ttf", 56)
-    fonte_id = get_font("arial.ttf", 30)
-    fonte_secao = get_font("arialbd.ttf", 38)
-    fonte_numero = get_font("arialbd.ttf", 34)
-    fonte_pequena = get_font("arial.ttf", 24)
+    fonte_nome = get_font("arialbd.ttf", 54)
+    fonte_id = get_font("arial.ttf", 32)
+    fonte_secao = get_font("arialbd.ttf", 34)
+    fonte_numero = get_font("arialbd.ttf", 36)
+    fonte_pequena = get_font("arialbd.ttf", 24)
 
-    # ===== NOME / ID =====
+    # ===== LIMPA A ÁREA DO NOME/ID DO MODELO =====
+    draw.rounded_rectangle(
+        (630, 520, 1420, 660),
+        radius=22,
+        fill=(10, 6, 18, 210),
+        outline=(170, 80, 255, 180),
+        width=3
+    )
+
     nome = membro.display_name[:18]
-    centralizar_texto(draw, "FEITICEIRO:", 650, 545, 910, 595, fonte_id, (225, 225, 235, 255))
-    draw.text((920, 535), nome, font=fonte_nome, fill=(210, 90, 255, 255))
-    centralizar_texto(draw, f"ID: {membro.id}", 650, 600, 1390, 650, fonte_id, (220, 220, 225, 255))
 
-    # ===== AVATAR =====
-    try:
-        avatar_bytes = await membro.display_avatar.replace(size=256).read()
-        avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
-        avatar = avatar.resize((140, 140), Image.LANCZOS)
+    centralizar_texto(
+        draw,
+        "FEITICEIRO:",
+        680, 548, 900, 590,
+        fonte_id,
+        (230, 230, 240, 255)
+    )
 
-        mask = Image.new("L", (140, 140), 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.ellipse((0, 0, 140, 140), fill=255)
+    draw.text(
+        (920, 535),
+        nome,
+        font=fonte_nome,
+        fill=(210, 90, 255, 255)
+    )
 
-        # moldura/avatar no centro do painel
-        base.paste(avatar, (625, 526), mask)
-        draw.ellipse((618, 519, 772, 673), outline=(190, 75, 255, 255), width=5)
-    except Exception:
-        pass
+    centralizar_texto(
+        draw,
+        f"ID: {membro.id}",
+        720, 600, 1330, 645,
+        fonte_id,
+        (220, 220, 225, 255)
+    )
 
     # ===== TÍTULO DAS CONQUISTAS =====
     progresso = len(conquistas_user)
+
+    draw.rounded_rectangle(
+        (600, 690, 1450, 745),
+        radius=15,
+        fill=(5, 3, 12, 120)
+    )
+
     centralizar_texto(
         draw,
         f"CONQUISTAS DESBLOQUEADAS  {progresso}/13",
-        0, 710, 2048, 770,
+        600, 690, 1450, 745,
         fonte_secao,
         (210, 80, 255, 255)
     )
 
-    # ===== POSIÇÕES DOS 13 ÍCONES =====
-    # Coordenadas feitas para o banner 2048x1093.
-    centros_x = [105, 262, 419, 576, 733, 890, 1047, 1204, 1361, 1518, 1675, 1832, 1989]
-    y_numero = 780
-    y_icon = 835
-    y_nome = 980
+    # ===== POSIÇÕES CERTAS DOS ÍCONES =====
+    centros_x = [100, 260, 420, 580, 740, 900, 1060, 1220, 1380, 1540, 1700, 1860, 2020]
+
+    y_numero = 760
+    y_icon = 820
+    y_nome = 975
 
     for i, cx in enumerate(centros_x, start=1):
         desbloqueada = i in conquistas_user
 
-        # número em cima
-        centralizar_texto(draw, str(i), cx - 45, y_numero, cx + 45, y_numero + 45, fonte_numero, (245, 235, 255, 255))
+        centralizar_texto(
+            draw,
+            str(i),
+            cx - 50, y_numero, cx + 50, y_numero + 45,
+            fonte_numero,
+            (245, 235, 255, 255)
+        )
 
-        # brilho atrás dos desbloqueados
         if desbloqueada:
             glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
             gd = ImageDraw.Draw(glow, "RGBA")
-            gd.ellipse((cx - 70, y_icon - 25, cx + 70, y_icon + 115), fill=(170, 45, 255, 90))
-            glow = glow.filter(ImageFilter.GaussianBlur(18))
+            gd.ellipse(
+                (cx - 80, y_icon - 25, cx + 80, y_icon + 135),
+                fill=(170, 45, 255, 95)
+            )
+            glow = glow.filter(ImageFilter.GaussianBlur(20))
             base.alpha_composite(glow)
+
             icon_path = f"{PASTA_ICONES}/{i}.png"
         else:
             icon_path = LOCK_ICON
 
         try:
-            icon = Image.open(icon_path).convert("RGBA").resize((110, 110), Image.LANCZOS)
-            base.paste(icon, (cx - 55, y_icon), icon)
+            icon = Image.open(icon_path).convert("RGBA")
+            icon = icon.resize((120, 120), Image.LANCZOS)
+            base.paste(icon, (cx - 60, y_icon), icon)
         except Exception:
             pass
 
-        # nome/??? embaixo
         if desbloqueada:
             nome_conq = CONQUISTAS[i].split()[0].upper()
             cor_nome = (210, 120, 255, 255)
         else:
             nome_conq = "???"
-            cor_nome = (170, 75, 210, 255)
+            cor_nome = (180, 75, 220, 255)
 
-        centralizar_texto(draw, nome_conq, cx - 65, y_nome, cx + 65, y_nome + 35, fonte_pequena, cor_nome)
+        centralizar_texto(
+            draw,
+            nome_conq,
+            cx - 80, y_nome, cx + 80, y_nome + 40,
+            fonte_pequena,
+            cor_nome
+        )
 
     buffer = io.BytesIO()
     base.save(buffer, format="PNG")
@@ -172,9 +205,14 @@ class Conquistas(commands.Cog):
             db[user_id].append(conquista_id)
             db[user_id].sort()
             save_db(db)
-            await interaction.response.send_message(f"✅ {membro.mention} recebeu **{CONQUISTAS[conquista_id]}**")
+            await interaction.response.send_message(
+                f"✅ {membro.mention} recebeu **{CONQUISTAS[conquista_id]}**"
+            )
         else:
-            await interaction.response.send_message("⚠️ Esse membro já possui essa conquista.", ephemeral=True)
+            await interaction.response.send_message(
+                "⚠️ Esse membro já possui essa conquista.",
+                ephemeral=True
+            )
 
     @app_commands.command(name="removerconquista", description="Remover conquista")
     async def removerconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: int):
@@ -188,20 +226,31 @@ class Conquistas(commands.Cog):
         if user_id in db and conquista_id in db[user_id]:
             db[user_id].remove(conquista_id)
             save_db(db)
-            await interaction.response.send_message(f"❌ {CONQUISTAS.get(conquista_id, 'Conquista')} removida de {membro.mention}")
+            await interaction.response.send_message(
+                f"❌ {CONQUISTAS.get(conquista_id, 'Conquista')} removida de {membro.mention}"
+            )
         else:
-            await interaction.response.send_message("⚠️ Esse membro não possui essa conquista.", ephemeral=True)
+            await interaction.response.send_message(
+                "⚠️ Esse membro não possui essa conquista.",
+                ephemeral=True
+            )
 
     @app_commands.command(name="conquistas", description="Ver banner de conquistas")
     async def conquistas(self, interaction: discord.Interaction, membro: discord.Member = None):
         await interaction.response.defer()
+
         membro = membro or interaction.user
 
         db = load_db()
         conquistas_user = db.get(str(membro.id), [])
+
         banner = await criar_banner(membro, conquistas_user)
 
-        file = discord.File(banner, filename=f"conquistas_{membro.id}.png")
+        file = discord.File(
+            banner,
+            filename=f"conquistas_{membro.id}.png"
+        )
+
         await interaction.followup.send(file=file)
 
 
