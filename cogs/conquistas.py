@@ -66,27 +66,23 @@ async def criar_banner(membro, conquistas_user):
     base = Image.open(BANNER_BASE).convert("RGBA")
     draw = ImageDraw.Draw(base, "RGBA")
 
-    fonte_nome = get_font("arialbd.ttf", 54)
-    fonte_id = get_font("arial.ttf", 30)
-    fonte_pequena = get_font("arialbd.ttf", 24)
-
-    # ===== COBRIR SOMENTE O NOME/ID ANTIGO =====
-    draw.rounded_rectangle(
-        (630, 535, 1420, 665),
-        radius=18,
-        fill=(5, 3, 12, 170)
-    )
+    fonte_nome = get_font("arialbd.ttf", 48)
+    fonte_id = get_font("arial.ttf", 28)
+    fonte_pequena = get_font("arialbd.ttf", 22)
 
     nome = membro.display_name[:18]
 
-    draw.text((720, 558), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235, 255))
-    draw.text((940, 545), nome, font=fonte_nome, fill=(210, 90, 255, 255))
-    draw.text((815, 610), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225, 255))
+    # ===== CORRIGE TEXTO SEM DESTRUIR O BANNER =====
+    draw.rectangle((760, 545, 1300, 640), fill=(5, 3, 12, 120))
 
-    # ===== ÍCONES =====
-    centros_x = [105, 262, 419, 576, 733, 890, 1047, 1204, 1361, 1518, 1675, 1832, 1989]
-    y_icon = 825
-    y_nome = 995
+    draw.text((770, 560), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235, 255))
+    draw.text((950, 548), nome, font=fonte_nome, fill=(210, 90, 255, 255))
+    draw.text((830, 605), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225, 255))
+
+    # ===== POSIÇÃO REAL DOS ÍCONES DO SEU BANNER =====
+    centros_x = [110, 270, 430, 590, 750, 910, 1070, 1230, 1390, 1550, 1710, 1870, 2030]
+    y_icon = 835
+    y_nome = 1005
 
     for i, cx in enumerate(centros_x, start=1):
         desbloqueada = i in conquistas_user
@@ -94,10 +90,11 @@ async def criar_banner(membro, conquistas_user):
         if desbloqueada:
             icon_path = f"{PASTA_ICONES}/{i}.png"
 
+            # glow suave
             glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            gd = ImageDraw.Draw(glow, "RGBA")
-            gd.ellipse((cx - 75, y_icon - 25, cx + 75, y_icon + 125), fill=(170, 45, 255, 90))
-            glow = glow.filter(ImageFilter.GaussianBlur(18))
+            gd = ImageDraw.Draw(glow)
+            gd.ellipse((cx - 65, y_icon - 20, cx + 65, y_icon + 120), fill=(170, 45, 255, 70))
+            glow = glow.filter(ImageFilter.GaussianBlur(14))
             base.alpha_composite(glow)
 
             nome_conq = CONQUISTAS[i].split()[0].upper()
@@ -109,15 +106,18 @@ async def criar_banner(membro, conquistas_user):
 
         try:
             icon = Image.open(icon_path).convert("RGBA")
-            icon = icon.resize((115, 115), Image.LANCZOS)
-            base.paste(icon, (cx - 57, y_icon), icon)
-        except Exception:
+            icon = icon.resize((95, 95), Image.LANCZOS)
+            base.paste(icon, (cx - 47, y_icon), icon)
+        except:
             pass
+
+        # cobre nome antigo
+        draw.rectangle((cx - 60, y_nome - 5, cx + 60, y_nome + 35), fill=(5, 3, 12, 100))
 
         centralizar_texto(
             draw,
             nome_conq,
-            cx - 70, y_nome, cx + 70, y_nome + 35,
+            cx - 60, y_nome, cx + 60, y_nome + 35,
             fonte_pequena,
             cor_nome
         )
