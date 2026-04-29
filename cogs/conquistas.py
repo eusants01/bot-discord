@@ -67,112 +67,57 @@ async def criar_banner(membro, conquistas_user):
     draw = ImageDraw.Draw(base, "RGBA")
 
     fonte_nome = get_font("arialbd.ttf", 54)
-    fonte_id = get_font("arial.ttf", 32)
-    fonte_secao = get_font("arialbd.ttf", 34)
-    fonte_numero = get_font("arialbd.ttf", 36)
+    fonte_id = get_font("arial.ttf", 30)
     fonte_pequena = get_font("arialbd.ttf", 24)
 
-    # ===== LIMPA A ÁREA DO NOME/ID DO MODELO =====
+    # ===== COBRIR SOMENTE O NOME/ID ANTIGO =====
     draw.rounded_rectangle(
-        (630, 520, 1420, 660),
-        radius=22,
-        fill=(10, 6, 18, 210),
-        outline=(170, 80, 255, 180),
-        width=3
+        (630, 535, 1420, 665),
+        radius=18,
+        fill=(5, 3, 12, 170)
     )
 
     nome = membro.display_name[:18]
 
-    centralizar_texto(
-        draw,
-        "FEITICEIRO:",
-        680, 548, 900, 590,
-        fonte_id,
-        (230, 230, 240, 255)
-    )
+    draw.text((720, 558), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235, 255))
+    draw.text((940, 545), nome, font=fonte_nome, fill=(210, 90, 255, 255))
+    draw.text((815, 610), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225, 255))
 
-    draw.text(
-        (920, 535),
-        nome,
-        font=fonte_nome,
-        fill=(210, 90, 255, 255)
-    )
-
-    centralizar_texto(
-        draw,
-        f"ID: {membro.id}",
-        720, 600, 1330, 645,
-        fonte_id,
-        (220, 220, 225, 255)
-    )
-
-    # ===== TÍTULO DAS CONQUISTAS =====
-    progresso = len(conquistas_user)
-
-    draw.rounded_rectangle(
-        (600, 690, 1450, 745),
-        radius=15,
-        fill=(5, 3, 12, 120)
-    )
-
-    centralizar_texto(
-        draw,
-        f"CONQUISTAS DESBLOQUEADAS  {progresso}/13",
-        600, 690, 1450, 745,
-        fonte_secao,
-        (210, 80, 255, 255)
-    )
-
-    # ===== POSIÇÕES CERTAS DOS ÍCONES =====
-    centros_x = [100, 260, 420, 580, 740, 900, 1060, 1220, 1380, 1540, 1700, 1860, 2020]
-
-    y_numero = 760
-    y_icon = 820
-    y_nome = 975
+    # ===== ÍCONES =====
+    centros_x = [105, 262, 419, 576, 733, 890, 1047, 1204, 1361, 1518, 1675, 1832, 1989]
+    y_icon = 825
+    y_nome = 995
 
     for i, cx in enumerate(centros_x, start=1):
         desbloqueada = i in conquistas_user
 
-        centralizar_texto(
-            draw,
-            str(i),
-            cx - 50, y_numero, cx + 50, y_numero + 45,
-            fonte_numero,
-            (245, 235, 255, 255)
-        )
-
         if desbloqueada:
+            icon_path = f"{PASTA_ICONES}/{i}.png"
+
             glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
             gd = ImageDraw.Draw(glow, "RGBA")
-            gd.ellipse(
-                (cx - 80, y_icon - 25, cx + 80, y_icon + 135),
-                fill=(170, 45, 255, 95)
-            )
-            glow = glow.filter(ImageFilter.GaussianBlur(20))
+            gd.ellipse((cx - 75, y_icon - 25, cx + 75, y_icon + 125), fill=(170, 45, 255, 90))
+            glow = glow.filter(ImageFilter.GaussianBlur(18))
             base.alpha_composite(glow)
 
-            icon_path = f"{PASTA_ICONES}/{i}.png"
-        else:
-            icon_path = LOCK_ICON
-
-        try:
-            icon = Image.open(icon_path).convert("RGBA")
-            icon = icon.resize((120, 120), Image.LANCZOS)
-            base.paste(icon, (cx - 60, y_icon), icon)
-        except Exception:
-            pass
-
-        if desbloqueada:
             nome_conq = CONQUISTAS[i].split()[0].upper()
             cor_nome = (210, 120, 255, 255)
         else:
+            icon_path = LOCK_ICON
             nome_conq = "???"
-            cor_nome = (180, 75, 220, 255)
+            cor_nome = (170, 75, 210, 255)
+
+        try:
+            icon = Image.open(icon_path).convert("RGBA")
+            icon = icon.resize((115, 115), Image.LANCZOS)
+            base.paste(icon, (cx - 57, y_icon), icon)
+        except Exception:
+            pass
 
         centralizar_texto(
             draw,
             nome_conq,
-            cx - 80, y_nome, cx + 80, y_nome + 40,
+            cx - 70, y_nome, cx + 70, y_nome + 35,
             fonte_pequena,
             cor_nome
         )
