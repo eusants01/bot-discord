@@ -51,7 +51,6 @@ async def main():
     async with bot:
         print("Iniciando bot...")
 
-        # 🔥 carregando cogs
         await bot.load_extension("cogs.tickets")
         await bot.load_extension("cogs.parceiros")
         await bot.load_extension("cogs.conquistas")
@@ -60,3 +59,6 @@ async def main():
         print("Token encontrado:", bool(token))
 
         await bot.start(token)
+
+
+asyncio.run(main())

@@ -3,10 +3,11 @@ from discord.ext import commands
 from discord import app_commands
 import json
 import os
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import io
 
 DB_FILE = "dados_conquistas.json"
+BANNER_BASE = "assets/banner_base_conquistas.png"
 
 STAFF_ROLE_ID = 1480349452744265759
 
@@ -44,173 +45,69 @@ def is_staff(member: discord.Member):
 
 
 async def criar_banner(membro, conquistas_user):
-    largura, altura = 1600, 700
-
-    img = Image.new("RGB", (largura, altura), (8, 5, 18))
-    draw = ImageDraw.Draw(img)
-
-    for y in range(altura):
-        r = int(10 + y * 0.03)
-        g = int(5 + y * 0.01)
-        b = int(25 + y * 0.05)
-        draw.line((0, y, largura, y), fill=(r, g, b))
-
-    glow = Image.new("RGBA", (largura, altura), (0, 0, 0, 0))
-    gdraw = ImageDraw.Draw(glow)
-
-    gdraw.ellipse((-250, -180, 500, 500), fill=(80, 40, 255, 90))
-    gdraw.ellipse((1150, -150, 1850, 520), fill=(255, 30, 80, 80))
-    gdraw.ellipse((450, 250, 1150, 900), fill=(140, 40, 255, 45))
-
-    glow = glow.filter(ImageFilter.GaussianBlur(80))
-    img = Image.alpha_composite(img.convert("RGBA"), glow)
-    draw = ImageDraw.Draw(img)
+    base = Image.open(BANNER_BASE).convert("RGBA")
+    draw = ImageDraw.Draw(base)
 
     try:
-        fonte_titulo = ImageFont.truetype("arialbd.ttf", 78)
-        fonte_media = ImageFont.truetype("arialbd.ttf", 34)
-        fonte_pequena = ImageFont.truetype("arial.ttf", 22)
-        fonte_numero = ImageFont.truetype("arialbd.ttf", 26)
+        fonte_nome = ImageFont.truetype("arialbd.ttf", 42)
+        fonte_id = ImageFont.truetype("arial.ttf", 24)
     except:
-        fonte_titulo = ImageFont.load_default()
-        fonte_media = ImageFont.load_default()
-        fonte_pequena = ImageFont.load_default()
-        fonte_numero = ImageFont.load_default()
+        fonte_nome = ImageFont.load_default()
+        fonte_id = ImageFont.load_default()
 
-    draw.rounded_rectangle(
-        (25, 25, largura - 25, altura - 25),
-        radius=28,
-        outline=(150, 65, 255),
-        width=4
+    # Nome
+    draw.text(
+        (450, 250),
+        membro.display_name,
+        font=fonte_nome,
+        fill=(210, 120, 255)
     )
 
-    draw.text((430, 55), "CAMINHO DO FEITICEIRO", font=fonte_titulo, fill=(235, 210, 255))
-    draw.text((610, 135), "FAMÍLIA SANT’S • JUJUTSU", font=fonte_pequena, fill=(180, 100, 255))
+    # ID
+    draw.text(
+        (450, 300),
+        f"ID: {membro.id}",
+        font=fonte_id,
+        fill=(220, 220, 220)
+    )
 
+    # Avatar
     try:
         avatar_bytes = await membro.display_avatar.replace(size=256).read()
         avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
-        avatar = avatar.resize((170, 170))
+        avatar = avatar.resize((150, 150))
 
-        mask = Image.new("L", (170, 170), 0)
+        mask = Image.new("L", (150, 150), 0)
         mask_draw = ImageDraw.Draw(mask)
-        mask_draw.ellipse((0, 0, 170, 170), fill=255)
+        mask_draw.ellipse((0, 0, 150, 150), fill=255)
 
-        img.paste(avatar, (90, 90), mask)
-        draw.ellipse((86, 86, 264, 264), outline=(170, 80, 255), width=5)
-    except Exception:
+        base.paste(avatar, (220, 205), mask)
+    except:
         pass
 
-    draw.text((300, 175), f"FEITICEIRO: {membro.display_name}", font=fonte_media, fill=(255, 255, 255))
-    draw.text((300, 220), f"ID: {membro.id}", font=fonte_pequena, fill=(185, 185, 200))
-
-    progresso = len(conquistas_user)
-    total = 13
-
-    draw.text((300, 265), f"CONQUISTAS DESBLOQUEADAS: {progresso}/{total}", font=fonte_media, fill=(190, 90, 255))
-
-    barra_x, barra_y = 300, 320
-    barra_w, barra_h = 720, 24
-
-    draw.rounded_rectangle(
-        (barra_x, barra_y, barra_x + barra_w, barra_y + barra_h),
-        radius=12,
-        fill=(28, 22, 40)
-    )
-
-    progresso_w = int((progresso / total) * barra_w)
-
-    if progresso_w > 0:
-        draw.rounded_rectangle(
-            (barra_x, barra_y, barra_x + progresso_w, barra_y + barra_h),
-            radius=12,
-            fill=(160, 60, 255)
-        )
-
-    draw.text(
-        (1080, 205),
-        "“A maldição testa.\nO feiticeiro evolui.\nO domínio se expande.”",
-        font=fonte_media,
-        fill=(230, 210, 255),
-        spacing=10
-    )
-
+    # Marcação das conquistas desbloqueadas
     start_x = 70
-    start_y = 415
-    box_w = 108
-    box_h = 170
-    gap = 9
-
-    simbolos = {
-        1: "●",
-        2: "◉",
-        3: "👁",
-        4: "札",
-        5: "⚔",
-        6: "☠",
-        7: "🌀",
-        8: "✦",
-        9: "弐",
-        10: "壱",
-        11: "鬼",
-        12: "領",
-        13: "域"
-    }
+    y = 355
+    gap = 101
 
     for i in range(1, 14):
-        x = start_x + (i - 1) * (box_w + gap)
-        y = start_y
+        x = start_x + (i - 1) * gap
 
-        desbloqueada = i in conquistas_user
-
-        if desbloqueada:
-            borda = (185, 75, 255)
-            fundo = (45, 15, 75)
-            texto = (255, 255, 255)
-            simbolo_cor = (235, 190, 255)
-            nome = CONQUISTAS[i]
+        if i in conquistas_user:
+            draw.ellipse(
+                (x, y, x + 70, y + 70),
+                outline=(210, 90, 255),
+                width=5
+            )
         else:
-            borda = (70, 70, 85)
-            fundo = (20, 20, 28)
-            texto = (120, 120, 130)
-            simbolo_cor = (90, 90, 100)
-            nome = "???"
-
-        if desbloqueada:
-            draw.rounded_rectangle(
-                (x - 4, y - 4, x + box_w + 4, y + box_h + 4),
-                radius=18,
-                outline=(120, 45, 255),
-                width=2
+            draw.ellipse(
+                (x, y, x + 70, y + 70),
+                outline=(70, 70, 80),
+                width=3
             )
 
-        draw.rounded_rectangle(
-            (x, y, x + box_w, y + box_h),
-            radius=16,
-            fill=fundo,
-            outline=borda,
-            width=3
-        )
-
-        draw.text((x + 38, y + 10), f"{i:02}", font=fonte_numero, fill=(255, 255, 255))
-
-        if desbloqueada:
-            draw.text((x + 35, y + 52), simbolos[i], font=fonte_media, fill=simbolo_cor)
-        else:
-            draw.text((x + 36, y + 52), "🔒", font=fonte_media, fill=simbolo_cor)
-
-        nome_curto = nome.replace(" ", "\n", 1)
-        draw.text((x + 8, y + 112), nome_curto[:18], font=fonte_pequena, fill=texto)
-
-    draw.text(
-        (430, 630),
-        "DO DESPERTAR À EXPANSÃO DE DOMÍNIO — SOMENTE OS MAIS FORTES SOBREVIVEM.",
-        font=fonte_pequena,
-        fill=(190, 100, 255)
-    )
-
     buffer = io.BytesIO()
-    img.convert("RGB").save(buffer, format="PNG")
+    base.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
@@ -222,7 +119,6 @@ class Conquistas(commands.Cog):
 
     @app_commands.command(name="addconquista", description="Adicionar conquista")
     async def addconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: int):
-
         if not is_staff(interaction.user):
             await interaction.response.send_message("❌ Apenas staff pode usar.", ephemeral=True)
             return
@@ -249,7 +145,6 @@ class Conquistas(commands.Cog):
 
     @app_commands.command(name="removerconquista", description="Remover conquista")
     async def removerconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: int):
-
         if not is_staff(interaction.user):
             await interaction.response.send_message("❌ Apenas staff pode usar.", ephemeral=True)
             return
