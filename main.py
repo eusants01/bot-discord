@@ -29,6 +29,7 @@ async def trocar_status():
         await asyncio.sleep(15)
 
 
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
