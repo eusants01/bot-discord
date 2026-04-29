@@ -83,15 +83,15 @@ async def criar_banner(membro, conquistas_user):
 
     nome = membro.display_name[:18]
 
-    # TEXTO LIMPO - sem retângulo preto por cima
-    draw.text((950, 520), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235))
-    draw.text((1150, 500), nome, font=fonte_nome, fill=(210, 90, 255))
-    draw.text((1030, 570), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225))
+    # TEXTO (AGORA DENTRO DA FUNÇÃO)
+    draw.text((880, 385), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235))
+    draw.text((1040, 365), nome, font=fonte_nome, fill=(210, 90, 255))
+    draw.text((940, 430), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225))
 
     # ÍCONES
-    centros_x = [120, 280, 440, 600, 760, 920, 1080, 1240, 1400, 1560, 1720, 1880, 2040]
-    y_icon = 780
-    y_nome = 960
+    centros_x = [620, 700, 780, 860, 940, 1020, 1100, 1180, 1260, 1340, 1420, 1500, 1580]
+    y_icon = 620
+    y_nome = 735
 
     for i, cx in enumerate(centros_x, start=1):
         desbloqueada = i in conquistas_user
