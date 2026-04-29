@@ -75,54 +75,23 @@ def centralizar_texto(draw, texto, x1, y1, x2, y2, fonte, fill):
 
 async def criar_banner(membro, conquistas_user):
     base = Image.open(BANNER_BASE).convert("RGBA")
-    draw = ImageDraw.Draw(base, "RGBA")
+    draw = ImageDraw.Draw(base)
 
-    w, h = base.size
-
-    fonte_nome = get_font(True, int(w * 0.028))
-    fonte_id = get_font(False, int(w * 0.015))
-    fonte_nome_conq = get_font(True, int(w * 0.012))
+    fonte_nome = get_font(True, 60)
+    fonte_id = get_font(False, 28)
+    fonte_small = get_font(True, 20)
 
     nome = membro.display_name[:18]
 
-    # ===== NOME / ID =====
-    # cobre apenas o texto antigo dentro da moldura original
-    draw.rounded_rectangle(
-        (int(w * 0.365), int(h * 0.455), int(w * 0.660), int(h * 0.525)),
-        radius=10,
-        fill=(5, 3, 12, 150)
-    )
+    # TEXTO LIMPO - sem retângulo preto por cima
+    draw.text((950, 520), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235))
+    draw.text((1150, 500), nome, font=fonte_nome, fill=(210, 90, 255))
+    draw.text((1030, 570), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225))
 
-    draw.text(
-        (int(w * 0.375), int(h * 0.465)),
-        "FEITICEIRO:",
-        font=fonte_id,
-        fill=(230, 230, 235, 255)
-    )
-
-    draw.text(
-        (int(w * 0.535), int(h * 0.452)),
-        nome,
-        font=fonte_nome,
-        fill=(210, 90, 255, 255)
-    )
-
-    draw.text(
-        (int(w * 0.410), int(h * 0.505)),
-        f"ID: {membro.id}",
-        font=fonte_id,
-        fill=(220, 220, 225, 255)
-    )
-
-    # ===== ÍCONES =====
-    centros_x = [int(w * p) for p in [
-        0.052, 0.128, 0.204, 0.280, 0.356, 0.432, 0.508,
-        0.584, 0.660, 0.736, 0.812, 0.888, 0.964
-    ]]
-
-    y_icon = int(h * 0.705)
-    y_nome = int(h * 0.865)
-    icon_size = int(w * 0.060)
+    # ÍCONES
+    centros_x = [120, 280, 440, 600, 760, 920, 1080, 1240, 1400, 1560, 1720, 1880, 2040]
+    y_icon = 780
+    y_nome = 960
 
     for i, cx in enumerate(centros_x, start=1):
         desbloqueada = i in conquistas_user
@@ -131,42 +100,31 @@ async def criar_banner(membro, conquistas_user):
             icon_path = f"{PASTA_ICONES}/{i}.png"
 
             glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            gd = ImageDraw.Draw(glow, "RGBA")
-            gd.ellipse(
-                (
-                    cx - int(icon_size * 0.75),
-                    y_icon - int(icon_size * 0.25),
-                    cx + int(icon_size * 0.75),
-                    y_icon + int(icon_size * 1.25)
-                ),
-                fill=(170, 45, 255, 70)
-            )
-            glow = glow.filter(ImageFilter.GaussianBlur(16))
+            gd = ImageDraw.Draw(glow)
+            gd.ellipse((cx - 60, y_icon - 10, cx + 60, y_icon + 110), fill=(170, 45, 255, 60))
+            glow = glow.filter(ImageFilter.GaussianBlur(10))
             base.alpha_composite(glow)
 
             nome_conq = CONQUISTAS[i].split()[0].upper()
-            cor_nome = (210, 120, 255, 255)
+            cor = (210, 120, 255)
         else:
             icon_path = LOCK_ICON
             nome_conq = "???"
-            cor_nome = (170, 75, 210, 255)
+            cor = (170, 75, 210)
 
         try:
             icon = Image.open(icon_path).convert("RGBA")
-            icon = icon.resize((icon_size, icon_size), Image.LANCZOS)
-            base.paste(icon, (cx - icon_size // 2, y_icon), icon)
+            icon = icon.resize((90, 90), Image.LANCZOS)
+            base.paste(icon, (cx - 45, y_icon), icon)
         except Exception as e:
             print(f"Erro ao carregar ícone {i}: {e}")
 
         centralizar_texto(
             draw,
             nome_conq,
-            cx - int(w * 0.040),
-            y_nome,
-            cx + int(w * 0.040),
-            y_nome + int(h * 0.035),
-            fonte_nome_conq,
-            cor_nome
+            cx - 60, y_nome, cx + 60, y_nome + 30,
+            fonte_small,
+            cor
         )
 
     buffer = io.BytesIO()
