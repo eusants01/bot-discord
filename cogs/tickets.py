@@ -7,14 +7,14 @@ import asyncio
 from cogs.conquistas import liberar_conquista
 
 # ================================
-# CONFIGURAÇÕES
+# CONFIG
 # ================================
 CATEGORIA_TICKETS_ID = 1495288098010169574
 CARGO_STAFF_ID = 1487560221202321600
 CANAL_LOG_ID = 1495272331558391818
 
 # ================================
-# 📄 TRANSCRIÇÃO
+# TRANSCRIÇÃO
 # ================================
 async def gerar_transcricao(channel):
     mensagens = []
@@ -37,7 +37,7 @@ async def gerar_transcricao(channel):
     return discord.File(arquivo, filename=f"{channel.name}.txt")
 
 # =========================
-# DOWNLOAD
+# BOTÃO DOWNLOAD
 # =========================
 class BotaoDownload(discord.ui.View):
     def __init__(self, url):
@@ -67,13 +67,17 @@ class ConfirmarFechamento(discord.ui.View):
                 description=(
                     f"👤 **Responsável:** {interaction.user.mention}\n"
                     f"📁 **Canal:** `{interaction.channel.name}`\n"
+                    f"🕒 **Data:** <t:{int(interaction.created_at.timestamp())}:f>"
                 ),
                 color=discord.Color.dark_blue()
             )
 
-            arquivo = await gerar_transcricao(interaction.channel)
-            msg = await log.send(file=arquivo)
+            embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
+            embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
 
+            arquivo = await gerar_transcricao(interaction.channel)
+
+            msg = await log.send(file=arquivo)
             link = msg.attachments[0].url
 
             await msg.edit(
@@ -82,17 +86,20 @@ class ConfirmarFechamento(discord.ui.View):
             )
 
         await interaction.response.send_message(
-            "🔒 Encerrando domínio...",
+            "🔒 Iniciando encerramento do domínio...",
             ephemeral=True
         )
 
         await asyncio.sleep(2)
+        await interaction.followup.send("💀 Domínio encerrado.")
+
+        await asyncio.sleep(1)
         await interaction.channel.delete()
 
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.gray, emoji="🛑")
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
-            "Cancelado.",
+            "🛑 Cancelado.",
             ephemeral=True
         )
 
@@ -110,7 +117,7 @@ class FecharTicketView(discord.ui.View):
 
         if interaction.user.guild_permissions.administrator:
             await interaction.followup.send(
-                "Confirmar fechamento?",
+                "Tem certeza que deseja encerrar este domínio?",
                 view=ConfirmarFechamento(),
                 ephemeral=True
             )
@@ -123,31 +130,31 @@ class FecharTicketView(discord.ui.View):
 
         if not any(role.id in cargos_permitidos for role in interaction.user.roles):
             await interaction.followup.send(
-                "❌ Sem permissão.",
+                "❌ Você não tem permissão.",
                 ephemeral=True
             )
             return
 
         await interaction.followup.send(
-            "Confirmar fechamento?",
+            "Tem certeza que deseja encerrar este domínio?",
             view=ConfirmarFechamento(),
             ephemeral=True
         )
 
 # =========================
-# SELECT
+# SELECT MENU
 # =========================
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Dúvidas", value="duvida"),
-            discord.SelectOption(label="Denúncia", value="denuncia"),
-            discord.SelectOption(label="Compra", value="comprar_vaga"),
-            discord.SelectOption(label="Cargo", value="cargo_exclusivo")
+            discord.SelectOption(label="❓ Domínio de Dúvidas", value="duvida"),
+            discord.SelectOption(label="🚨 Relatório de Maldição", value="denuncia"),
+            discord.SelectOption(label="💰 Ritual de Acesso", value="comprar_vaga"),
+            discord.SelectOption(label="📜 Protocolo Especial", value="cargo_exclusivo")
         ]
 
         super().__init__(
-            placeholder="Escolha...",
+            placeholder="Selecione uma opção...",
             options=options
         )
 
@@ -164,7 +171,7 @@ class TicketSelect(discord.ui.Select):
 
         for ch in guild.text_channels:
             if ch.topic and str(user.id) in ch.topic:
-                return await interaction.followup.send(f"Você já tem: {ch.mention}", ephemeral=True)
+                return await interaction.followup.send(f"❌ Você já possui um ticket: {ch.mention}", ephemeral=True)
 
         nome = f"ticket-{user.name}".lower()
 
@@ -182,9 +189,11 @@ class TicketSelect(discord.ui.Select):
         )
 
         embed = discord.Embed(
-            description=f"{user.mention} seu ticket foi criado.",
-            color=discord.Color.purple()
+            description=f"👁️ {user.mention}, você entrou em um domínio.\n\n<@&{CARGO_STAFF_ID}>",
+            color=discord.Color.from_rgb(80, 0, 120)
         )
+
+        embed.set_footer(text="Finalize o ritual quando terminar.")
 
         await canal.send(
             content=user.mention,
@@ -201,7 +210,7 @@ class TicketSelect(discord.ui.Select):
         )
 
         await interaction.followup.send(
-            f"Ticket criado: {canal.mention}",
+            f"✅ Ticket criado: {canal.mention}",
             ephemeral=True
         )
 
@@ -220,13 +229,17 @@ class TicketCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="ticket", description="Enviar painel")
+    @app_commands.command(name="ticket", description="Enviar painel de ticket")
+    @app_commands.checks.has_permissions(administrator=True)
     async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="🎫 Tickets",
-            description="Abra um ticket abaixo",
-            color=discord.Color.purple()
+            title="Escola Jujutsu Atendimentos",
+            description="Canalize sua energia amaldiçoada e escolha seu destino...\n\n",
+            color=discord.Color.from_rgb(60, 0, 100)
         )
+
+        embed.set_image(url="https://i.imgur.com/s3Qvs9x.png")
+        embed.set_footer(text="Painel oficial da escola de feiticeiros.")
 
         await interaction.channel.send(
             embed=embed,
@@ -234,7 +247,7 @@ class TicketCog(commands.Cog):
         )
 
         await interaction.response.send_message(
-            "Painel enviado.",
+            "✅ Painel enviado com sucesso.",
             ephemeral=True
         )
 
