@@ -1,209 +1,217 @@
 import discord
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 import json
 import os
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import io
+from datetime import datetime
 
-DB_FILE = "dados_conquistas.json"
-BANNER_BASE = "assets/banner_base_conquistas.png"
-PASTA_ICONES = "assets/conquistas"
-LOCK_ICON = "assets/lock.png"
-
-STAFF_ROLE_IDS = [
-    1480349452744265759
-]
+ARQUIVO_DADOS = "dados_conquistas.json"
+COR_JUJUTSU = 0x7B2CFF
 
 CONQUISTAS = {
-    1: "Desperto",
-    2: "Sensitivo",
-    3: "Iniciado",
-    4: "Aprendiz Amaldiçoado",
-    5: "Combatente",
-    6: "Executor de Maldições",
-    7: "Manipulador de Energia",
-    8: "Usuário de Técnica",
-    9: "Feiticeiro Grau 2",
-    10: "Feiticeiro Grau 1",
-    11: "Grau Especial",
-    12: "Portador de Domínio",
-    13: "Expansão de Domínio"
+    "primeiro_selo": {
+        "emoji": "🩸",
+        "nome": "Primeiro Selo",
+        "descricao": "Despertou sua primeira marca dentro do domínio."
+    },
+    "contrato_aberto": {
+        "emoji": "📜",
+        "nome": "Contrato Aberto",
+        "descricao": "Abriu seu primeiro ticket amaldiçoado."
+    },
+    "exorcista_vitorioso": {
+        "emoji": "⚔️",
+        "nome": "Exorcista Vitorioso",
+        "descricao": "Venceu um evento da Família Sant’s."
+    },
+    "sombra_oculta": {
+        "emoji": "🔒",
+        "nome": "???",
+        "descricao": "Apenas os escolhidos descobrirão."
+    },
+    "dominio_revelado": {
+        "emoji": "🌀",
+        "nome": "Domínio Revelado",
+        "descricao": "Visualizou suas conquistas pela primeira vez."
+    }
 }
 
 
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return {}
-    with open(DB_FILE, "r", encoding="utf-8") as f:
+def carregar_dados():
+    if not os.path.exists(ARQUIVO_DADOS):
+        with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
+            json.dump({}, f, indent=4, ensure_ascii=False)
+
+    with open(ARQUIVO_DADOS, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_db(data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+def salvar_dados(dados):
+    with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=4, ensure_ascii=False)
 
 
-def is_staff(member: discord.Member):
-    return any(role.id in STAFF_ROLE_IDS for role in member.roles)
+def liberar_conquista_usuario(user_id: int, conquista_id: str):
+    if conquista_id not in CONQUISTAS:
+        return False
+
+    dados = carregar_dados()
+    user_id = str(user_id)
+
+    if user_id not in dados:
+        dados[user_id] = {}
+
+    if conquista_id in dados[user_id]:
+        return False
+
+    dados[user_id][conquista_id] = datetime.now().strftime("%d/%m/%Y %H:%M")
+    salvar_dados(dados)
+    return True
 
 
-def get_font(bold=False, tamanho=30):
-    fontes = [
-        "C:/Windows/Fonts/arialbd.ttf" if bold else "C:/Windows/Fonts/arial.ttf",
-        "arialbd.ttf" if bold else "arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ]
+class ViewConquistas(discord.ui.View):
+    def __init__(self, usuario: discord.User, paginas):
+        super().__init__(timeout=60)
+        self.usuario = usuario
+        self.paginas = paginas
+        self.pagina = 0
 
-    for fonte in fontes:
-        try:
-            return ImageFont.truetype(fonte, tamanho)
-        except Exception:
-            pass
-
-    return ImageFont.load_default()
-
-
-def centralizar_texto(draw, texto, x1, y1, x2, y2, fonte, fill):
-    bbox = draw.textbbox((0, 0), texto, font=fonte)
-    w = bbox[2] - bbox[0]
-    h = bbox[3] - bbox[1]
-    x = x1 + ((x2 - x1) - w) // 2
-    y = y1 + ((y2 - y1) - h) // 2
-    draw.text((x, y), texto, font=fonte, fill=fill)
-
-
-async def criar_banner(membro, conquistas_user):
-    base = Image.open(BANNER_BASE).convert("RGBA")
-    draw = ImageDraw.Draw(base)
-
-    fonte_nome = get_font(True, 60)
-    fonte_id = get_font(False, 28)
-    fonte_small = get_font(True, 20)
-
-    nome = membro.display_name[:18]
-
-    # TEXTO (AGORA DENTRO DA FUNÇÃO)
-    draw.text((880, 385), "FEITICEIRO:", font=fonte_id, fill=(230, 230, 235))
-    draw.text((1040, 365), nome, font=fonte_nome, fill=(210, 90, 255))
-    draw.text((940, 430), f"ID: {membro.id}", font=fonte_id, fill=(220, 220, 225))
-
-    # ÍCONES
-    centros_x = [620, 700, 780, 860, 940, 1020, 1100, 1180, 1260, 1340, 1420, 1500, 1580]
-    y_icon = 620
-    y_nome = 735
-
-    for i, cx in enumerate(centros_x, start=1):
-        desbloqueada = i in conquistas_user
-
-        if desbloqueada:
-            icon_path = f"{PASTA_ICONES}/{i}.png"
-
-            glow = Image.new("RGBA", base.size, (0, 0, 0, 0))
-            gd = ImageDraw.Draw(glow)
-            gd.ellipse((cx - 60, y_icon - 10, cx + 60, y_icon + 110), fill=(170, 45, 255, 60))
-            glow = glow.filter(ImageFilter.GaussianBlur(10))
-            base.alpha_composite(glow)
-
-            nome_conq = CONQUISTAS[i].split()[0].upper()
-            cor = (210, 120, 255)
-        else:
-            icon_path = LOCK_ICON
-            nome_conq = "???"
-            cor = (170, 75, 210)
-
-        try:
-            icon = Image.open(icon_path).convert("RGBA")
-            icon = icon.resize((90, 90), Image.LANCZOS)
-            base.paste(icon, (cx - 45, y_icon), icon)
-        except Exception as e:
-            print(f"Erro ao carregar ícone {i}: {e}")
-
-        centralizar_texto(
-            draw,
-            nome_conq,
-            cx - 60, y_nome, cx + 60, y_nome + 30,
-            fonte_small,
-            cor
+    async def atualizar(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(
+            embed=self.paginas[self.pagina],
+            view=self
         )
 
-    buffer = io.BytesIO()
-    base.save(buffer, format="PNG")
-    buffer.seek(0)
-    return buffer
+    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.secondary)
+    async def anterior(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.usuario.id:
+            return await interaction.response.send_message(
+                "Esse painel não é seu.",
+                ephemeral=True
+            )
+
+        if self.pagina > 0:
+            self.pagina -= 1
+
+        await self.atualizar(interaction)
+
+    @discord.ui.button(label="➡️", style=discord.ButtonStyle.secondary)
+    async def proxima(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.usuario.id:
+            return await interaction.response.send_message(
+                "Esse painel não é seu.",
+                ephemeral=True
+            )
+
+        if self.pagina < len(self.paginas) - 1:
+            self.pagina += 1
+
+        await self.atualizar(interaction)
 
 
 class Conquistas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="addconquista", description="Adicionar conquista")
-    async def addconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: int):
-        if not is_staff(interaction.user):
-            await interaction.response.send_message("❌ Apenas staff pode usar.", ephemeral=True)
-            return
+    @app_commands.command(
+        name="conquistas",
+        description="Veja suas conquistas dentro do domínio."
+    )
+    async def conquistas(self, interaction: discord.Interaction):
+        liberar_conquista_usuario(interaction.user.id, "dominio_revelado")
 
-        if conquista_id not in CONQUISTAS:
-            await interaction.response.send_message("❌ ID inválido. Use de 1 a 13.", ephemeral=True)
-            return
+        dados = carregar_dados()
+        user_data = dados.get(str(interaction.user.id), {})
 
-        db = load_db()
-        user_id = str(membro.id)
-        db.setdefault(user_id, [])
+        total = len(CONQUISTAS)
+        conquistadas = len(user_data)
 
-        if conquista_id not in db[user_id]:
-            db[user_id].append(conquista_id)
-            db[user_id].sort()
-            save_db(db)
+        lista = []
 
-            await interaction.response.send_message(
-                f"✅ {membro.mention} recebeu **{CONQUISTAS[conquista_id]}**"
-            )
-        else:
-            await interaction.response.send_message(
-                "⚠️ Esse membro já possui essa conquista.",
-                ephemeral=True
-            )
+        for conquista_id, conquista in CONQUISTAS.items():
+            desbloqueada = conquista_id in user_data
 
-    @app_commands.command(name="removerconquista", description="Remover conquista")
-    async def removerconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: int):
-        if not is_staff(interaction.user):
-            await interaction.response.send_message("❌ Apenas staff pode usar.", ephemeral=True)
-            return
+            if desbloqueada:
+                texto = (
+                    f"{conquista['emoji']} **{conquista['nome']}**\n"
+                    f"{conquista['descricao']}\n"
+                    f"**Conquistado em:** {user_data[conquista_id]}"
+                )
+            else:
+                texto = (
+                    f"🔒 **Conquista Bloqueada**\n"
+                    f"Continue explorando o domínio para revelar."
+                )
 
-        db = load_db()
-        user_id = str(membro.id)
+            lista.append(texto)
 
-        if user_id in db and conquista_id in db[user_id]:
-            db[user_id].remove(conquista_id)
-            save_db(db)
+        paginas = []
+        por_pagina = 4
 
-            await interaction.response.send_message(
-                f"❌ {CONQUISTAS.get(conquista_id, 'Conquista')} removida de {membro.mention}"
-            )
-        else:
-            await interaction.response.send_message(
-                "⚠️ Esse membro não possui essa conquista.",
-                ephemeral=True
+        for i in range(0, len(lista), por_pagina):
+            embed = discord.Embed(
+                title=f"🌀 Todas as Conquistas [{conquistadas}/{total}]",
+                description="\n\n".join(lista[i:i + por_pagina]),
+                color=COR_JUJUTSU
             )
 
-    @app_commands.command(name="conquistas", description="Ver banner de conquistas")
-    async def conquistas(self, interaction: discord.Interaction, membro: discord.Member = None):
-        await interaction.response.defer()
+            embed.set_author(
+                name=f"Domínio de {interaction.user.display_name}",
+                icon_url=interaction.user.display_avatar.url
+            )
 
-        membro = membro or interaction.user
+            embed.set_footer(
+                text=f"Página {(i // por_pagina) + 1}/{(len(lista) - 1) // por_pagina + 1} • Família Sant’s"
+            )
 
-        db = load_db()
-        conquistas_user = db.get(str(membro.id), [])
+            paginas.append(embed)
 
-        banner = await criar_banner(membro, conquistas_user)
+        view = ViewConquistas(interaction.user, paginas)
 
-        file = discord.File(
-            banner,
-            filename=f"conquistas_{membro.id}.png"
+        await interaction.response.send_message(
+            embed=paginas[0],
+            view=view
         )
 
-        await interaction.followup.send(file=file)
+    @app_commands.command(
+        name="darconquista",
+        description="Dar uma conquista para um membro."
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def darconquista(
+        self,
+        interaction: discord.Interaction,
+        membro: discord.Member,
+        conquista_id: str
+    ):
+        if conquista_id not in CONQUISTAS:
+            ids = "\n".join(CONQUISTAS.keys())
+            return await interaction.response.send_message(
+                f"Conquista não encontrada.\n\nIDs disponíveis:\n```{ids}```",
+                ephemeral=True
+            )
+
+        ganhou = liberar_conquista_usuario(membro.id, conquista_id)
+
+        if not ganhou:
+            return await interaction.response.send_message(
+                f"{membro.mention} já possui essa conquista.",
+                ephemeral=True
+            )
+
+        conquista = CONQUISTAS[conquista_id]
+
+        embed = discord.Embed(
+            title="🏆 Nova Conquista Desbloqueada",
+            description=(
+                f"{membro.mention} despertou uma nova conquista!\n\n"
+                f"{conquista['emoji']} **{conquista['nome']}**\n"
+                f"{conquista['descricao']}"
+            ),
+            color=COR_JUJUTSU
+        )
+
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):
