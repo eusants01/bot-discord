@@ -1,48 +1,54 @@
 import discord
 from discord.ext import commands
 
-COR_ROXA_JUJUTSU = 0x7B2CFF
+COR_ROXA_JUJUTSU = 0x6A00FF
 
 PARCEIROS = [
     {
         "nome": "Família Celeste",
-        "descricao": "Uma aliança elevada, protegida pelas nuvens do domínio.",
+        "descricao": "Entidade que observa o domínio dos céus, acima das maldições.",
         "emoji": "🌥️",
         "link": "https://discord.gg/TsUKsMgsz"
     },
     {
         "nome": "Instruções Delta",
-        "descricao": "Um pacto estratégico selado por energia amaldiçoada.",
+        "descricao": "Ordem estratégica baseada em selos e controle absoluto.",
         "emoji": "📜",
-        "link": "https://discord.gg/4yaUuGCuG"
+        "link": "https://discord.gg/W5mQvup4T"
     },
     {
         "nome": "Base de Eventos Delta",
-        "descricao": "Território onde desafios e rituais são iniciados.",
+        "descricao": "Campo onde rituais e confrontos são executados.",
         "emoji": "🏯",
-        "link": "https://discord.gg/4yaUuGCuG"
+        "link": "https://discord.gg/ua2mZzBzA5"
+    },
+    {
+        "nome": "BIDEX",
+        "descricao": "Zona instável onde apenas os mais fortes resistem.",
+        "emoji": "🔥",
+        "link": "https://discord.gg/HGvEQ8mn7b"
     },
     {
         "nome": "Konoha Network",
-        "descricao": "Uma vila aliada conectada por antigos selos.",
+        "descricao": "Uma vila conectada por contratos antigos e energia espiritual.",
         "emoji": "🍃",
-        "link": "https://discord.gg/4yaUuGCuG"
+        "link": "https://discord.gg/RYsFkXqCS"
     },
     {
         "nome": "Time Anti Praças",
-        "descricao": "Guerreiros marcados por um juramento sombrio.",
+        "descricao": "Combatentes ligados por um juramento sombrio.",
         "emoji": "⚔️",
         "link": "https://discord.gg/4yaUuGCuG"
     },
     {
         "nome": "Família Shelby",
-        "descricao": "Aliados envoltos por sombras e lealdade.",
+        "descricao": "Aliança envolta em estratégia e sombras.",
         "emoji": "🐦‍⬛",
         "link": "https://discord.gg/5kd5mpyt"
     },
     {
         "nome": "Polícia Militar",
-        "descricao": "A ordem que vigia os limites deste território.",
+        "descricao": "Força que mantém a ordem dentro do território.",
         "emoji": "🚓",
         "link": "https://discord.gg/8HzSqvJju"
     }
@@ -61,11 +67,11 @@ class SelectParceiros(discord.ui.Select):
         ]
 
         super().__init__(
-            placeholder="⛩️ Escolha uma aliança selada no domínio...",
+            placeholder="🌀 Escolha um pacto dentro da Expansão de Domínio...",
             min_values=1,
             max_values=1,
             options=options,
-            custom_id="select_parceiros_jujutsu"
+            custom_id="jujutsu_parceiros_select"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -75,14 +81,24 @@ class SelectParceiros(discord.ui.Select):
         embed = discord.Embed(
             title=f"{parceiro['emoji']} {parceiro['nome']}",
             description=(
-                "☯️ **ALIANÇA INVOCADA COM SUCESSO**\n\n"
-                "Uma conexão foi aberta dentro do domínio da **Família Sant's**.\n\n"
-                f"📖 **Registro da Aliança:**\n"
-                f"{parceiro['descricao']}\n\n"
-                f"🔗 **Portal Amaldiçoado:**\n"
-                f"{parceiro['link']}"
+                "🔮 **PACTO ESTABELECIDO**\n\n"
+                "A energia amaldiçoada respondeu ao seu chamado...\n\n"
+                f"📖 **Registro Espiritual:**\n{parceiro['descricao']}\n\n"
+                f"🌀 **Abrir Portal:**\n{parceiro['link']}"
             ),
             color=COR_ROXA_JUJUTSU
+        )
+
+        embed.add_field(
+            name="⚡ Classe de Energia",
+            value="Classe Especial",
+            inline=True
+        )
+
+        embed.add_field(
+            name="☠️ Nível de Ameaça",
+            value="Alto",
+            inline=True
         )
 
         embed.set_footer(text="領域展開 • Família Sant's")
@@ -107,15 +123,21 @@ class Parceiros(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def painel_parceiros(self, ctx):
         embed = discord.Embed(
-            title="⛩️ 領域展開 — DOMÍNIO DOS PARCEIROS",
+            title="🌀 領域展開 — EXPANSÃO DE DOMÍNIO",
             description=(
-                "A barreira foi erguida.\n"
-                "Dentro deste território, apenas alianças reconhecidas pela "
-                "**Família Sant's** podem ser invocadas.\n\n"
-                "☯️ **Selecione abaixo um pacto oficial** e abra o portal "
-                "para o servidor aliado."
+                "**O domínio foi ativado.**\n\n"
+                "A realidade foi distorcida...\n"
+                "Apenas alianças reconhecidas podem ser acessadas.\n\n"
+                "🔮 Cada escolha abrirá um portal.\n"
+                "⚠️ Nem todos retornam do outro lado."
             ),
             color=COR_ROXA_JUJUTSU
+        )
+
+        embed.add_field(
+            name="☯️ Sistema de Pactos",
+            value="Selecione abaixo e invoque uma aliança ativa.",
+            inline=False
         )
 
         embed.set_image(url="https://i.imgur.com/aINwFAT.png")
@@ -125,7 +147,7 @@ class Parceiros(commands.Cog):
 
         try:
             await ctx.message.delete()
-        except discord.Forbidden:
+        except:
             pass
 
 
