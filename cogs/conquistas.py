@@ -7,23 +7,83 @@ from datetime import datetime
 
 ARQUIVO_DADOS = "dados_conquistas.json"
 ARQUIVO_MSG = "contador_msgs.json"
+
 COR_JUJUTSU = 0x7B2CFF
 
+# 🔥 COLOQUE AQUI O ID DO CANAL DE CONQUISTAS
+CANAL_CONQUISTAS_ID = 1498134533839650838
+
 CONQUISTAS = {
-    "primeiro_selo": {"emoji": "🩸", "nome": "Primeiro Selo", "descricao": "Despertou sua primeira marca dentro do domínio."},
-    "dominio_revelado": {"emoji": "🌀", "nome": "Domínio Revelado", "descricao": "Visualizou suas conquistas pela primeira vez."},
-    "contrato_aberto": {"emoji": "📜", "nome": "Contrato Aberto", "descricao": "Abriu seu primeiro ticket amaldiçoado."},
-    "voz_do_dominio": {"emoji": "📢", "nome": "Voz do Domínio", "descricao": "Enviou 50 mensagens dentro da Família."},
-    "presenca_constante": {"emoji": "👁️", "nome": "Presença Constante", "descricao": "Enviou 100 mensagens dentro do domínio."},
-    "exorcista_vitorioso": {"emoji": "⚔️", "nome": "Exorcista Vitorioso", "descricao": "Venceu um evento da Família Sant’s."},
-    "sangue_familia": {"emoji": "🩸", "nome": "Sangue da Família", "descricao": "Entrou na Família Sant’s."},
-    "alianca_amaldicoada": {"emoji": "🤝", "nome": "Aliança Amaldiçoada", "descricao": "Criou laços dentro do domínio."},
-    "observador_silencioso": {"emoji": "👁️", "nome": "Observador Silencioso", "descricao": "Acompanhou o domínio sem se expor."},
-    "energia_instavel": {"emoji": "🔥", "nome": "Energia Instável", "descricao": "Enviou 200 mensagens no servidor."},
-    "portador_do_caos": {"emoji": "💀", "nome": "Portador do Caos", "descricao": "Causou impacto dentro do domínio."},
-    "herdeiro_do_dominio": {"emoji": "👑", "nome": "Herdeiro do Domínio", "descricao": "Alcançou reconhecimento na Família."},
-    "sombra_oculta": {"emoji": "🔒", "nome": "???", "descricao": "Apenas os escolhidos descobrirão."},
-    "lenda_proibida": {"emoji": "🕯️", "nome": "???", "descricao": "Uma presença que não deveria existir..."}
+    "primeiro_selo": {
+        "emoji": "🩸",
+        "nome": "Primeiro Selo",
+        "descricao": "Despertou sua primeira marca dentro do domínio."
+    },
+    "dominio_revelado": {
+        "emoji": "🌀",
+        "nome": "Domínio Revelado",
+        "descricao": "Visualizou suas conquistas pela primeira vez."
+    },
+    "contrato_aberto": {
+        "emoji": "📜",
+        "nome": "Contrato Aberto",
+        "descricao": "Abriu seu primeiro ticket amaldiçoado."
+    },
+    "voz_do_dominio": {
+        "emoji": "📢",
+        "nome": "Voz do Domínio",
+        "descricao": "Enviou 50 mensagens dentro da Família."
+    },
+    "presenca_constante": {
+        "emoji": "👁️",
+        "nome": "Presença Constante",
+        "descricao": "Enviou 100 mensagens dentro do domínio."
+    },
+    "exorcista_vitorioso": {
+        "emoji": "⚔️",
+        "nome": "Exorcista Vitorioso",
+        "descricao": "Venceu um evento da Família Sant’s."
+    },
+    "sangue_familia": {
+        "emoji": "🩸",
+        "nome": "Sangue da Família",
+        "descricao": "Entrou na Família Sant’s."
+    },
+    "alianca_amaldicoada": {
+        "emoji": "🤝",
+        "nome": "Aliança Amaldiçoada",
+        "descricao": "Criou laços dentro do domínio."
+    },
+    "observador_silencioso": {
+        "emoji": "👁️",
+        "nome": "Observador Silencioso",
+        "descricao": "Acompanhou o domínio sem se expor."
+    },
+    "energia_instavel": {
+        "emoji": "🔥",
+        "nome": "Energia Instável",
+        "descricao": "Enviou 200 mensagens no servidor."
+    },
+    "portador_do_caos": {
+        "emoji": "💀",
+        "nome": "Portador do Caos",
+        "descricao": "Causou impacto dentro do domínio."
+    },
+    "herdeiro_do_dominio": {
+        "emoji": "👑",
+        "nome": "Herdeiro do Domínio",
+        "descricao": "Alcançou reconhecimento na Família."
+    },
+    "sombra_oculta": {
+        "emoji": "🔒",
+        "nome": "???",
+        "descricao": "Apenas os escolhidos descobrirão."
+    },
+    "lenda_proibida": {
+        "emoji": "🕯️",
+        "nome": "???",
+        "descricao": "Uma presença que não deveria existir..."
+    }
 }
 
 
@@ -75,7 +135,9 @@ async def liberar_conquista(bot, usuario, conquista_id, canal=None):
 
     conquista = CONQUISTAS[conquista_id]
 
-    if canal:
+    canal_conquistas = bot.get_channel(CANAL_CONQUISTAS_ID)
+
+    if canal_conquistas:
         embed = discord.Embed(
             title="🏆 Nova Conquista Desbloqueada",
             description=(
@@ -85,7 +147,11 @@ async def liberar_conquista(bot, usuario, conquista_id, canal=None):
             ),
             color=COR_JUJUTSU
         )
-        await canal.send(embed=embed)
+
+        embed.set_thumbnail(url=usuario.display_avatar.url)
+        embed.set_footer(text="Família Sant’s • Sistema de Conquistas")
+
+        await canal_conquistas.send(embed=embed)
 
     return True
 
@@ -106,7 +172,10 @@ class ViewConquistas(discord.ui.View):
     @discord.ui.button(label="⬅️", style=discord.ButtonStyle.secondary)
     async def anterior(self, interaction, button):
         if interaction.user.id != self.usuario.id:
-            return await interaction.response.send_message("Esse painel não é seu.", ephemeral=True)
+            return await interaction.response.send_message(
+                "Esse painel não é seu.",
+                ephemeral=True
+            )
 
         if self.pagina > 0:
             self.pagina -= 1
@@ -116,7 +185,10 @@ class ViewConquistas(discord.ui.View):
     @discord.ui.button(label="➡️", style=discord.ButtonStyle.secondary)
     async def proxima(self, interaction, button):
         if interaction.user.id != self.usuario.id:
-            return await interaction.response.send_message("Esse painel não é seu.", ephemeral=True)
+            return await interaction.response.send_message(
+                "Esse painel não é seu.",
+                ephemeral=True
+            )
 
         if self.pagina < len(self.paginas) - 1:
             self.pagina += 1
@@ -145,29 +217,29 @@ class Conquistas(commands.Cog):
         total = dados_msg[user_id]
 
         if total == 1:
-            await liberar_conquista(self.bot, message.author, "primeiro_selo", message.channel)
+            await liberar_conquista(self.bot, message.author, "primeiro_selo")
 
         elif total == 50:
-            await liberar_conquista(self.bot, message.author, "voz_do_dominio", message.channel)
+            await liberar_conquista(self.bot, message.author, "voz_do_dominio")
 
         elif total == 100:
-            await liberar_conquista(self.bot, message.author, "presenca_constante", message.channel)
+            await liberar_conquista(self.bot, message.author, "presenca_constante")
 
         elif total == 200:
-            await liberar_conquista(self.bot, message.author, "energia_instavel", message.channel)
+            await liberar_conquista(self.bot, message.author, "energia_instavel")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        canal = member.guild.system_channel
-
         await liberar_conquista(
             self.bot,
             member,
-            "sangue_familia",
-            canal
+            "sangue_familia"
         )
 
-    @app_commands.command(name="conquistas", description="Veja suas conquistas dentro do domínio.")
+    @app_commands.command(
+        name="conquistas",
+        description="Veja suas conquistas dentro do domínio."
+    )
     async def conquistas(self, interaction: discord.Interaction):
         await liberar_conquista(self.bot, interaction.user, "dominio_revelado")
 
@@ -217,12 +289,21 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message(
             embed=paginas[0],
-            view=ViewConquistas(interaction.user, paginas)
+            view=ViewConquistas(interaction.user, paginas),
+            ephemeral=True
         )
 
-    @app_commands.command(name="darconquista", description="Dar uma conquista para um membro.")
+    @app_commands.command(
+        name="darconquista",
+        description="Dar uma conquista para um membro."
+    )
     @app_commands.checks.has_permissions(administrator=True)
-    async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
+    async def darconquista(
+        self,
+        interaction: discord.Interaction,
+        membro: discord.Member,
+        conquista_id: str
+    ):
         if conquista_id not in CONQUISTAS:
             ids = "\n".join(CONQUISTAS.keys())
             return await interaction.response.send_message(
@@ -230,7 +311,11 @@ class Conquistas(commands.Cog):
                 ephemeral=True
             )
 
-        ganhou = await liberar_conquista(self.bot, membro, conquista_id, interaction.channel)
+        ganhou = await liberar_conquista(
+            self.bot,
+            membro,
+            conquista_id
+        )
 
         if not ganhou:
             return await interaction.response.send_message(
@@ -243,7 +328,10 @@ class Conquistas(commands.Cog):
             ephemeral=True
         )
 
-    @app_commands.command(name="codigo", description="Resgate um código secreto amaldiçoado.")
+    @app_commands.command(
+        name="codigo",
+        description="Resgate um código secreto amaldiçoado."
+    )
     async def codigo(self, interaction: discord.Interaction, codigo: str):
         codigos_secretos = {
             "MAHORAGA": "sombra_oculta",
@@ -263,8 +351,7 @@ class Conquistas(commands.Cog):
         ganhou = await liberar_conquista(
             self.bot,
             interaction.user,
-            conquista_id,
-            interaction.channel
+            conquista_id
         )
 
         if not ganhou:
