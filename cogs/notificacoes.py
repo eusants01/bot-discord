@@ -3,7 +3,6 @@ from discord.ext import commands
 
 COR_ROXA_JUJUTSU = 0x6A00FF
 
-# 🔴 IDS DOS CARGOS
 CARGOS_NOTIFICACAO = {
     "🩸 Sorteios Amaldiçoados": 1481027666722164807,
     "📰 Jornal Jujutsu": 1493477718950674492,
@@ -14,18 +13,29 @@ CARGOS_NOTIFICACAO = {
 }
 
 
-# 🔘 BOTÃO
-class BotaoCargo(discord.ui.Button):
-    def __init__(self, nome_cargo, cargo_id):
+class SelectCargosJujutsu(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label=nome,
+                description="Ativar ou remover este selo.",
+                emoji=nome.split(" ")[0]
+            )
+            for nome in CARGOS_NOTIFICACAO
+        ]
+
         super().__init__(
-            label=nome_cargo,
-            style=discord.ButtonStyle.danger,  # 🔥 estilo Sukuna (vermelho)
-            custom_id=f"jujutsu_cargo_{cargo_id}"
+            placeholder="🌀 Selecione um selo amaldiçoado...",
+            min_values=1,
+            max_values=1,
+            options=options,
+            custom_id="select_cargos_jujutsu"
         )
-        self.cargo_id = cargo_id
 
     async def callback(self, interaction: discord.Interaction):
-        cargo = interaction.guild.get_role(self.cargo_id)
+        escolhido = self.values[0]
+        cargo_id = CARGOS_NOTIFICACAO[escolhido]
+        cargo = interaction.guild.get_role(cargo_id)
 
         if cargo is None:
             await interaction.response.send_message(
@@ -50,16 +60,12 @@ class BotaoCargo(discord.ui.Button):
             )
 
 
-# 🧿 VIEW
 class ViewCargosJujutsu(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-
-        for nome, cargo_id in CARGOS_NOTIFICACAO.items():
-            self.add_item(BotaoCargo(nome, cargo_id))
+        self.add_item(SelectCargosJujutsu())
 
 
-# 🏯 COG
 class NotificacoesJujutsu(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -73,17 +79,13 @@ class NotificacoesJujutsu(commands.Cog):
                 "**O domínio foi ativado.**\n\n"
                 "Escolha quais selos deseja carregar.\n\n"
                 "🔮 Cada selo libera um fluxo de energia amaldiçoada.\n"
-                "☠️ Clique novamente para remover.\n\n"
+                "☠️ Selecione novamente para remover.\n\n"
                 "⚠️ Alguns poderes cobram um preço..."
             ),
             color=COR_ROXA_JUJUTSU
         )
 
-        # 🔥 TROQUE ESSE LINK PELA SUA IMAGEM
-        embed.set_image(
-            url="https://i.imgur.com/GyCDbdH.png"
-        )
-
+        embed.set_image(url="https://i.imgur.com/GyCDbdH.png")
         embed.set_footer(text="Ryomen Sukuna • Família Sant's")
 
         await ctx.send(embed=embed, view=ViewCargosJujutsu())
