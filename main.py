@@ -5,6 +5,7 @@ from discord.ext import commands, tasks
 
 intents = discord.Intents.default()
 intents.guilds = True
+intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -21,21 +22,17 @@ status_list = [
 @tasks.loop(seconds=15)
 async def trocar_status():
     for status in status_list:
-        atividade = discord.Game(name=status)
         await bot.change_presence(
             status=discord.Status.online,
-            activity=atividade
+            activity=discord.Game(name=status)
         )
         await asyncio.sleep(15)
-
-
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
 
     GUILD_ID = 1480334256763961465
-
     guild = discord.Object(id=GUILD_ID)
 
     bot.tree.copy_global_to(guild=guild)
@@ -45,7 +42,6 @@ async def on_ready():
 
     if not trocar_status.is_running():
         trocar_status.start()
-
 
 async def main():
     async with bot:
@@ -60,6 +56,5 @@ async def main():
         print("Token encontrado:", bool(token))
 
         await bot.start(token)
-
 
 asyncio.run(main())
