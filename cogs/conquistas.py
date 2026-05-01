@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from utils.db import conn, cursor
 
@@ -12,21 +12,17 @@ CONQUISTAS = {
     "despertar": {"emoji": "🧿", "nome": "Despertar"},
     "eco_no_dominio": {"emoji": "📢", "nome": "Eco no Domínio"},
     "marca_inicial": {"emoji": "🩸", "nome": "Marca Inicial"},
-
     "tecnica_formada": {"emoji": "🌀", "nome": "Técnica Formada"},
     "quebra_barreira": {"emoji": "💥", "nome": "Quebra de Barreira"},
     "energia_densa": {"emoji": "🌑", "nome": "Energia Densa"},
-
     "expansao_dominio": {"emoji": "🌌", "nome": "Expansão de Domínio"},
     "olhos_do_infinito": {"emoji": "👁️", "nome": "Olhos do Infinito"},
     "ritual_perfeito": {"emoji": "🕯️", "nome": "Ritual Perfeito"},
-
     "voz_da_sombra": {"emoji": "🔒", "nome": "???"},
     "pacto_proibido": {"emoji": "🔒", "nome": "???"},
     "alma_transfigurada": {"emoji": "🧠", "nome": "???"},
     "mahito_transfigurado": {"emoji": "🧠", "nome": "Transfiguração da Alma"},
     "novo_membro_sant": {"emoji": "🏠", "nome": "Novo Membro Sant’s"},
-
     "herdeiro_do_caos": {"emoji": "🔥", "nome": "Herdeiro do Caos"},
     "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"},
     "membro_da_familia": {"emoji": "🏠", "nome": "Membro da Família"},
@@ -45,7 +41,7 @@ async def liberar_conquista(bot, usuario, conquista_id, gif_url=None):
     if cursor.fetchone():
         return False
 
-    data = datetime.now().strftime("%d/%m/%Y %H:%M")
+    data = datetime.now(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M")
 
     cursor.execute(
         "INSERT INTO conquistas VALUES (?, ?, ?)",
@@ -119,12 +115,12 @@ class Conquistas(commands.Cog):
             await liberar_conquista(self.bot, message.author, "energia_densa")
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member):
         await liberar_conquista(self.bot, member, "marca_inicial")
 
     @app_commands.command(name="darconquista")
     @app_commands.autocomplete(conquista_id=autocomplete_conquista)
-    async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
+    async def darconquista(self, interaction, membro: discord.Member, conquista_id: str):
         if conquista_id not in CONQUISTAS:
             return await interaction.response.send_message("Conquista inválida.", ephemeral=True)
 
@@ -138,70 +134,13 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
-    @app_commands.command(name="conquistas")
-    async def conquistas(self, interaction: discord.Interaction):
-        cursor.execute(
-            "SELECT conquista_id FROM conquistas WHERE user_id=?",
-            (str(interaction.user.id),)
-        )
-
-        dados = [cid for (cid,) in cursor.fetchall()]
-
-        lista = list(CONQUISTAS.items())
-        total = len(lista)
-        conquistadas = len(dados)
-
-        paginas = [lista[i:i+4] for i in range(0, total, 4)]
-        pagina_atual = 0
-
-        def criar_embed(pagina):
-            embed = discord.Embed(
-                title=f"🌀 Domínio de {interaction.user.display_name}",
-                description=f"🌀 **Todas as Conquistas [{conquistadas}/{total}]**",
-                color=COR_JUJUTSU
-            )
-
-            for cid, c in paginas[pagina]:
-                if cid in dados:
-                    embed.add_field(
-                        name=f"{c['emoji']} {c['nome']}",
-                        value="Conquista desbloqueada.",
-                        inline=False
-                    )
-                else:
-                    embed.add_field(
-                        name="🔒 Conquista Bloqueada",
-                        value="Continue explorando o domínio para revelar.",
-                        inline=False
-                    )
-
-            embed.set_footer(text=f"Página {pagina+1}/{len(paginas)} • Família Sant’s")
-            return embed
-
-        class View(discord.ui.View):
-            @discord.ui.button(label="⬅️")
-            async def voltar(self, i, b):
-                nonlocal pagina_atual
-                if pagina_atual > 0:
-                    pagina_atual -= 1
-                await i.response.edit_message(embed=criar_embed(pagina_atual), view=self)
-
-            @discord.ui.button(label="➡️")
-            async def avancar(self, i, b):
-                nonlocal pagina_atual
-                if pagina_atual < len(paginas) - 1:
-                    pagina_atual += 1
-                await i.response.edit_message(embed=criar_embed(pagina_atual), view=self)
-
-        await interaction.response.send_message(embed=criar_embed(0), view=View(), ephemeral=True)
-
     @app_commands.command(name="codigo")
     async def codigo(self, interaction: discord.Interaction, codigo: str):
         codigos = {
             "MAHORAGA": {
                 "c": "voz_da_sombra",
                 "limite": 1,
-                "gif": "https://media1.tenor.com/m/xxTiQVYbcAAAAAAd/jujutsu-kaisen-shibuya-arc-mahoraga-shibuya-arc.gif"
+                "gif": "https://media1.tenor.com/m/xxTiQVYbcAAAAAAd/jujutsu-kaisen-shibuya-arc-mahoraga.gif"
             },
             "SUKUNAHEIAN": {
                 "c": "rei_das_maldicoes",
@@ -235,27 +174,22 @@ class Conquistas(commands.Cog):
         usos = cursor.fetchone()[0]
 
         if usos >= codigos[codigo]["limite"]:
-            return await interaction.response.send_message("Esgotado.", ephemeral=True)
+            return await interaction.response.send_message("⛔ Código esgotado.", ephemeral=True)
 
         info = codigos[codigo]
 
-        ganhou = await liberar_conquista(
+        await liberar_conquista(
             self.bot,
             interaction.user,
             info["c"],
             gif_url=info["gif"]
         )
 
-        if not ganhou:
-            return await interaction.response.send_message("Você já possui essa conquista.", ephemeral=True)
-
         cursor.execute("INSERT INTO codigos VALUES (?, ?)", (codigo, user_id))
         conn.commit()
 
-        restantes = info["limite"] - (usos + 1)
-
         await interaction.response.send_message(
-            f"✅ Código aceito!\n🔢 Restantes: **{restantes}/{info['limite']}**",
+            "🔥 Código aceito. Você evoluiu dentro do domínio.",
             ephemeral=True
         )
 
