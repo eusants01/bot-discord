@@ -1,3 +1,46 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+from datetime import datetime
+
+from utils.db import conn, cursor
+
+COR_JUJUTSU = 0x7B2CFF
+
+# 🏆 CONQUISTAS
+CONQUISTAS = {
+    "voz_da_sombra": {"emoji": "🔒", "nome": "???"},
+    "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"}
+}
+
+# 🔓 LIBERAR CONQUISTA
+async def liberar_conquista(bot, usuario, conquista_id):
+
+    cursor.execute(
+        "SELECT 1 FROM conquistas WHERE user_id=? AND conquista_id=?",
+        (str(usuario.id), conquista_id)
+    )
+
+    if cursor.fetchone():
+        return False
+
+    cursor.execute(
+        "INSERT INTO conquistas VALUES (?, ?, ?)",
+        (str(usuario.id), conquista_id, datetime.now().strftime("%d/%m/%Y"))
+    )
+    conn.commit()
+
+    return True
+
+# 🔍 AUTOCOMPLETE
+async def autocomplete_conquista(interaction, current):
+    return [
+        app_commands.Choice(name=f"{c['nome']} ({cid})", value=cid)
+        for cid, c in CONQUISTAS.items()
+        if current.lower() in cid.lower()
+    ][:25]
+
+
 class Conquistas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -21,15 +64,15 @@ class Conquistas(commands.Cog):
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
     # 📜 VER CONQUISTAS
-    @app_commands.command(name="conquistas", description="Veja suas conquistas")
+    @app_commands.command(name="conquistas")
     async def conquistas(self, interaction: discord.Interaction):
 
         cursor.execute(
-            "SELECT conquista_id, data FROM conquistas WHERE user_id=?",
+            "SELECT conquista_id FROM conquistas WHERE user_id=?",
             (str(interaction.user.id),)
         )
 
-        dados = {cid: data for cid, data in cursor.fetchall()}
+        dados = [cid for (cid,) in cursor.fetchall()]
 
         texto = ""
         for cid, c in CONQUISTAS.items():
@@ -47,7 +90,7 @@ class Conquistas(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     # 🔑 CODIGO
-    @app_commands.command(name="codigo", description="Resgatar código")
+    @app_commands.command(name="codigo")
     async def codigo(self, interaction: discord.Interaction, codigo: str):
 
         codigos = {
@@ -78,3 +121,8 @@ class Conquistas(commands.Cog):
         conn.commit()
 
         await interaction.response.send_message("✅ Código aceito.", ephemeral=True)
+
+
+# 🔥 ESSENCIAL
+async def setup(bot):
+    await bot.add_cog(Conquistas(bot))
