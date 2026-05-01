@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
+import io
 
 from utils.db import conn, cursor
 
@@ -63,7 +65,7 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
-    # 📜 VER CONQUISTAS
+    # 🎴 PERFIL ANIME
     @app_commands.command(name="conquistas")
     async def conquistas(self, interaction: discord.Interaction):
 
@@ -74,20 +76,53 @@ class Conquistas(commands.Cog):
 
         dados = [cid for (cid,) in cursor.fetchall()]
 
-        texto = ""
-        for cid, c in CONQUISTAS.items():
-            if cid in dados:
-                texto += f"{c['emoji']} **{c['nome']}**\n"
-            else:
-                texto += "🔒 ???\n"
+        total = len(CONQUISTAS)
+        conquistadas = len(dados)
 
-        embed = discord.Embed(
-            title="🌀 Suas Conquistas",
-            description=texto,
-            color=COR_JUJUTSU
-        )
+        # 🎴 FUNDO
+        img = Image.open("assets/perfil_jujutsu.png").convert("RGBA")
+        draw = ImageDraw.Draw(img)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        fonte = ImageFont.load_default()
+
+        # 👤 Nome
+        draw.text((40, 40), interaction.user.name, fill=(255,255,255), font=fonte)
+
+        # 📊 progresso
+        porcentagem = int((conquistadas / total) * 100) if total > 0 else 0
+        draw.text((40, 80), f"{conquistadas}/{total} conquistas", fill=(255,255,255), font=fonte)
+
+        # barra
+        largura = 400
+        progresso = int((conquistadas / total) * largura) if total > 0 else 0
+
+        draw.rectangle((40, 120, 40+largura, 140), fill=(50,50,50))
+        draw.rectangle((40, 120, 40+progresso, 140), fill=(123,44,255))
+
+        # 👑 título
+        if porcentagem >= 80:
+            titulo = "👑 Rei das Maldições"
+        elif porcentagem >= 50:
+            titulo = "🔥 Feiticeiro Avançado"
+        else:
+            titulo = "🌀 Feiticeiro Iniciante"
+
+        draw.text((40, 170), titulo, fill=(255,200,100), font=fonte)
+
+        # 🧍 Avatar
+        avatar_bytes = await interaction.user.display_avatar.read()
+        avatar = Image.open(io.BytesIO(avatar_bytes)).resize((100,100))
+
+        img.paste(avatar, (600, 40))
+
+        # 💾 salvar
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        file = discord.File(buffer, filename="perfil.png")
+
+        await interaction.response.send_message(file=file)
 
     # 🔑 CODIGO
     @app_commands.command(name="codigo")
@@ -123,6 +158,5 @@ class Conquistas(commands.Cog):
         await interaction.response.send_message("✅ Código aceito.", ephemeral=True)
 
 
-# 🔥 ESSENCIAL
 async def setup(bot):
     await bot.add_cog(Conquistas(bot))
