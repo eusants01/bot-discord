@@ -8,7 +8,6 @@ from utils.db import conn, cursor
 COR_JUJUTSU = 0x7B2CFF
 CANAL_CONQUISTAS_ID = 1498134533839650838
 
-# 🏆 CONQUISTAS
 CONQUISTAS = {
     "despertar": {"emoji": "🧿", "nome": "Despertar"},
     "eco_no_dominio": {"emoji": "📢", "nome": "Eco no Domínio"},
@@ -25,15 +24,16 @@ CONQUISTAS = {
     "voz_da_sombra": {"emoji": "🔒", "nome": "???"},
     "pacto_proibido": {"emoji": "🔒", "nome": "???"},
     "alma_transfigurada": {"emoji": "🧠", "nome": "???"},
+    "mahito_transfigurado": {"emoji": "🧠", "nome": "Transfiguração da Alma"},
+    "novo_membro_sant": {"emoji": "🏠", "nome": "Novo Membro Sant’s"},
 
     "herdeiro_do_caos": {"emoji": "🔥", "nome": "Herdeiro do Caos"},
     "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"},
     "membro_da_familia": {"emoji": "🏠", "nome": "Membro da Família"},
 }
 
-# 🔓 LIBERAR CONQUISTA (COM ANÚNCIO)
-async def liberar_conquista(bot, usuario, conquista_id):
 
+async def liberar_conquista(bot, usuario, conquista_id, gif_url=None):
     if conquista_id not in CONQUISTAS:
         return False
 
@@ -70,11 +70,14 @@ async def liberar_conquista(bot, usuario, conquista_id):
         embed.set_thumbnail(url=usuario.display_avatar.url)
         embed.set_footer(text="Família Sant’s • Sistema de Conquistas")
 
+        if gif_url:
+            embed.set_image(url=gif_url)
+
         await canal.send(embed=embed)
 
     return True
 
-# 🔍 AUTOCOMPLETE
+
 async def autocomplete_conquista(interaction, current):
     return [
         app_commands.Choice(name=f"{c['nome']} ({cid})", value=cid)
@@ -87,7 +90,6 @@ class Conquistas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # 🔥 SISTEMA AUTOMÁTICO (MENSAGENS)
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
@@ -116,16 +118,13 @@ class Conquistas(commands.Cog):
         elif total == 200:
             await liberar_conquista(self.bot, message.author, "energia_densa")
 
-    # 🔥 ENTRADA NO SERVIDOR
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         await liberar_conquista(self.bot, member, "marca_inicial")
 
-    # 🎁 DAR CONQUISTA
     @app_commands.command(name="darconquista")
     @app_commands.autocomplete(conquista_id=autocomplete_conquista)
     async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
-
         if conquista_id not in CONQUISTAS:
             return await interaction.response.send_message("Conquista inválida.", ephemeral=True)
 
@@ -139,10 +138,8 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
-    # 📜 VER CONQUISTAS
     @app_commands.command(name="conquistas")
     async def conquistas(self, interaction: discord.Interaction):
-
         cursor.execute(
             "SELECT conquista_id FROM conquistas WHERE user_id=?",
             (str(interaction.user.id),)
@@ -198,16 +195,32 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message(embed=criar_embed(0), view=View(), ephemeral=True)
 
-    # 🔑 CODIGO
     @app_commands.command(name="codigo")
     async def codigo(self, interaction: discord.Interaction, codigo: str):
-
         codigos = {
-            "MAHORAGA": {"c": "voz_da_sombra", "limite": 1},
-            "SUKUNAHEIAN": {"c": "rei_das_maldicoes", "limite": 5}
+            "MAHORAGA": {
+                "c": "voz_da_sombra",
+                "limite": 1,
+                "gif": "https://media1.tenor.com/m/xxTiQVYbcAAAAAAd/jujutsu-kaisen-shibuya-arc-mahoraga-shibuya-arc.gif"
+            },
+            "SUKUNAHEIAN": {
+                "c": "rei_das_maldicoes",
+                "limite": 5,
+                "gif": "https://media1.tenor.com/m/0FxSr1qzukYAAAAC/sukuna-heian.gif"
+            },
+            "MAHITO": {
+                "c": "mahito_transfigurado",
+                "limite": 1,
+                "gif": "https://media1.tenor.com/m/rzLycKqpA_EAAAAd/mahito-domain-expansion.gif"
+            },
+            "NEWMEMBERFAMILY": {
+                "c": "novo_membro_sant",
+                "limite": 1,
+                "gif": "https://i.imgur.com/9RoxlqM.png"
+            },
         }
 
-        codigo = codigo.upper()
+        codigo = codigo.upper().replace(" ", "")
 
         if codigo not in codigos:
             return await interaction.response.send_message("❌ Código inválido.", ephemeral=True)
@@ -224,12 +237,27 @@ class Conquistas(commands.Cog):
         if usos >= codigos[codigo]["limite"]:
             return await interaction.response.send_message("Esgotado.", ephemeral=True)
 
-        await liberar_conquista(self.bot, interaction.user, codigos[codigo]["c"])
+        info = codigos[codigo]
+
+        ganhou = await liberar_conquista(
+            self.bot,
+            interaction.user,
+            info["c"],
+            gif_url=info["gif"]
+        )
+
+        if not ganhou:
+            return await interaction.response.send_message("Você já possui essa conquista.", ephemeral=True)
 
         cursor.execute("INSERT INTO codigos VALUES (?, ?)", (codigo, user_id))
         conn.commit()
 
-        await interaction.response.send_message("✅ Código aceito.", ephemeral=True)
+        restantes = info["limite"] - (usos + 1)
+
+        await interaction.response.send_message(
+            f"✅ Código aceito!\n🔢 Restantes: **{restantes}/{info['limite']}**",
+            ephemeral=True
+        )
 
 
 async def setup(bot):
