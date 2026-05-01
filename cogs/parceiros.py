@@ -43,6 +43,12 @@ PARCEIROS = [
         "link": "https://discord.gg/cjgDDkgDZu"
     },
     {
+        "nome": "Tropa Games",
+        "descricao": "Dimensão onde maldições caminham livremente entre os vivos.",
+        "emoji": "🎩",
+        "link": "https://discord.gg/F964M2GC9"
+    },
+    {
         "nome": "BiscoiteX Community",
         "descricao": "Campo instável onde alianças são testadas e quebradas.",
         "emoji": "🔥",

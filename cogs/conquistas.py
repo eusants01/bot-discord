@@ -34,7 +34,7 @@ async def liberar_conquista(bot, usuario, conquista_id, gif_url=None):
         return False
 
     cursor.execute(
-        "SELECT 1 FROM conquistas WHERE user_id=? AND conquista_id=?",
+        "SELECT 1 FROM conquistas WHERE user_id=%s AND conquista_id=%s",
         (str(usuario.id), conquista_id)
     )
 
@@ -44,7 +44,7 @@ async def liberar_conquista(bot, usuario, conquista_id, gif_url=None):
     data = datetime.now(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M")
 
     cursor.execute(
-        "INSERT INTO conquistas VALUES (?, ?, ?)",
+        "INSERT INTO conquistas VALUES (%s, %s, %s)",
         (str(usuario.id), conquista_id, data)
     )
     conn.commit()
@@ -93,15 +93,24 @@ class Conquistas(commands.Cog):
 
         user_id = str(message.author.id)
 
-        cursor.execute("SELECT total FROM mensagens WHERE user_id=?", (user_id,))
+        cursor.execute(
+            "SELECT total FROM mensagens WHERE user_id=%s",
+            (user_id,)
+        )
         row = cursor.fetchone()
 
         if row:
             total = row[0] + 1
-            cursor.execute("UPDATE mensagens SET total=? WHERE user_id=?", (total, user_id))
+            cursor.execute(
+                "UPDATE mensagens SET total=%s WHERE user_id=%s",
+                (total, user_id)
+            )
         else:
             total = 1
-            cursor.execute("INSERT INTO mensagens VALUES (?, ?)", (user_id, total))
+            cursor.execute(
+                "INSERT INTO mensagens VALUES (%s, %s)",
+                (user_id, total)
+            )
 
         conn.commit()
 
@@ -120,7 +129,7 @@ class Conquistas(commands.Cog):
 
     @app_commands.command(name="darconquista")
     @app_commands.autocomplete(conquista_id=autocomplete_conquista)
-    async def darconquista(self, interaction, membro: discord.Member, conquista_id: str):
+    async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
         if conquista_id not in CONQUISTAS:
             return await interaction.response.send_message("Conquista inválida.", ephemeral=True)
 
@@ -133,6 +142,67 @@ class Conquistas(commands.Cog):
             return await interaction.response.send_message("Já possui.", ephemeral=True)
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
+
+    @app_commands.command(name="conquistas")
+    async def conquistas(self, interaction: discord.Interaction):
+        cursor.execute(
+            "SELECT conquista_id FROM conquistas WHERE user_id=%s",
+            (str(interaction.user.id),)
+        )
+
+        dados = [cid for (cid,) in cursor.fetchall()]
+
+        lista = list(CONQUISTAS.items())
+        total = len(lista)
+        conquistadas = len(dados)
+
+        paginas = [lista[i:i + 4] for i in range(0, total, 4)]
+        pagina_atual = 0
+
+        def criar_embed(pagina):
+            embed = discord.Embed(
+                title=f"🌀 Domínio de {interaction.user.display_name}",
+                description=f"🌀 **Todas as Conquistas [{conquistadas}/{total}]**",
+                color=COR_JUJUTSU
+            )
+
+            for cid, c in paginas[pagina]:
+                if cid in dados:
+                    embed.add_field(
+                        name=f"{c['emoji']} {c['nome']}",
+                        value="Conquista desbloqueada.",
+                        inline=False
+                    )
+                else:
+                    embed.add_field(
+                        name="🔒 Conquista Bloqueada",
+                        value="Continue explorando o domínio para revelar.",
+                        inline=False
+                    )
+
+            embed.set_footer(text=f"Página {pagina + 1}/{len(paginas)} • Família Sant’s")
+            return embed
+
+        class View(discord.ui.View):
+            @discord.ui.button(label="⬅️")
+            async def voltar(self, i, b):
+                nonlocal pagina_atual
+                if pagina_atual > 0:
+                    pagina_atual -= 1
+                await i.response.edit_message(embed=criar_embed(pagina_atual), view=self)
+
+            @discord.ui.button(label="➡️")
+            async def avancar(self, i, b):
+                nonlocal pagina_atual
+                if pagina_atual < len(paginas) - 1:
+                    pagina_atual += 1
+                await i.response.edit_message(embed=criar_embed(pagina_atual), view=self)
+
+        await interaction.response.send_message(
+            embed=criar_embed(0),
+            view=View(),
+            ephemeral=True
+        )
 
     @app_commands.command(name="codigo")
     async def codigo(self, interaction: discord.Interaction, codigo: str):
@@ -160,36 +230,53 @@ class Conquistas(commands.Cog):
         }
 
         codigo = codigo.upper().replace(" ", "")
+        user_id = str(interaction.user.id)
 
         if codigo not in codigos:
             return await interaction.response.send_message("❌ Código inválido.", ephemeral=True)
 
-        user_id = str(interaction.user.id)
-
-        cursor.execute("SELECT 1 FROM codigos WHERE codigo=? AND user_id=?", (codigo, user_id))
+        cursor.execute(
+            "SELECT 1 FROM codigos WHERE codigo=%s AND user_id=%s",
+            (codigo, user_id)
+        )
         if cursor.fetchone():
             return await interaction.response.send_message("Já usou.", ephemeral=True)
 
-        cursor.execute("SELECT COUNT(*) FROM codigos WHERE codigo=?", (codigo,))
+        cursor.execute(
+            "SELECT COUNT(*) FROM codigos WHERE codigo=%s",
+            (codigo,)
+        )
         usos = cursor.fetchone()[0]
-
-        if usos >= codigos[codigo]["limite"]:
-            return await interaction.response.send_message("⛔ Código esgotado.", ephemeral=True)
 
         info = codigos[codigo]
 
-        await liberar_conquista(
+        if usos >= info["limite"]:
+            return await interaction.response.send_message("⛔ Código esgotado.", ephemeral=True)
+
+        ganhou = await liberar_conquista(
             self.bot,
             interaction.user,
             info["c"],
             gif_url=info["gif"]
         )
 
-        cursor.execute("INSERT INTO codigos VALUES (?, ?)", (codigo, user_id))
+        if not ganhou:
+            return await interaction.response.send_message(
+                "Você já possui essa conquista.",
+                ephemeral=True
+            )
+
+        cursor.execute(
+            "INSERT INTO codigos VALUES (%s, %s)",
+            (codigo, user_id)
+        )
         conn.commit()
 
+        restantes = info["limite"] - (usos + 1)
+
         await interaction.response.send_message(
-            "🔥 Código aceito. Você evoluiu dentro do domínio.",
+            f"🔥 Código aceito. Você evoluiu dentro do domínio.\n"
+            f"🔢 Restantes: **{restantes}/{info['limite']}**",
             ephemeral=True
         )
 
