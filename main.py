@@ -2,6 +2,7 @@ import os
 import discord
 import asyncio
 from discord.ext import commands, tasks
+from utils.db import criar_tabelas
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -31,6 +32,9 @@ async def trocar_status():
 @bot.event
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
+
+    criar_tabelas()
+    print("✅ Banco de conquistas iniciado")
 
     GUILD_ID = 1480334256763961465
     guild = discord.Object(id=GUILD_ID)

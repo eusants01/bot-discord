@@ -1,13 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import json
-import os
 from datetime import datetime
 
-ARQUIVO_DADOS = "dados_conquistas.json"
-ARQUIVO_MSG = "contador_msgs.json"
-ARQUIVO_CODIGOS = "codigos_usados.json"
+from utils.db import conn, cursor
 
 COR_JUJUTSU = 0x7B2CFF
 CANAL_CONQUISTAS_ID = 1498134533839650838
@@ -30,59 +26,25 @@ CONQUISTAS = {
 }
 
 
-def carregar_json(arquivo):
-    if not os.path.exists(arquivo):
-        with open(arquivo, "w", encoding="utf-8") as f:
-            json.dump({}, f, indent=4, ensure_ascii=False)
-
-    with open(arquivo, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def salvar_json(arquivo, dados):
-    with open(arquivo, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=4, ensure_ascii=False)
-
-
-def carregar_dados():
-    return carregar_json(ARQUIVO_DADOS)
-
-
-def salvar_dados(dados):
-    salvar_json(ARQUIVO_DADOS, dados)
-
-
-def carregar_msgs():
-    return carregar_json(ARQUIVO_MSG)
-
-
-def salvar_msgs(dados):
-    salvar_json(ARQUIVO_MSG, dados)
-
-
-def carregar_codigos():
-    return carregar_json(ARQUIVO_CODIGOS)
-
-
-def salvar_codigos(dados):
-    salvar_json(ARQUIVO_CODIGOS, dados)
-
-
 async def liberar_conquista(bot, usuario, conquista_id, canal=None):
     if conquista_id not in CONQUISTAS:
         return False
 
-    dados = carregar_dados()
-    user_id = str(usuario.id)
+    cursor.execute(
+        "SELECT 1 FROM conquistas WHERE user_id=? AND conquista_id=?",
+        (str(usuario.id), conquista_id)
+    )
 
-    if user_id not in dados:
-        dados[user_id] = {}
-
-    if conquista_id in dados[user_id]:
+    if cursor.fetchone():
         return False
 
-    dados[user_id][conquista_id] = datetime.now().strftime("%d/%m/%Y %H:%M")
-    salvar_dados(dados)
+    data = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    cursor.execute(
+        "INSERT INTO conquistas (user_id, conquista_id, data) VALUES (?, ?, ?)",
+        (str(usuario.id), conquista_id, data)
+    )
+    conn.commit()
 
     conquista = CONQUISTAS[conquista_id]
     canal_conquistas = bot.get_channel(CANAL_CONQUISTAS_ID)
@@ -155,16 +117,28 @@ class Conquistas(commands.Cog):
         if message.author.bot:
             return
 
-        dados_msg = carregar_msgs()
         user_id = str(message.author.id)
 
-        if user_id not in dados_msg:
-            dados_msg[user_id] = 0
+        cursor.execute(
+            "SELECT total FROM mensagens WHERE user_id=?",
+            (user_id,)
+        )
+        row = cursor.fetchone()
 
-        dados_msg[user_id] += 1
-        salvar_msgs(dados_msg)
+        if row:
+            total = row[0] + 1
+            cursor.execute(
+                "UPDATE mensagens SET total=? WHERE user_id=?",
+                (total, user_id)
+            )
+        else:
+            total = 1
+            cursor.execute(
+                "INSERT INTO mensagens (user_id, total) VALUES (?, ?)",
+                (user_id, total)
+            )
 
-        total = dados_msg[user_id]
+        conn.commit()
 
         if total == 1:
             await liberar_conquista(self.bot, message.author, "primeiro_selo")
@@ -186,8 +160,12 @@ class Conquistas(commands.Cog):
     async def conquistas(self, interaction: discord.Interaction):
         await liberar_conquista(self.bot, interaction.user, "dominio_revelado")
 
-        dados = carregar_dados()
-        user_data = dados.get(str(interaction.user.id), {})
+        cursor.execute(
+            "SELECT conquista_id, data FROM conquistas WHERE user_id=?",
+            (str(interaction.user.id),)
+        )
+
+        user_data = {cid: data for cid, data in cursor.fetchall()}
 
         total = len(CONQUISTAS)
         conquistadas = len(user_data)
@@ -300,15 +278,14 @@ class Conquistas(commands.Cog):
                 ephemeral=True
             )
 
-        dados_codigos = carregar_codigos()
-
-        if codigo not in dados_codigos:
-            dados_codigos[codigo] = []
-
-        usuarios_que_usaram = dados_codigos[codigo]
         user_id = str(interaction.user.id)
 
-        if user_id in usuarios_que_usaram:
+        cursor.execute(
+            "SELECT 1 FROM codigos WHERE codigo=? AND user_id=?",
+            (codigo, user_id)
+        )
+
+        if cursor.fetchone():
             return await interaction.response.send_message(
                 "❌ Você já resgatou esse código.",
                 ephemeral=True
@@ -316,7 +293,14 @@ class Conquistas(commands.Cog):
 
         limite = codigos_secretos[codigo]["limite"]
 
-        if len(usuarios_que_usaram) >= limite:
+        cursor.execute(
+            "SELECT COUNT(*) FROM codigos WHERE codigo=?",
+            (codigo,)
+        )
+
+        usos = cursor.fetchone()[0]
+
+        if usos >= limite:
             return await interaction.response.send_message(
                 "❌ Esse código já atingiu o limite máximo de resgates.",
                 ephemeral=True
@@ -336,10 +320,13 @@ class Conquistas(commands.Cog):
                 ephemeral=True
             )
 
-        usuarios_que_usaram.append(user_id)
-        salvar_codigos(dados_codigos)
+        cursor.execute(
+            "INSERT INTO codigos (codigo, user_id) VALUES (?, ?)",
+            (codigo, user_id)
+        )
+        conn.commit()
 
-        restantes = limite - len(usuarios_que_usaram)
+        restantes = limite - (usos + 1)
         tipo = codigos_secretos[codigo]["tipo"]
 
         await interaction.response.send_message(
