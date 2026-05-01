@@ -12,7 +12,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 GUILD_ID = 1480334256763961465
-sincronizado = False
 
 status_list = [
     "🩸 Em expansão de domínio...",
@@ -22,6 +21,7 @@ status_list = [
     "🔥 Despertando energia amaldiçoada",
     "💀 Você está dentro do domínio...",
 ]
+
 
 @tasks.loop(seconds=15)
 async def trocar_status():
@@ -35,48 +35,49 @@ async def trocar_status():
 
 @bot.event
 async def on_ready():
-    global sincronizado
-
     print(f"✅ Bot online como {bot.user}")
 
     criar_tabelas()
     print("✅ Banco de conquistas iniciado")
 
-    if not sincronizado:
-        guild = discord.Object(id=GUILD_ID)
+    guild = discord.Object(id=GUILD_ID)
 
-        comandos = [cmd.name for cmd in bot.tree.get_commands()]
-        print("📌 Comandos carregados:", comandos)
+    comandos = [cmd.name for cmd in bot.tree.get_commands()]
+    print("📌 Comandos carregados antes do sync:", comandos)
 
-        bot.tree.copy_global_to(guild=guild)
-        synced = await bot.tree.sync(guild=guild)
+    # 🔥 Limpa comandos antigos do servidor
+    bot.tree.clear_commands(guild=guild)
 
-        print(f"✅ {len(synced)} slash commands sincronizados:")
-        for cmd in synced:
-            print(f" - /{cmd.name}")
+    # 🔥 Copia comandos atuais para o servidor
+    bot.tree.copy_global_to(guild=guild)
 
-        sincronizado = True
+    # 🔥 Sincroniza no servidor
+    synced = await bot.tree.sync(guild=guild)
+
+    print(f"✅ {len(synced)} slash commands sincronizados no servidor:")
+    for cmd in synced:
+        print(f" - /{cmd.name}")
 
     if not trocar_status.is_running():
         trocar_status.start()
 
 
-async def carregar_cog(bot, nome):
+async def carregar_cog(nome):
     try:
         await bot.load_extension(nome)
         print(f"✅ {nome} carregado")
     except Exception as e:
-        print(f"❌ Erro ao carregar {nome}: {e}")
+        print(f"❌ Erro ao carregar {nome}: {type(e).__name__}: {e}")
 
 
 async def main():
     async with bot:
         print("Iniciando bot...")
 
-        await carregar_cog(bot, "cogs.tickets")
-        await carregar_cog(bot, "cogs.parceiros")
-        await carregar_cog(bot, "cogs.conquistas")
-        await carregar_cog(bot, "cogs.notificacoes")
+        await carregar_cog("cogs.tickets")
+        await carregar_cog("cogs.parceiros")
+        await carregar_cog("cogs.conquistas")
+        await carregar_cog("cogs.notificacoes")
 
         token = os.getenv("DISCORD_TOKEN")
         print("Token encontrado:", bool(token))
