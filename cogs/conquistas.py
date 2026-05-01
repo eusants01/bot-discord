@@ -2,25 +2,47 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import io
 
 from utils.db import conn, cursor
 
 COR_JUJUTSU = 0x7B2CFF
 
-# 🏆 CONQUISTAS (exemplo — pode expandir)
+# 🏆 CONQUISTAS COMPLETAS
 CONQUISTAS = {
+    # COMUM
+    "despertar": {"emoji": "🧿", "nome": "Despertar"},
+    "eco_no_dominio": {"emoji": "📢", "nome": "Eco no Domínio"},
+    "marca_inicial": {"emoji": "🩸", "nome": "Marca Inicial"},
+
+    # RARO
+    "tecnica_formada": {"emoji": "🌀", "nome": "Técnica Formada"},
+    "quebra_barreira": {"emoji": "💥", "nome": "Quebra de Barreira"},
+    "energia_densa": {"emoji": "🌑", "nome": "Energia Densa"},
+
+    # ÉPICO
+    "expansao_dominio": {"emoji": "🌌", "nome": "Expansão de Domínio"},
+    "olhos_do_infinito": {"emoji": "👁️", "nome": "Olhos do Infinito"},
+    "ritual_perfeito": {"emoji": "🕯️", "nome": "Ritual Perfeito"},
+
+    # SECRETA
     "voz_da_sombra": {"emoji": "🔒", "nome": "???"},
-    "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"}
+    "pacto_proibido": {"emoji": "🔒", "nome": "???"},
+    "alma_transfigurada": {"emoji": "🧠", "nome": "???"},
+
+    # LENDÁRIA
+    "herdeiro_do_caos": {"emoji": "🔥", "nome": "Herdeiro do Caos"},
+    "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"},
+    "membro_da_familia": {"emoji": "🏠", "nome": "Membro da Família"},
 }
 
 # 🔓 LIBERAR CONQUISTA
 async def liberar_conquista(bot, usuario, conquista_id):
+
     cursor.execute(
         "SELECT 1 FROM conquistas WHERE user_id=? AND conquista_id=?",
         (str(usuario.id), conquista_id)
     )
+
     if cursor.fetchone():
         return False
 
@@ -28,6 +50,7 @@ async def liberar_conquista(bot, usuario, conquista_id):
         "INSERT INTO conquistas VALUES (?, ?, ?)",
         (str(usuario.id), conquista_id, datetime.now().strftime("%d/%m/%Y"))
     )
+
     conn.commit()
     return True
 
@@ -47,12 +70,8 @@ class Conquistas(commands.Cog):
     # 🎁 DAR CONQUISTA
     @app_commands.command(name="darconquista", description="Dar conquista a um membro")
     @app_commands.autocomplete(conquista_id=autocomplete_conquista)
-    async def darconquista(
-        self,
-        interaction: discord.Interaction,
-        membro: discord.Member,
-        conquista_id: str
-    ):
+    async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
+
         if conquista_id not in CONQUISTAS:
             return await interaction.response.send_message("Conquista inválida.", ephemeral=True)
 
@@ -66,15 +85,9 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
-    # 🎴 PERFIL ANIME (ABSURDO FINAL)
-    @app_commands.command(name="conquistas", description="Veja seu perfil de conquistas")
+    # 📜 VER CONQUISTAS (ESTILO PAGINADO)
+    @app_commands.command(name="conquistas", description="Veja suas conquistas")
     async def conquistas(self, interaction: discord.Interaction):
-
-        def fonte(t):
-            try:
-                return ImageFont.truetype("arial.ttf", t)
-            except:
-                return ImageFont.load_default()
 
         cursor.execute(
             "SELECT conquista_id FROM conquistas WHERE user_id=?",
@@ -82,86 +95,61 @@ class Conquistas(commands.Cog):
         )
 
         dados = [cid for (cid,) in cursor.fetchall()]
-        total = len(CONQUISTAS)
+
+        lista = list(CONQUISTAS.items())
+        total = len(lista)
         conquistadas = len(dados)
 
-        # 🎴 FUNDO
-        base = Image.open("assets/perfil_jujutsu.png").convert("RGBA")
-        base = base.resize((1000, 420))
+        itens_por_pagina = 4
+        paginas = [lista[i:i+itens_por_pagina] for i in range(0, total, itens_por_pagina)]
 
-        # 🌑 overlay escuro
-        overlay = Image.new("RGBA", base.size, (0, 0, 0, 140))
-        base = Image.alpha_composite(base, overlay)
+        pagina_atual = 0
 
-        draw = ImageDraw.Draw(base)
+        def criar_embed(pagina):
+            embed = discord.Embed(
+                title=f"🌀 Domínio de {interaction.user.display_name}",
+                description=f"🌀 **Todas as Conquistas [{conquistadas}/{total}]**",
+                color=COR_JUJUTSU
+            )
 
-        # 🟪 painel
-        draw.rounded_rectangle(
-            (40, 40, 680, 380),
-            radius=25,
-            fill=(20, 20, 40, 220),
-            outline=(123, 44, 255),
-            width=3
-        )
+            for cid, c in paginas[pagina]:
+                if cid in dados:
+                    embed.add_field(
+                        name=f"{c['emoji']} {c['nome']}",
+                        value="Conquista desbloqueada.",
+                        inline=False
+                    )
+                else:
+                    embed.add_field(
+                        name="🔒 Conquista Bloqueada",
+                        value="Continue explorando o domínio para revelar.",
+                        inline=False
+                    )
 
-        # 👤 nome
-        draw.text((70, 60), interaction.user.display_name, fill=(255,255,255), font=fonte(28))
+            embed.set_footer(text=f"Página {pagina+1}/{len(paginas)} • Família Sant’s")
+            return embed
 
-        # 📊 progresso
-        porcentagem = int((conquistadas / total) * 100) if total > 0 else 0
+        class ViewPaginada(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=120)
 
-        draw.text(
-            (70, 110),
-            f"{conquistadas}/{total} conquistas",
-            fill=(200,200,255),
-            font=fonte(20)
-        )
+            @discord.ui.button(label="⬅️", style=discord.ButtonStyle.secondary)
+            async def voltar(self, interaction_btn: discord.Interaction, button: discord.ui.Button):
+                nonlocal pagina_atual
+                if pagina_atual > 0:
+                    pagina_atual -= 1
+                await interaction_btn.response.edit_message(embed=criar_embed(pagina_atual), view=self)
 
-        # 🔳 barra fundo
-        draw.rounded_rectangle((70, 150, 550, 180), 15, fill=(60,60,80))
-
-        # 🟣 barra progresso
-        progresso = int((conquistadas / total) * 480) if total > 0 else 0
-        draw.rounded_rectangle((70, 150, 70+progresso, 180), 15, fill=(123,44,255))
-
-        # 👑 título
-        if porcentagem >= 80:
-            titulo = "👑 Rei das Maldições"
-            cor = (255,80,80)
-        elif porcentagem >= 50:
-            titulo = "🔥 Feiticeiro Avançado"
-            cor = (255,180,60)
-        else:
-            titulo = "🌀 Feiticeiro Iniciante"
-            cor = (180,180,255)
-
-        draw.text((70, 210), titulo, fill=cor, font=fonte(22))
-
-        # 🧍 avatar redondo
-        avatar_bytes = await interaction.user.display_avatar.read()
-        avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA").resize((120,120))
-
-        mask = Image.new("L", (120,120), 0)
-        m = ImageDraw.Draw(mask)
-        m.ellipse((0,0,120,120), fill=255)
-
-        base.paste(avatar, (760, 70), mask)
-
-        # 🔮 glow
-        glow = Image.new("RGBA", base.size, (0,0,0,0))
-        g = ImageDraw.Draw(glow)
-        g.ellipse((740, 50, 900, 230), outline=(123,44,255), width=5)
-        glow = glow.filter(ImageFilter.GaussianBlur(8))
-
-        base = Image.alpha_composite(base, glow)
-
-        # 💾 salvar
-        buffer = io.BytesIO()
-        base.convert("RGB").save(buffer, "PNG")
-        buffer.seek(0)
+            @discord.ui.button(label="➡️", style=discord.ButtonStyle.secondary)
+            async def avancar(self, interaction_btn: discord.Interaction, button: discord.ui.Button):
+                nonlocal pagina_atual
+                if pagina_atual < len(paginas) - 1:
+                    pagina_atual += 1
+                await interaction_btn.response.edit_message(embed=criar_embed(pagina_atual), view=self)
 
         await interaction.response.send_message(
-            file=discord.File(buffer, "perfil.png"),
+            embed=criar_embed(pagina_atual),
+            view=ViewPaginada(),
             ephemeral=True
         )
 
