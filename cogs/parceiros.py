@@ -1,60 +1,81 @@
 import discord
 from discord.ext import commands
 
+# 🟣 Energia Amaldiçoada
 COR_ROXA_JUJUTSU = 0x6A00FF
 
+# 🌀 REGISTRO DE PACTOS
 PARCEIROS = [
     {
         "nome": "Família Celeste",
-        "descricao": "Entidade que observa o domínio dos céus, acima das maldições.",
+        "descricao": "Entidade superior que observa o domínio dos céus, além da compreensão humana.",
         "emoji": "🌥️",
         "link": "https://discord.gg/TsUKsMgsz"
     },
     {
         "nome": "Instruções Delta",
-        "descricao": "Ordem estratégica baseada em selos e controle absoluto.",
+        "descricao": "Ordem selada por técnicas proibidas e controle absoluto do campo de batalha.",
         "emoji": "📜",
         "link": "https://discord.gg/W5mQvup4T"
     },
     {
         "nome": "Base de Eventos Delta",
-        "descricao": "Campo onde rituais e confrontos são executados.",
+        "descricao": "Território onde rituais e confrontos são executados sob regras desconhecidas.",
         "emoji": "🏯",
         "link": "https://discord.gg/ua2mZzBzA5"
     },
     {
         "nome": "BIDEX",
-        "descricao": "Zona instável onde apenas os mais fortes resistem.",
+        "descricao": "Zona caótica onde apenas feiticeiros de elite sobrevivem.",
         "emoji": "🔥",
         "link": "https://discord.gg/HGvEQ8mn7b"
     },
     {
+        "nome": "Irmandade Roleplay",
+        "descricao": "Grupo envolto em ilusões e narrativas moldadas pela energia espiritual.",
+        "emoji": "🎪",
+        "link": "https://discord.gg/J3VfQfgqHN"
+    },
+    {
+        "nome": "Submundo",
+        "descricao": "Dimensão onde maldições caminham livremente entre os vivos.",
+        "emoji": "🔥",
+        "link": "https://discord.gg/cjgDDkgDZu"
+    },
+    {
+        "nome": "BiscoiteX Community",
+        "descricao": "Campo instável onde alianças são testadas e quebradas.",
+        "emoji": "🔥",
+        "link": "https://discord.gg/dRE4QTh6mN"
+    },
+    {
         "nome": "Konoha Network",
-        "descricao": "Uma vila conectada por contratos antigos e energia espiritual.",
+        "descricao": "Uma vila conectada por contratos antigos e energia espiritual ancestral.",
         "emoji": "🍃",
         "link": "https://discord.gg/RYsFkXqCS"
     },
     {
         "nome": "Time Anti Praças",
-        "descricao": "Combatentes ligados por um juramento sombrio.",
+        "descricao": "Combatentes ligados por um juramento sombrio e inquebrável.",
         "emoji": "⚔️",
         "link": "https://discord.gg/4yaUuGCuG"
     },
     {
         "nome": "Família Shelby",
-        "descricao": "Aliança envolta em estratégia e sombras.",
+        "descricao": "Aliança silenciosa que atua nas sombras estratégicas.",
         "emoji": "🐦‍⬛",
         "link": "https://discord.gg/5kd5mpyt"
     },
     {
         "nome": "Polícia Militar",
-        "descricao": "Força que mantém a ordem dentro do território.",
+        "descricao": "Força que mantém a ordem dentro do território controlado.",
         "emoji": "🚓",
         "link": "https://discord.gg/8HzSqvJju"
     }
 ]
 
 
+# 🌀 SELECT - INVOCAR PACTO
 class SelectParceiros(discord.ui.Select):
     def __init__(self):
         options = [
@@ -81,23 +102,24 @@ class SelectParceiros(discord.ui.Select):
         embed = discord.Embed(
             title=f"{parceiro['emoji']} {parceiro['nome']}",
             description=(
-                "🔮 **PACTO ESTABELECIDO**\n\n"
-                "A energia amaldiçoada respondeu ao seu chamado...\n\n"
+                "🌀 **PACTO INVOCADO**\n\n"
+                "A barreira foi rompida...\n"
+                "Sua energia amaldiçoada respondeu ao chamado.\n\n"
                 f"📖 **Registro Espiritual:**\n{parceiro['descricao']}\n\n"
-                f"🌀 **Abrir Portal:**\n{parceiro['link']}"
+                f"🔗 **Abrir Portal:**\n{parceiro['link']}"
             ),
             color=COR_ROXA_JUJUTSU
         )
 
         embed.add_field(
-            name="⚡ Classe de Energia",
+            name="⚡ Classificação",
             value="Classe Especial",
             inline=True
         )
 
         embed.add_field(
-            name="☠️ Nível de Ameaça",
-            value="Alto",
+            name="☠️ Risco Espiritual",
+            value="Extremo",
             inline=True
         )
 
@@ -109,12 +131,14 @@ class SelectParceiros(discord.ui.Select):
         )
 
 
+# 🌀 VIEW
 class ViewParceiros(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(SelectParceiros())
 
 
+# 🌀 COG
 class Parceiros(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -122,14 +146,15 @@ class Parceiros(commands.Cog):
     @commands.command(name="painel_parceiros")
     @commands.has_permissions(administrator=True)
     async def painel_parceiros(self, ctx):
+
         embed = discord.Embed(
             title="🌀 領域展開 — EXPANSÃO DE DOMÍNIO",
             description=(
-                "**O domínio foi ativado.**\n\n"
-                "A realidade foi distorcida...\n"
-                "Apenas alianças reconhecidas podem ser acessadas.\n\n"
-                "🔮 Cada escolha abrirá um portal.\n"
-                "⚠️ Nem todos retornam do outro lado."
+                "**A realidade foi distorcida.**\n\n"
+                "Você entrou em um território onde regras não existem.\n"
+                "Apenas aqueles com energia suficiente podem formar pactos.\n\n"
+                "🔮 Cada escolha abre um portal.\n"
+                "☠️ Nem todos sobrevivem ao outro lado."
             ),
             color=COR_ROXA_JUJUTSU
         )
