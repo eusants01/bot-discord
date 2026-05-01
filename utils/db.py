@@ -19,6 +19,7 @@ def criar_tabelas():
     )
     """)
 
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS codigos (
         codigo TEXT,
