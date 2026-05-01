@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from io import BytesIO
 import asyncio
+
 from cogs.conquistas import liberar_conquista
 
 
@@ -279,11 +280,12 @@ class TicketSelect(discord.ui.Select):
             view=FecharTicketView()
         )
 
+        # 🏆 Conquista automática ao abrir ticket
+        # Precisa existir no CONQUISTAS do cogs/conquistas.py
         await liberar_conquista(
             interaction.client,
             user,
-            "contrato_aberto",
-            canal
+            "quebra_barreira"
         )
 
         await interaction.followup.send(
