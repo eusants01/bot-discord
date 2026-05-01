@@ -2,14 +2,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import io
 
 from utils.db import conn, cursor
 
 COR_JUJUTSU = 0x7B2CFF
 
-# 🏆 CONQUISTAS
+# 🏆 CONQUISTAS (exemplo — pode expandir)
 CONQUISTAS = {
     "voz_da_sombra": {"emoji": "🔒", "nome": "???"},
     "rei_das_maldicoes": {"emoji": "👑", "nome": "Rei das Maldições"}
@@ -17,12 +17,10 @@ CONQUISTAS = {
 
 # 🔓 LIBERAR CONQUISTA
 async def liberar_conquista(bot, usuario, conquista_id):
-
     cursor.execute(
         "SELECT 1 FROM conquistas WHERE user_id=? AND conquista_id=?",
         (str(usuario.id), conquista_id)
     )
-
     if cursor.fetchone():
         return False
 
@@ -31,7 +29,6 @@ async def liberar_conquista(bot, usuario, conquista_id):
         (str(usuario.id), conquista_id, datetime.now().strftime("%d/%m/%Y"))
     )
     conn.commit()
-
     return True
 
 # 🔍 AUTOCOMPLETE
@@ -48,10 +45,14 @@ class Conquistas(commands.Cog):
         self.bot = bot
 
     # 🎁 DAR CONQUISTA
-    @app_commands.command(name="darconquista")
+    @app_commands.command(name="darconquista", description="Dar conquista a um membro")
     @app_commands.autocomplete(conquista_id=autocomplete_conquista)
-    async def darconquista(self, interaction: discord.Interaction, membro: discord.Member, conquista_id: str):
-
+    async def darconquista(
+        self,
+        interaction: discord.Interaction,
+        membro: discord.Member,
+        conquista_id: str
+    ):
         if conquista_id not in CONQUISTAS:
             return await interaction.response.send_message("Conquista inválida.", ephemeral=True)
 
@@ -65,9 +66,15 @@ class Conquistas(commands.Cog):
 
         await interaction.response.send_message("✅ Conquista entregue.", ephemeral=True)
 
-    # 🎴 PERFIL ANIME
-    @app_commands.command(name="conquistas")
+    # 🎴 PERFIL ANIME (ABSURDO FINAL)
+    @app_commands.command(name="conquistas", description="Veja seu perfil de conquistas")
     async def conquistas(self, interaction: discord.Interaction):
+
+        def fonte(t):
+            try:
+                return ImageFont.truetype("arial.ttf", t)
+            except:
+                return ImageFont.load_default()
 
         cursor.execute(
             "SELECT conquista_id FROM conquistas WHERE user_id=?",
@@ -75,57 +82,91 @@ class Conquistas(commands.Cog):
         )
 
         dados = [cid for (cid,) in cursor.fetchall()]
-
         total = len(CONQUISTAS)
         conquistadas = len(dados)
 
         # 🎴 FUNDO
-        img = Image.open("assets/perfil_jujutsu.png").convert("RGBA")
-        draw = ImageDraw.Draw(img)
+        base = Image.open("assets/perfil_jujutsu.png").convert("RGBA")
+        base = base.resize((1000, 420))
 
-        fonte = ImageFont.load_default()
+        # 🌑 overlay escuro
+        overlay = Image.new("RGBA", base.size, (0, 0, 0, 140))
+        base = Image.alpha_composite(base, overlay)
 
-        # 👤 Nome
-        draw.text((40, 40), interaction.user.name, fill=(255,255,255), font=fonte)
+        draw = ImageDraw.Draw(base)
+
+        # 🟪 painel
+        draw.rounded_rectangle(
+            (40, 40, 680, 380),
+            radius=25,
+            fill=(20, 20, 40, 220),
+            outline=(123, 44, 255),
+            width=3
+        )
+
+        # 👤 nome
+        draw.text((70, 60), interaction.user.display_name, fill=(255,255,255), font=fonte(28))
 
         # 📊 progresso
         porcentagem = int((conquistadas / total) * 100) if total > 0 else 0
-        draw.text((40, 80), f"{conquistadas}/{total} conquistas", fill=(255,255,255), font=fonte)
 
-        # barra
-        largura = 400
-        progresso = int((conquistadas / total) * largura) if total > 0 else 0
+        draw.text(
+            (70, 110),
+            f"{conquistadas}/{total} conquistas",
+            fill=(200,200,255),
+            font=fonte(20)
+        )
 
-        draw.rectangle((40, 120, 40+largura, 140), fill=(50,50,50))
-        draw.rectangle((40, 120, 40+progresso, 140), fill=(123,44,255))
+        # 🔳 barra fundo
+        draw.rounded_rectangle((70, 150, 550, 180), 15, fill=(60,60,80))
+
+        # 🟣 barra progresso
+        progresso = int((conquistadas / total) * 480) if total > 0 else 0
+        draw.rounded_rectangle((70, 150, 70+progresso, 180), 15, fill=(123,44,255))
 
         # 👑 título
         if porcentagem >= 80:
             titulo = "👑 Rei das Maldições"
+            cor = (255,80,80)
         elif porcentagem >= 50:
             titulo = "🔥 Feiticeiro Avançado"
+            cor = (255,180,60)
         else:
             titulo = "🌀 Feiticeiro Iniciante"
+            cor = (180,180,255)
 
-        draw.text((40, 170), titulo, fill=(255,200,100), font=fonte)
+        draw.text((70, 210), titulo, fill=cor, font=fonte(22))
 
-        # 🧍 Avatar
+        # 🧍 avatar redondo
         avatar_bytes = await interaction.user.display_avatar.read()
-        avatar = Image.open(io.BytesIO(avatar_bytes)).resize((100,100))
+        avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA").resize((120,120))
 
-        img.paste(avatar, (600, 40))
+        mask = Image.new("L", (120,120), 0)
+        m = ImageDraw.Draw(mask)
+        m.ellipse((0,0,120,120), fill=255)
+
+        base.paste(avatar, (760, 70), mask)
+
+        # 🔮 glow
+        glow = Image.new("RGBA", base.size, (0,0,0,0))
+        g = ImageDraw.Draw(glow)
+        g.ellipse((740, 50, 900, 230), outline=(123,44,255), width=5)
+        glow = glow.filter(ImageFilter.GaussianBlur(8))
+
+        base = Image.alpha_composite(base, glow)
 
         # 💾 salvar
         buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
+        base.convert("RGB").save(buffer, "PNG")
         buffer.seek(0)
 
-        file = discord.File(buffer, filename="perfil.png")
-
-        await interaction.response.send_message(file=file)
+        await interaction.response.send_message(
+            file=discord.File(buffer, "perfil.png"),
+            ephemeral=True
+        )
 
     # 🔑 CODIGO
-    @app_commands.command(name="codigo")
+    @app_commands.command(name="codigo", description="Resgatar código secreto")
     async def codigo(self, interaction: discord.Interaction, codigo: str):
 
         codigos = {
