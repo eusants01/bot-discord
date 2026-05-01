@@ -44,23 +44,39 @@ async def on_ready():
 
     if not sincronizado:
         guild = discord.Object(id=GUILD_ID)
+
+        comandos = [cmd.name for cmd in bot.tree.get_commands()]
+        print("📌 Comandos carregados:", comandos)
+
         bot.tree.copy_global_to(guild=guild)
-        await bot.tree.sync(guild=guild)
+        synced = await bot.tree.sync(guild=guild)
+
+        print(f"✅ {len(synced)} slash commands sincronizados:")
+        for cmd in synced:
+            print(f" - /{cmd.name}")
+
         sincronizado = True
-        print("✅ Slash commands sincronizados no servidor")
 
     if not trocar_status.is_running():
         trocar_status.start()
+
+
+async def carregar_cog(bot, nome):
+    try:
+        await bot.load_extension(nome)
+        print(f"✅ {nome} carregado")
+    except Exception as e:
+        print(f"❌ Erro ao carregar {nome}: {e}")
 
 
 async def main():
     async with bot:
         print("Iniciando bot...")
 
-        await bot.load_extension("cogs.tickets")
-        await bot.load_extension("cogs.parceiros")
-        await bot.load_extension("cogs.conquistas")
-        await bot.load_extension("cogs.notificacoes")
+        await carregar_cog(bot, "cogs.tickets")
+        await carregar_cog(bot, "cogs.parceiros")
+        await carregar_cog(bot, "cogs.conquistas")
+        await carregar_cog(bot, "cogs.notificacoes")
 
         token = os.getenv("DISCORD_TOKEN")
         print("Token encontrado:", bool(token))
