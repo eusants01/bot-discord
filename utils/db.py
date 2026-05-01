@@ -19,11 +19,17 @@ def criar_tabelas():
     )
     """)
 
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS codigos (
         codigo TEXT,
         user_id TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS titulos (
+        user_id TEXT PRIMARY KEY,
+        titulo TEXT
     )
     """)
 

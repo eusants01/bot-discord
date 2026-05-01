@@ -11,6 +11,9 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+GUILD_ID = 1480334256763961465
+sincronizado = False
+
 status_list = [
     "🩸 Em expansão de domínio...",
     "🔮 Julgando maldições...",
@@ -29,23 +32,26 @@ async def trocar_status():
         )
         await asyncio.sleep(15)
 
+
 @bot.event
 async def on_ready():
+    global sincronizado
+
     print(f"✅ Bot online como {bot.user}")
 
     criar_tabelas()
     print("✅ Banco de conquistas iniciado")
 
-    GUILD_ID = 1480334256763961465
-    guild = discord.Object(id=GUILD_ID)
-
-    bot.tree.copy_global_to(guild=guild)
-    await bot.tree.sync(guild=guild)
-
-    print("✅ Slash commands sincronizados no servidor")
+    if not sincronizado:
+        guild = discord.Object(id=GUILD_ID)
+        bot.tree.copy_global_to(guild=guild)
+        await bot.tree.sync(guild=guild)
+        sincronizado = True
+        print("✅ Slash commands sincronizados no servidor")
 
     if not trocar_status.is_running():
         trocar_status.start()
+
 
 async def main():
     async with bot:
@@ -59,6 +65,10 @@ async def main():
         token = os.getenv("DISCORD_TOKEN")
         print("Token encontrado:", bool(token))
 
+        if not token:
+            raise RuntimeError("DISCORD_TOKEN não encontrado nas variáveis de ambiente.")
+
         await bot.start(token)
+
 
 asyncio.run(main())
