@@ -4,7 +4,7 @@ Bot desenvolvido com Python utilizando a biblioteca discord.py, com foco em auto
 
 ---
 
-## ⚙️ Funcionalidades
+## 🚀 Funcionalidades
 
 - 📩 Sistema de tickets  
 - ⚙️ Comandos personalizados  
@@ -22,7 +22,7 @@ Bot desenvolvido com Python utilizando a biblioteca discord.py, com foco em auto
 
 ---
 
-## 🚀 Como executar o projeto
+## ▶️ Como executar o projeto
 
 ```bash
 git clone https://github.com/eusants01/bot-discord
