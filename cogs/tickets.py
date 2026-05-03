@@ -4,7 +4,6 @@ from discord import app_commands
 from io import BytesIO
 import asyncio
 
-from cogs.conquistas import liberar_conquista
 
 
 CATEGORIA_TICKETS_ID = 1495288098010169574
@@ -280,13 +279,6 @@ class TicketSelect(discord.ui.Select):
             view=FecharTicketView()
         )
 
-        # 🏆 Conquista automática ao abrir ticket
-        # Precisa existir no CONQUISTAS do cogs/conquistas.py
-        await liberar_conquista(
-            interaction.client,
-            user,
-            "quebra_barreira"
-        )
 
         await interaction.followup.send(
             f"✅ Ticket criado: {canal.mention}",
