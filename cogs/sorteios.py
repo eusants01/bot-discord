@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 COR_JUJUTSU = 0x6A00FF
 
-GIF_SORTEIO = "COLOQUE_AQUI_O_LINK_DO_SEU_BANNER"
+GIF_SORTEIO = "https://cdn.discordapp.com/attachments/961677475191078992/1500700233816871062/content.png?ex=69f96381&is=69f81201&hm=513fd8c673f3b3121d73bf382a8c82a968f9fafe99ba949d37e0bd301f1b0e6b&"
 
 
 class SorteioView(discord.ui.View):
