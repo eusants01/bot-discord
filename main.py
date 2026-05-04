@@ -78,6 +78,7 @@ async def main():
         await carregar_cog("cogs.parceiros")
         await carregar_cog("cogs.conquistas")
         await carregar_cog("cogs.notificacoes")
+        await bot.load_extension("cogs.sorteios")
 
         token = os.getenv("DISCORD_TOKEN")
         print("Token encontrado:", bool(token))
