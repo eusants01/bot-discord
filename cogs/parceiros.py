@@ -76,7 +76,7 @@ PARCEIROS = [
         "nome": "Polícia Militar",
         "descricao": "Força que mantém a ordem dentro do território controlado.",
         "emoji": "🚓",
-        "link": "https://discord.gg/8HzSqvJju"
+        "link": "https://discord.gg/Q94PvtNCs"
     }
 ]
 
