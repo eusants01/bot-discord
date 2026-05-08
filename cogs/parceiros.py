@@ -189,4 +189,5 @@ class Parceiros(commands.Cog):
 
 
 async def setup(bot):
+    bot.add_view(ViewParceiros())
     await bot.add_cog(Parceiros(bot))
