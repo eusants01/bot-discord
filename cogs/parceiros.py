@@ -37,16 +37,16 @@ PARCEIROS = [
         "link": "https://discord.gg/J3VfQfgqHN"
     },
     {
-        "nome": "Submundo",
-        "descricao": "Dimensão onde maldições caminham livremente entre os vivos.",
-        "emoji": "🔥",
-        "link": "https://discord.gg/cjgDDkgDZu"
+        "nome": "Família Ghost",
+        "descricao": "Dimensão das maldições.",
+        "emoji": "👻",
+        "link": "https://discord.gg/uJhDsRMV4"
     },
     {
-        "nome": "Tropa Games",
+        "nome": "Gangue anti Bisonhos",
         "descricao": "Dimensão onde maldições caminham livremente entre os vivos.",
         "emoji": "🎩",
-        "link": "https://discord.gg/F964M2GC9"
+        "link": "https://discord.gg/rS9gTbYsV"
     },
     {
         "nome": "BiscoiteX Community",

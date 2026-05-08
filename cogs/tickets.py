@@ -3,6 +3,8 @@ from discord.ext import commands
 from discord import app_commands
 from io import BytesIO
 import asyncio
+import re
+from datetime import datetime, timezone
 
 
 CATEGORIA_TICKETS_ID = 1495288098010169574
@@ -12,15 +14,51 @@ CANAL_LOG_ID = 1495272331558391818
 CARGOS_ATENDIMENTO_IDS = [
     1487560221202321600,  # STAFF
     1501356975491907664,  # SUPORTE
-    1500545846427652166,   # NOVO CARGO
-    1480381506064093225,   # NOVO CARGO
+    1500545846427652166,  # NOVO CARGO
+    1480381506064093225,  # NOVO CARGO
 ]
 
+COR_ROXA = discord.Color.from_rgb(90, 0, 150)
+COR_VERMELHA = discord.Color.from_rgb(150, 0, 0)
+COR_DOURADA = discord.Color.from_rgb(180, 120, 0)
+COR_ESCURA = discord.Color.from_rgb(40, 0, 65)
 
-async def gerar_transcricao(channel):
+BANNER_TICKET_FECHADO = "https://i.imgur.com/ynK8fwA.png"
+
+
+def limpar_nome(texto: str) -> str:
+    texto = texto.lower()
+    texto = re.sub(r"[^a-z0-9-]", "-", texto)
+    texto = re.sub(r"-+", "-", texto)
+    return texto.strip("-")
+
+
+def formatar_duracao(segundos: int) -> str:
+    minutos, seg = divmod(segundos, 60)
+    horas, min = divmod(minutos, 60)
+    dias, horas = divmod(horas, 24)
+
+    partes = []
+
+    if dias:
+        partes.append(f"{dias}d")
+    if horas:
+        partes.append(f"{horas}h")
+    if min:
+        partes.append(f"{min}min")
+    if seg and not partes:
+        partes.append(f"{seg}s")
+
+    return " ".join(partes) if partes else "0s"
+
+
+async def gerar_transcricao(channel: discord.TextChannel):
     mensagens = []
+    total_mensagens = 0
 
     async for msg in channel.history(limit=None, oldest_first=True):
+        total_mensagens += 1
+
         autor = f"{msg.author} ({msg.author.id})"
         data = msg.created_at.strftime("%d/%m/%Y %H:%M")
         conteudo = msg.content if msg.content else "[Sem texto]"
@@ -31,13 +69,15 @@ async def gerar_transcricao(channel):
 
         mensagens.append(f"[{data}] {autor}: {conteudo}")
 
+    if not mensagens:
+        mensagens.append("Nenhuma mensagem registrada neste domínio.")
+
     arquivo = BytesIO("\n".join(mensagens).encode("utf-8"))
     arquivo.seek(0)
 
-    return discord.File(
-        arquivo,
-        filename=f"{channel.name}.txt"
-    )
+    nome_arquivo = f"registro-do-dominio-{limpar_nome(channel.name)}.txt"
+
+    return discord.File(arquivo, filename=nome_arquivo), total_mensagens
 
 
 class BotaoDownload(discord.ui.View):
@@ -46,91 +86,131 @@ class BotaoDownload(discord.ui.View):
 
         self.add_item(
             discord.ui.Button(
-                label="📥 Baixar Ticket",
+                label="📥 Baixar Registro",
                 url=url
+            )
+        )
+
+        self.add_item(
+            discord.ui.Button(
+                label="🩸 Domínio Encerrado",
+                style=discord.ButtonStyle.gray,
+                disabled=True
             )
         )
 
 
 class ConfirmarFechamento(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=60)
 
     @discord.ui.button(
-        label="Confirmar",
+        label="Confirmar Encerramento",
         style=discord.ButtonStyle.red,
-        emoji="✅"
+        emoji="🔒"
     )
     async def confirmar(
         self,
         interaction: discord.Interaction,
         button: discord.ui.Button
     ):
+        await interaction.response.send_message(
+            "🩸 O domínio será encerrado em instantes...",
+            ephemeral=True
+        )
+
         log = interaction.guild.get_channel(CANAL_LOG_ID)
 
+        criado_em = interaction.channel.created_at
+        fechado_em = datetime.now(timezone.utc)
+        duracao_segundos = int((fechado_em - criado_em).total_seconds())
+        duracao = formatar_duracao(duracao_segundos)
+
+        arquivo, total_mensagens = await gerar_transcricao(interaction.channel)
+
         if log:
+            msg = await log.send(file=arquivo)
+            link = msg.attachments[0].url
+
             embed_log = discord.Embed(
-                title="<a:D1_blue_check:1485361075930136847> Ticket Encerrado",
+                title="🩸 Domínio Encerrado",
                 description=(
-                    f"👤 **Responsável:** {interaction.user.mention}\n"
-                    f"📁 **Canal:** `{interaction.channel.name}`\n"
-                    f"🕒 **Data:** <t:{int(interaction.created_at.timestamp())}:f>"
+                    "O ritual foi finalizado com sucesso.\n"
+                    "A barreira amaldiçoada foi desfeita e os registros foram selados."
                 ),
-                color=discord.Color.dark_blue()
+                color=COR_ROXA
             )
 
-            embed_log.set_image(
-                url="https://i.imgur.com/ynK8fwA.png"
+            embed_log.add_field(
+                name="👁️ Responsável",
+                value=interaction.user.mention,
+                inline=True
+            )
+
+            embed_log.add_field(
+                name="📁 Canal",
+                value=f"`{interaction.channel.name}`",
+                inline=True
+            )
+
+            embed_log.add_field(
+                name="🕒 Encerrado em",
+                value=f"<t:{int(interaction.created_at.timestamp())}:f>",
+                inline=False
+            )
+
+            embed_log.add_field(
+                name="⏳ Duração do Ritual",
+                value=f"`{duracao}`",
+                inline=True
+            )
+
+            embed_log.add_field(
+                name="💬 Mensagens Registradas",
+                value=f"`{total_mensagens}`",
+                inline=True
+            )
+
+            embed_log.add_field(
+                name="📜 Registro",
+                value="Use o botão abaixo para baixar o transcript.",
+                inline=False
             )
 
             embed_log.set_thumbnail(
                 url=interaction.user.display_avatar.url
             )
 
+            embed_log.set_image(
+                url=BANNER_TICKET_FECHADO
+            )
+
             embed_log.set_footer(
                 text="Família Sant's • Sistema de Tickets"
             )
-
-            arquivo = await gerar_transcricao(interaction.channel)
-
-            msg = await log.send(file=arquivo)
-
-            link = msg.attachments[0].url
 
             await msg.edit(
                 embed=embed_log,
                 view=BotaoDownload(link)
             )
 
-        await interaction.response.send_message(
-            "🔒 Iniciando encerramento do domínio...",
-            ephemeral=True
+        aviso = discord.Embed(
+            title="🌑 Colapso do Domínio",
+            description=(
+                "A energia amaldiçoada está se dissipando...\n"
+                "Este canal será apagado em **5 segundos**."
+            ),
+            color=COR_ESCURA
         )
 
-        await asyncio.sleep(2)
+        await interaction.channel.send(embed=aviso)
 
-        await interaction.followup.send(
-            "⚡ A energia amaldiçoada está se dissipando..."
-        )
-
-        await asyncio.sleep(2)
-
-        await interaction.followup.send(
-            "🌑 O domínio está colapsando..."
-        )
-
-        await asyncio.sleep(2)
-
-        await interaction.followup.send(
-            "💀 Domínio encerrado."
-        )
-
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
 
         await interaction.channel.delete()
 
     @discord.ui.button(
-        label="Cancelar Ritual",
+        label="Cancelar",
         style=discord.ButtonStyle.gray,
         emoji="🛑"
     )
@@ -152,7 +232,8 @@ class FecharTicketView(discord.ui.View):
     @discord.ui.button(
         label="Fechar Ticket",
         style=discord.ButtonStyle.red,
-        emoji="🔒"
+        emoji="🔒",
+        custom_id="fechar_ticket_sants"
     )
     async def fechar(
         self,
@@ -161,26 +242,30 @@ class FecharTicketView(discord.ui.View):
     ):
         await interaction.response.defer(ephemeral=True)
 
-        if interaction.user.guild_permissions.administrator:
-            await interaction.followup.send(
-                "Tem certeza que deseja encerrar este domínio?",
-                view=ConfirmarFechamento(),
-                ephemeral=True
-            )
-            return
-
-        if not any(
+        tem_permissao = interaction.user.guild_permissions.administrator or any(
             role.id in CARGOS_ATENDIMENTO_IDS
             for role in interaction.user.roles
-        ):
+        )
+
+        if not tem_permissao:
             await interaction.followup.send(
-                "❌ Você não tem permissão para fechar tickets.",
+                "❌ Você não possui permissão para encerrar este domínio.",
                 ephemeral=True
             )
             return
 
+        embed = discord.Embed(
+            title="🔒 Confirmar Encerramento",
+            description=(
+                "Tem certeza que deseja encerrar este domínio?\n\n"
+                "Após confirmar, o registro será enviado ao canal de logs "
+                "e este ticket será apagado."
+            ),
+            color=COR_VERMELHA
+        )
+
         await interaction.followup.send(
-            "Tem certeza que deseja encerrar este domínio?",
+            embed=embed,
             view=ConfirmarFechamento(),
             ephemeral=True
         )
@@ -190,28 +275,25 @@ class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="❓ Domínio de Dúvidas",
+                label="Domínio de Dúvidas",
                 description="Tem incertezas? Abra um chamado e obtenha respostas.",
                 emoji="❓",
                 value="duvida"
             ),
-
             discord.SelectOption(
-                label="🚨 Relatório de Maldição",
+                label="Relatório de Maldição",
                 description="Presenciou algo suspeito? Traga provas da maldição.",
                 emoji="🚨",
                 value="denuncia"
             ),
-
             discord.SelectOption(
-                label="💰 Ritual de Acesso",
-                description="Deseja ingressar na Família Sant's? Valor: R$80,00.",
+                label="Ritual de Acesso",
+                description="Deseja ingressar na Família Sant's? Tributo: R$80,00.",
                 emoji="💰",
                 value="comprar_vaga"
             ),
-
             discord.SelectOption(
-                label="📜 Protocolo Especial",
+                label="Arquivo Restrito",
                 description="Solicite seu cargo exclusivo preenchendo o modelo.",
                 emoji="📜",
                 value="cargo_exclusivo"
@@ -219,10 +301,11 @@ class TicketSelect(discord.ui.Select):
         ]
 
         super().__init__(
-            placeholder="Selecione uma opção...",
+            placeholder="Selecione um domínio...",
             min_values=1,
             max_values=1,
-            options=options
+            options=options,
+            custom_id="ticket_select_sants"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -230,7 +313,6 @@ class TicketSelect(discord.ui.Select):
 
         guild = interaction.guild
         user = interaction.user
-
         categoria = guild.get_channel(CATEGORIA_TICKETS_ID)
 
         if categoria is None:
@@ -243,7 +325,7 @@ class TicketSelect(discord.ui.Select):
         for channel in guild.text_channels:
             if channel.topic and str(user.id) in channel.topic:
                 await interaction.followup.send(
-                    f"❌ Você já possui um ticket: {channel.mention}",
+                    f"❌ Você já possui um domínio ativo: {channel.mention}",
                     ephemeral=True
                 )
                 return
@@ -255,66 +337,63 @@ class TicketSelect(discord.ui.Select):
                 "nome": "duvida",
                 "titulo": "❓ Domínio de Dúvidas",
                 "descricao": "Tem incertezas? Abra um chamado e obtenha respostas.",
-                "cor": discord.Color.from_rgb(100, 0, 160),
+                "cor": COR_ROXA,
                 "imagem": "https://i.imgur.com/4GQjoSb.png",
-                "thumbnail": "https://i.imgur.com/AYs4N07.png"
+                "thumbnail": "https://i.imgur.com/AYs4N07.png",
+                "grau": "🟣 Grau de Maldição: Dúvida"
             },
-
             "denuncia": {
                 "nome": "denuncia",
                 "titulo": "🚨 Relatório de Maldição",
                 "descricao": "Traga provas e denuncie a maldição.",
-                "cor": discord.Color.from_rgb(140, 0, 0),
+                "cor": COR_VERMELHA,
                 "imagem": "https://i.imgur.com/Bl79W4Y.png",
-                "thumbnail": "https://i.imgur.com/zkIgP83.png"
+                "thumbnail": "https://i.imgur.com/zkIgP83.png",
+                "grau": "🔴 Grau de Maldição: Alto Risco"
             },
-
             "cargo_exclusivo": {
                 "nome": "cargo-exclusivo",
-                "titulo": "📜 Protocolo Especial",
-                "descricao": "Solicite seu cargo exclusivo.",
-                "cor": discord.Color.from_rgb(80, 0, 140),
+                "titulo": "📜 Arquivo Restrito",
+                "descricao": "Solicite seu cargo exclusivo preenchendo o modelo.",
+                "cor": COR_ESCURA,
                 "imagem": "https://i.imgur.com/UP1k58c.png",
-                "thumbnail": "https://i.imgur.com/4ZnTLm3.png"
+                "thumbnail": "https://i.imgur.com/4ZnTLm3.png",
+                "grau": "⚫ Grau de Maldição: Restrito"
             },
-
             "comprar_vaga": {
-                "nome": "comprar-vaga",
+                "nome": "ritual-acesso",
                 "titulo": "💰 Ritual de Acesso",
-                "descricao": "Custo do pacto: R$80,00.",
-                "cor": discord.Color.from_rgb(120, 0, 180),
+                "descricao": "Deseja ingressar na Família Sant's? Tributo necessário: R$80,00.",
+                "cor": COR_DOURADA,
                 "imagem": "https://i.imgur.com/pB3mL7E.png",
-                "thumbnail": "https://i.imgur.com/yw1FDpN.png"
+                "thumbnail": "https://i.imgur.com/yw1FDpN.png",
+                "grau": "🟡 Grau de Maldição: Pacto"
             }
         }
 
         info = tipos_ticket[tipo_ticket]
 
-        nome_canal = (
-            f"{info['nome']}-{user.name}"
-            .lower()
-            .replace(" ", "-")
-        )
+        nome_canal = limpar_nome(f"{info['nome']}-{user.name}")
 
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(
                 view_channel=False
             ),
-
             user: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True,
-                read_message_history=True
+                read_message_history=True,
+                attach_files=True,
+                embed_links=True
             ),
-
             guild.me: discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=True,
-                manage_channels=True
+                manage_channels=True,
+                read_message_history=True
             ),
         }
 
-        # 🔮 ADICIONA TODOS OS CARGOS DE ATENDIMENTO
         for cargo_id in CARGOS_ATENDIMENTO_IDS:
             cargo = guild.get_role(cargo_id)
 
@@ -322,7 +401,9 @@ class TicketSelect(discord.ui.Select):
                 overwrites[cargo] = discord.PermissionOverwrite(
                     view_channel=True,
                     send_messages=True,
-                    read_message_history=True
+                    read_message_history=True,
+                    attach_files=True,
+                    embed_links=True
                 )
 
         canal = await guild.create_text_channel(
@@ -332,32 +413,29 @@ class TicketSelect(discord.ui.Select):
             topic=f"{user.id} | Ticket de {user} | Tipo: {tipo_ticket}"
         )
 
-        # 🔮 MENÇÃO DE TODOS OS CARGOS
         mencoes_staff = " ".join(
             f"<@&{cargo_id}>"
             for cargo_id in CARGOS_ATENDIMENTO_IDS
         )
 
         embed_ticket = discord.Embed(
+            title=info["titulo"],
             description=(
                 f"👁️ {user.mention}, você entrou em um domínio.\n\n"
-                f"**Categoria:** {info['titulo']}\n"
-                f"**Detalhes:** {info['descricao']}\n\n"
+                f"**Detalhes:** {info['descricao']}\n"
+                f"**Classificação:** {info['grau']}\n\n"
+                "📌 **Orientação:**\n"
+                "Explique sua solicitação com clareza e envie provas/imagens se necessário.\n\n"
+                "⏳ **Status:** `Aguardando atendimento`\n\n"
                 f"{mencoes_staff}"
             ),
             color=info["cor"]
         )
 
-        embed_ticket.set_thumbnail(
-            url=info["thumbnail"]
-        )
-
-        embed_ticket.set_image(
-            url=info["imagem"]
-        )
-
+        embed_ticket.set_thumbnail(url=info["thumbnail"])
+        embed_ticket.set_image(url=info["imagem"])
         embed_ticket.set_footer(
-            text="Finalize o ritual quando terminar."
+            text="Finalize o ritual quando o atendimento terminar."
         )
 
         await canal.send(
@@ -367,7 +445,7 @@ class TicketSelect(discord.ui.Select):
         )
 
         await interaction.followup.send(
-            f"✅ Ticket criado: {canal.mention}",
+            f"✅ Domínio criado com sucesso: {canal.mention}",
             ephemeral=True
         )
 
@@ -382,26 +460,26 @@ class TicketCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        self.bot.add_view(TicketView())
+        self.bot.add_view(FecharTicketView())
+
     @app_commands.command(
         name="ticket",
         description="Enviar painel de ticket"
     )
-
-    @app_commands.checks.has_permissions(
-        administrator=True
-    )
-
-    async def ticket(
-        self,
-        interaction: discord.Interaction
-    ):
+    @app_commands.checks.has_permissions(administrator=True)
+    async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="Escola Jujutsu Atendimentos",
+            title="🩸 Escola Jujutsu — Central de Rituais",
             description=(
-                "Canalize sua energia amaldiçoada "
-                "e escolha seu destino...\n\n"
+                "Canalize sua energia amaldiçoada e escolha o domínio desejado.\n\n"
+                "❓ **Domínio de Dúvidas** — suporte geral.\n"
+                "🚨 **Relatório de Maldição** — denúncias e provas.\n"
+                "💰 **Ritual de Acesso** — ingresso na Família Sant's.\n"
+                "📜 **Arquivo Restrito** — solicitação de cargo exclusivo.\n\n"
+                "Selecione uma opção abaixo para iniciar o atendimento."
             ),
-            color=discord.Color.from_rgb(60, 0, 100)
+            color=COR_ROXA
         )
 
         embed.set_image(
@@ -409,7 +487,7 @@ class TicketCog(commands.Cog):
         )
 
         embed.set_footer(
-            text="Painel oficial da escola de feiticeiros."
+            text="Família Sant's • Painel oficial de atendimento"
         )
 
         await interaction.channel.send(
@@ -428,10 +506,16 @@ class TicketCog(commands.Cog):
         interaction: discord.Interaction,
         error
     ):
-        await interaction.response.send_message(
-            "❌ Você não tem um grau especial para usar esse comando.",
-            ephemeral=True
-        )
+        if interaction.response.is_done():
+            await interaction.followup.send(
+                "❌ Você não tem permissão para usar esse comando.",
+                ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                "❌ Você não tem permissão para usar esse comando.",
+                ephemeral=True
+            )
 
 
 async def setup(bot):
