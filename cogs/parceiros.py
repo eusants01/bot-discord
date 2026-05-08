@@ -70,13 +70,7 @@ PARCEIROS = [
         "nome": "Cidadela da Hayley",
         "descricao": "Entre agora e esteja conosco nessa aventura",
         "emoji": "🌸",
-        "link": "https://discord.gg/4yaUuGCuG"
-    },
-    {
-        "nome": "Família Shelby",
-        "descricao": "Aliança silenciosa que atua nas sombras estratégicas.",
-        "emoji": "🐦‍⬛",
-        "link": "https://discord.gg/5kd5mpyt"
+        "link": "https://discord.gg/YMGvwm74y"
     },
     {
         "nome": "Polícia Militar",
