@@ -1,388 +1,427 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import random
 import asyncio
-from datetime import datetime, timedelta
+import random
 
-COR_JUJUTSU = 0x6A00FF
+COR_CUPHEAD = 0xC48A3A
+COR_FINALIZADO = 0x8B3A3A
 
-GIF_SORTEIO = "https://cdn.discordapp.com/attachments/961677475191078992/1500700233816871062/content.png?ex=69f96381&is=69f81201&hm=513fd8c673f3b3121d73bf382a8c82a968f9fafe99ba949d37e0bd301f1b0e6b&"
+# 🔥 COLOQUE O LINK DO SEU BANNER AQUI
+GIF_SORTEIO = "https://i.imgur.com/82XpPJu.png"
 
 
 class SorteioView(discord.ui.View):
-    def __init__(self, cog, sorteio_id):
+    def __init__(self, premio, descricao, ganhadores, requisito, tempo_segundos):
         super().__init__(timeout=None)
-        self.cog = cog
-        self.sorteio_id = sorteio_id
 
-    def is_admin(self, interaction: discord.Interaction):
-        return interaction.user.guild_permissions.administrator
+        self.premio = premio
+        self.descricao = descricao
+        self.ganhadores = ganhadores
+        self.requisito = requisito
+        self.tempo_segundos = tempo_segundos
 
-    @discord.ui.button(label="Participar", emoji="🎟️", style=discord.ButtonStyle.danger)
-    async def participar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        data = self.cog.sorteios.get(self.sorteio_id)
+        self.participantes = []
+        self.finalizado = False
 
-        if not data:
+    def criar_embed(self, status="🎬 EM ANDAMENTO"):
+
+        embed = discord.Embed(
+            title="🎞️ 『 SORTEIO DO CASINO 』 🎞️",
+            description=(
+                "━━━━━━━━━━━━━━━━━━\n"
+                "🎰 UMA NOVA RODADA COMEÇOU\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+
+                "Os sinos tocaram...\n"
+                "A máquina já foi ligada...\n"
+                "E a sorte escolherá seus próximos vencedores.\n\n"
+
+                "🃏 Entre na rodada antes que as cortinas se fechem.\n"
+                "🎲 Apenas os mais sortudos sairão com o prêmio.\n\n"
+
+                "━━━━━━━━━━━━━━━━━━"
+            ),
+            color=COR_CUPHEAD
+        )
+
+        # 🔥 BANNER
+        embed.set_image(url=GIF_SORTEIO)
+
+        embed.add_field(
+            name="🎁 PRÊMIO",
+            value=f"╰➤ `{self.premio}`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="📜 DESCRIÇÃO",
+            value=f"╰➤ `{self.descricao}`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="👑 GANHADORES",
+            value=f"╰➤ `{self.ganhadores}`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🎟️ PARTICIPANTES",
+            value=f"╰➤ `{len(self.participantes)} jogadores`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🎯 REQUISITO",
+            value=f"╰➤ {self.requisito}",
+            inline=True
+        )
+
+        embed.add_field(
+            name="⏳ TERMINA EM",
+            value=f"╰➤ `{self.tempo_segundos // 3600} horas`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="📌 STATUS DA RODADA",
+            value=f"```{status}```",
+            inline=False
+        )
+
+        embed.add_field(
+            name="🎪 COMO PARTICIPAR",
+            value=(
+                "Clique no botão 🎟️ Participar\n"
+                "e entre na rodada atual."
+            ),
+            inline=False
+        )
+
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
+
+        return embed
+
+    async def atualizar_embed(self, interaction: discord.Interaction):
+        await interaction.message.edit(
+            embed=self.criar_embed(),
+            view=self
+        )
+
+    # 🎟️ PARTICIPAR
+    @discord.ui.button(
+        label="Participar",
+        emoji="🎟️",
+        style=discord.ButtonStyle.danger
+    )
+    async def participar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if self.finalizado:
             return await interaction.response.send_message(
-                "❌ Esse sorteio não está mais ativo.",
+                "🎬 Este sorteio já foi finalizado.",
                 ephemeral=True
             )
 
-        if data["cancelado"] or data["finalizado"]:
+        if interaction.user in self.participantes:
             return await interaction.response.send_message(
-                "❌ Esse sorteio já foi encerrado.",
+                "🎟️ Você já está participando desta rodada.",
                 ephemeral=True
             )
 
-        membro = interaction.user
-
-        if data["cargo_id"]:
-            if not any(cargo.id == data["cargo_id"] for cargo in membro.roles):
-                return await interaction.response.send_message(
-                    f"❌ Você precisa do cargo <@&{data['cargo_id']}> para participar.",
-                    ephemeral=True
-                )
-
-        if membro.id in data["participantes"]:
-            return await interaction.response.send_message(
-                "⚠️ Você já está participando.",
-                ephemeral=True
-            )
-
-        data["participantes"].add(membro.id)
-
-        await self.cog.atualizar_mensagem(self.sorteio_id)
+        self.participantes.append(interaction.user)
 
         await interaction.response.send_message(
-            "🩸 Você entrou no sorteio amaldiçoado.",
+            "🎰 Você entrou na rodada do sorteio!",
             ephemeral=True
         )
 
-    @discord.ui.button(label="Sair", emoji="🚪", style=discord.ButtonStyle.secondary)
-    async def sair(self, interaction: discord.Interaction, button: discord.ui.Button):
-        data = self.cog.sorteios.get(self.sorteio_id)
+        await self.atualizar_embed(interaction)
 
-        if not data:
+    # 🚪 SAIR
+    @discord.ui.button(
+        label="Sair",
+        emoji="🚪",
+        style=discord.ButtonStyle.secondary
+    )
+    async def sair(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if interaction.user not in self.participantes:
             return await interaction.response.send_message(
-                "❌ Sorteio não encontrado.",
+                "🚪 Você não está participando deste sorteio.",
                 ephemeral=True
             )
 
-        if data["finalizado"] or data["cancelado"]:
-            return await interaction.response.send_message(
-                "❌ Esse sorteio já foi encerrado.",
-                ephemeral=True
-            )
-
-        if interaction.user.id not in data["participantes"]:
-            return await interaction.response.send_message(
-                "⚠️ Você não está participando.",
-                ephemeral=True
-            )
-
-        data["participantes"].remove(interaction.user.id)
-
-        await self.cog.atualizar_mensagem(self.sorteio_id)
+        self.participantes.remove(interaction.user)
 
         await interaction.response.send_message(
-            "🚪 Você saiu do sorteio.",
+            "🚪 Você saiu da rodada.",
             ephemeral=True
         )
 
-    @discord.ui.button(label="Finalizar", emoji="🏁", style=discord.ButtonStyle.success)
-    async def finalizar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not self.is_admin(interaction):
+        await self.atualizar_embed(interaction)
+
+    # 🎲 REROLL
+    @discord.ui.button(
+        label="Reroll",
+        emoji="🎲",
+        style=discord.ButtonStyle.primary
+    )
+    async def reroll(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if not interaction.user.guild_permissions.manage_messages:
             return await interaction.response.send_message(
-                "❌ Apenas administradores podem usar isso.",
+                "❌ Apenas a equipe pode usar o reroll.",
                 ephemeral=True
             )
 
-        await interaction.response.defer(ephemeral=True)
+        if len(self.participantes) < self.ganhadores:
+            return await interaction.response.send_message(
+                "❌ Não há participantes suficientes.",
+                ephemeral=True
+            )
 
-        await self.cog.finalizar_sorteio(self.sorteio_id, manual=True)
-
-        await interaction.followup.send(
-            "🏁 Sorteio finalizado.",
-            ephemeral=True
+        vencedores = random.sample(
+            self.participantes,
+            self.ganhadores
         )
 
-    @discord.ui.button(label="Reroll", emoji="🔄", style=discord.ButtonStyle.primary)
-    async def reroll(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not self.is_admin(interaction):
-            return await interaction.response.send_message(
-                "❌ Apenas administradores podem usar isso.",
-                ephemeral=True
-            )
-
-        await interaction.response.defer(ephemeral=True)
-
-        resultado = await self.cog.reroll_sorteio(self.sorteio_id)
-
-        await interaction.followup.send(resultado, ephemeral=True)
-
-    @discord.ui.button(label="Cancelar", emoji="❌", style=discord.ButtonStyle.danger)
-    async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not self.is_admin(interaction):
-            return await interaction.response.send_message(
-                "❌ Apenas administradores podem usar isso.",
-                ephemeral=True
-            )
-
-        data = self.cog.sorteios.get(self.sorteio_id)
-
-        if not data:
-            return await interaction.response.send_message(
-                "❌ Sorteio não encontrado.",
-                ephemeral=True
-            )
-
-        data["cancelado"] = True
-        data["finalizado"] = True
-
-        await self.cog.atualizar_mensagem(self.sorteio_id, cancelado=True)
+        mencoes = ", ".join(
+            v.mention for v in vencedores
+        )
 
         await interaction.response.send_message(
-            "❌ Sorteio cancelado.",
-            ephemeral=True
+            f"🎲 **REROLL REALIZADO!**\n\n"
+            f"🎁 Prêmio: **{self.premio}**\n"
+            f"👑 Novo vencedor: {mencoes}"
+        )
+
+    # 🏁 FINALIZAR
+    @discord.ui.button(
+        label="Finalizar",
+        emoji="🏁",
+        style=discord.ButtonStyle.success
+    )
+    async def finalizar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if not interaction.user.guild_permissions.manage_messages:
+            return await interaction.response.send_message(
+                "❌ Apenas a equipe pode finalizar.",
+                ephemeral=True
+            )
+
+        await interaction.response.defer()
+
+        await self.finalizar_sorteio(
+            interaction.message
+        )
+
+    # ❌ CANCELAR
+    @discord.ui.button(
+        label="Cancelar",
+        emoji="❌",
+        style=discord.ButtonStyle.danger
+    )
+    async def cancelar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if not interaction.user.guild_permissions.manage_messages:
+            return await interaction.response.send_message(
+                "❌ Apenas a equipe pode cancelar.",
+                ephemeral=True
+            )
+
+        self.finalizado = True
+
+        for item in self.children:
+            item.disabled = True
+
+        embed = discord.Embed(
+            title="❌ 『 SORTEIO CANCELADO 』",
+            description=(
+                "━━━━━━━━━━━━━━━━━━\n"
+                "A rodada foi interrompida.\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                f"🎁 Prêmio cancelado:\n"
+                f"`{self.premio}`"
+            ),
+            color=COR_FINALIZADO
+        )
+
+        embed.set_image(url=GIF_SORTEIO)
+
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
+
+        await interaction.response.edit_message(
+            embed=embed,
+            view=self
+        )
+
+    # 🔥 FINALIZAR SORTEIO
+    async def finalizar_sorteio(
+        self,
+        message: discord.Message
+    ):
+
+        if self.finalizado:
+            return
+
+        self.finalizado = True
+
+        for item in self.children:
+            item.disabled = True
+
+        # SEM PARTICIPANTES
+        if len(self.participantes) < self.ganhadores:
+
+            embed = discord.Embed(
+                title="🎬 『 FIM DA RODADA 』",
+                description=(
+                    "━━━━━━━━━━━━━━━━━━\n"
+                    "A rodada foi encerrada.\n"
+                    "━━━━━━━━━━━━━━━━━━\n\n"
+
+                    "🎭 O prêmio não encontrou\n"
+                    "um vencedor desta vez.\n\n"
+
+                    "🕰️ Volte na próxima sessão."
+                ),
+                color=COR_FINALIZADO
+            )
+
+            embed.set_image(url=GIF_SORTEIO)
+
+            embed.set_footer(
+                text="Família Sant's • Cassino Retrô"
+            )
+
+            return await message.edit(
+                embed=embed,
+                view=self
+            )
+
+        # COM VENCEDORES
+        vencedores = random.sample(
+            self.participantes,
+            self.ganhadores
+        )
+
+        mencoes = ", ".join(
+            v.mention for v in vencedores
+        )
+
+        embed = discord.Embed(
+            title="🏆 『 VENCEDOR DEFINIDO 』",
+            description=(
+                "━━━━━━━━━━━━━━━━━━\n"
+                "A roleta parou!\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+
+                f"🎁 **Prêmio:**\n"
+                f"`{self.premio}`\n\n"
+
+                f"👑 **Vencedor(es):**\n"
+                f"{mencoes}\n\n"
+
+                "🎰 Obrigado por participar."
+            ),
+            color=COR_CUPHEAD
+        )
+
+        embed.set_image(url=GIF_SORTEIO)
+
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
+
+        await message.edit(
+            embed=embed,
+            view=self
         )
 
 
-class Sorteios(commands.Cog):
+class Sorteio(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.sorteios = {}
 
     @app_commands.command(
         name="sorteio",
-        description="Criar um sorteio amaldiçoado"
+        description="Cria um sorteio estilo Cuphead."
     )
     @app_commands.describe(
-        premio="🎁 Prêmio do sorteio",
-        descricao="📜 Descrição do prêmio",
-        minutos="⏳ Tempo do sorteio em minutos",
-        ganhadores="👥 Quantidade de ganhadores",
-        canal="📢 Canal onde o sorteio será enviado",
-        cargo="🧿 Cargo obrigatório para participar"
+        premio="Prêmio do sorteio",
+        descricao="Descrição do prêmio",
+        ganhadores="Quantidade de ganhadores",
+        horas="Duração em horas",
+        requisito="Requisito para participar"
     )
     async def sorteio(
         self,
         interaction: discord.Interaction,
         premio: str,
         descricao: str,
-        minutos: int,
         ganhadores: int,
-        canal: discord.TextChannel,
-        cargo: discord.Role = None
+        horas: int,
+        requisito: str = "Nenhum"
     ):
-        if not interaction.user.guild_permissions.administrator:
+
+        if not interaction.user.guild_permissions.manage_messages:
             return await interaction.response.send_message(
-                "❌ Apenas administradores podem criar sorteios.",
+                "❌ Apenas a equipe pode criar sorteios.",
                 ephemeral=True
             )
 
-        if minutos < 1:
-            return await interaction.response.send_message(
-                "❌ O tempo mínimo é 1 minuto.",
-                ephemeral=True
-            )
+        tempo_segundos = horas * 3600
 
-        if ganhadores < 1:
-            return await interaction.response.send_message(
-                "❌ O número de ganhadores precisa ser pelo menos 1.",
-                ephemeral=True
-            )
-
-        await interaction.response.defer(ephemeral=True)
-
-        sorteio_id = interaction.id
-        fim = datetime.utcnow() + timedelta(minutes=minutos)
-
-        self.sorteios[sorteio_id] = {
-            "premio": premio,
-            "descricao": descricao,
-            "ganhadores": ganhadores,
-            "cargo_id": cargo.id if cargo else None,
-            "participantes": set(),
-            "fim": fim,
-            "canal_id": canal.id,
-            "mensagem_id": None,
-            "finalizado": False,
-            "cancelado": False,
-            "vencedores": []
-        }
-
-        embed = self.criar_embed(sorteio_id)
-        view = SorteioView(self, sorteio_id)
-
-        msg = await canal.send(embed=embed, view=view)
-
-        self.sorteios[sorteio_id]["mensagem_id"] = msg.id
-
-        await interaction.followup.send(
-            f"✅ Sorteio criado com sucesso em {canal.mention}.",
-            ephemeral=True
+        view = SorteioView(
+            premio,
+            descricao,
+            ganhadores,
+            requisito,
+            tempo_segundos
         )
 
-        asyncio.create_task(self.timer_sorteio(sorteio_id, minutos))
+        embed = view.criar_embed()
 
-    def criar_embed(self, sorteio_id, cancelado=False, finalizado=False):
-        data = self.sorteios[sorteio_id]
-
-        requisito = f"<@&{data['cargo_id']}>" if data["cargo_id"] else "Nenhum"
-        participantes = len(data["participantes"])
-
-        status = "🩸 **Status:** Ativo"
-
-        if cancelado:
-            status = "❌ **Status:** Cancelado"
-        elif finalizado:
-            status = "🏁 **Status:** Finalizado"
-
-        embed = discord.Embed(
-            title="🩸 SORTEIO AMALDIÇOADO",
-            description=(
-                "Uma barreira foi erguida dentro do domínio da **Família Sant’s**.\n"
-                "A energia amaldiçoada escolherá seus próximos portadores.\n\n"
-                f"🎁 **Prêmio:** {data['premio']}\n"
-                f"📜 **Descrição:** {data['descricao']}\n"
-                f"👥 **Ganhadores:** {data['ganhadores']}\n"
-                f"🎟️ **Participantes:** {participantes}\n"
-                f"🧿 **Requisito:** {requisito}\n"
-                f"⏳ **Termina:** <t:{int(data['fim'].timestamp())}:R>\n\n"
-                "Clique em **Participar** para entrar no ritual.\n\n"
-                f"{status}"
-            ),
-            color=COR_JUJUTSU
+        await interaction.response.send_message(
+            embed=embed,
+            view=view
         )
 
-        if GIF_SORTEIO and GIF_SORTEIO != "COLOQUE_AQUI_O_LINK_DO_SEU_BANNER":
-            embed.set_image(url=GIF_SORTEIO)
+        mensagem = await interaction.original_response()
 
-        embed.set_footer(text="Família Sant’s • Sorteio Amaldiçoado")
+        await asyncio.sleep(
+            tempo_segundos
+        )
 
-        return embed
-
-    async def atualizar_mensagem(self, sorteio_id, cancelado=False, finalizado=False):
-        data = self.sorteios.get(sorteio_id)
-
-        if not data:
-            return
-
-        canal = self.bot.get_channel(data["canal_id"])
-
-        if not canal:
-            return
-
-        try:
-            msg = await canal.fetch_message(data["mensagem_id"])
-            embed = self.criar_embed(
-                sorteio_id,
-                cancelado=cancelado,
-                finalizado=finalizado
+        if not view.finalizado:
+            await view.finalizar_sorteio(
+                mensagem
             )
-            await msg.edit(embed=embed)
-        except Exception:
-            pass
-
-    async def timer_sorteio(self, sorteio_id, minutos):
-        await asyncio.sleep(minutos * 60)
-
-        data = self.sorteios.get(sorteio_id)
-
-        if not data:
-            return
-
-        if data["finalizado"] or data["cancelado"]:
-            return
-
-        await self.finalizar_sorteio(sorteio_id)
-
-    async def finalizar_sorteio(self, sorteio_id, manual=False):
-        data = self.sorteios.get(sorteio_id)
-
-        if not data:
-            return
-
-        if data["finalizado"]:
-            return
-
-        data["finalizado"] = True
-
-        canal = self.bot.get_channel(data["canal_id"])
-
-        if not canal:
-            return
-
-        participantes = list(data["participantes"])
-
-        if len(participantes) < data["ganhadores"]:
-            await canal.send(
-                f"❌ O sorteio **{data['premio']}** foi encerrado, mas não teve participantes suficientes."
-            )
-
-            await self.atualizar_mensagem(sorteio_id, finalizado=True)
-            return
-
-        vencedores = random.sample(participantes, data["ganhadores"])
-
-        data["vencedores"] = vencedores
-
-        texto_vencedores = "\n".join([f"🏆 <@{v}>" for v in vencedores])
-
-        embed = discord.Embed(
-            title="🏆 O RITUAL FOI CONCLUÍDO",
-            description=(
-                f"🎁 **Prêmio:** {data['premio']}\n"
-                f"📜 **Descrição:** {data['descricao']}\n\n"
-                f"**Vencedores:**\n{texto_vencedores}\n\n"
-                "A energia amaldiçoada escolheu seus portadores."
-            ),
-            color=COR_JUJUTSU
-        )
-
-        embed.set_footer(text="Família Sant’s • Resultado do Sorteio")
-
-        await canal.send(embed=embed)
-
-        await self.atualizar_mensagem(sorteio_id, finalizado=True)
-
-    async def reroll_sorteio(self, sorteio_id):
-        data = self.sorteios.get(sorteio_id)
-
-        if not data:
-            return "❌ Sorteio não encontrado."
-
-        participantes = list(data["participantes"])
-
-        if len(participantes) < data["ganhadores"]:
-            return "❌ Não há participantes suficientes para fazer reroll."
-
-        novos = random.sample(participantes, data["ganhadores"])
-
-        data["vencedores"] = novos
-
-        canal = self.bot.get_channel(data["canal_id"])
-
-        texto = "\n".join([f"🔄 <@{v}>" for v in novos])
-
-        embed = discord.Embed(
-            title="🔄 REROLL DO SORTEIO",
-            description=(
-                f"🎁 **Prêmio:** {data['premio']}\n"
-                f"📜 **Descrição:** {data['descricao']}\n\n"
-                f"**Novos vencedores:**\n{texto}"
-            ),
-            color=COR_JUJUTSU
-        )
-
-        embed.set_footer(text="Família Sant’s • Reroll Amaldiçoado")
-
-        if canal:
-            await canal.send(embed=embed)
-
-        return "🔄 Reroll realizado com sucesso."
 
 
 async def setup(bot):
-    await bot.add_cog(Sorteios(bot))
+    await bot.add_cog(Sorteio(bot))
