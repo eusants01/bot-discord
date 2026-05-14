@@ -9,9 +9,135 @@ COR_FINALIZADO = 0x8B3A3A
 
 GIF_SORTEIO = "https://i.imgur.com/82XpPJu.png"
 
+# 🔥 CARGO QUE PODE ACESSAR O PAINEL ADMIN
+CARGOS_ADMIN_SORTEIO = [
+    1501356975491907664,
+    1500545846427652166,
+    12345678901234567890
+]
+
+
+class AdminSorteioView(discord.ui.View):
+    def __init__(self, sorteio_view):
+        super().__init__(timeout=120)
+        self.sorteio_view = sorteio_view
+
+    @discord.ui.button(
+        label="Participantes",
+        emoji="👥",
+        style=discord.ButtonStyle.primary
+    )
+    async def ver_participantes(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        participantes = self.sorteio_view.participantes
+
+        if not participantes:
+            texto = "Nenhum participante."
+        else:
+            texto = "\n".join(
+                [f"{i+1}. {m.mention}" for i, m in enumerate(participantes)]
+            )
+
+        embed = discord.Embed(
+            title="👥 Participantes do Sorteio",
+            description=texto,
+            color=COR_CUPHEAD
+        )
+
+        embed.set_footer(
+            text=f"Total: {len(participantes)} participante(s)"
+        )
+
+        await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    @discord.ui.button(
+        label="Reroll",
+        emoji="🎲",
+        style=discord.ButtonStyle.primary
+    )
+    async def reroll(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        if len(self.sorteio_view.participantes) < self.sorteio_view.ganhadores:
+            return await interaction.response.send_message(
+                "❌ Não há participantes suficientes.",
+                ephemeral=True
+            )
+
+        vencedores = random.sample(
+            self.sorteio_view.participantes,
+            self.sorteio_view.ganhadores
+        )
+
+        mencoes = ", ".join(
+            v.mention for v in vencedores
+        )
+
+        await interaction.response.send_message(
+            f"🎲 **REROLL REALIZADO!**\n\n"
+            f"🎁 Prêmio: **{self.sorteio_view.premio}**\n"
+            f"👑 Novo vencedor: {mencoes}"
+        )
+
+    @discord.ui.button(
+        label="Finalizar",
+        emoji="🏁",
+        style=discord.ButtonStyle.success
+    )
+    async def finalizar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        await interaction.response.defer(
+            ephemeral=True
+        )
+
+        await self.sorteio_view.finalizar_sorteio(
+            self.sorteio_view.mensagem
+        )
+
+    @discord.ui.button(
+        label="Cancelar",
+        emoji="❌",
+        style=discord.ButtonStyle.danger
+    )
+    async def cancelar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        await interaction.response.defer(
+            ephemeral=True
+        )
+
+        await self.sorteio_view.cancelar_sorteio(
+            self.sorteio_view.mensagem
+        )
+
 
 class SorteioView(discord.ui.View):
-    def __init__(self, premio, descricao, ganhadores, requisito, tempo_segundos):
+    def __init__(
+        self,
+        premio,
+        descricao,
+        ganhadores,
+        requisito,
+        tempo_segundos
+    ):
+
         super().__init__(timeout=None)
 
         self.premio = premio
@@ -22,32 +148,64 @@ class SorteioView(discord.ui.View):
 
         self.participantes = []
         self.finalizado = False
+        self.mensagem = None
 
-    def criar_embed(self, status="🎬 EM ANDAMENTO"):
+    def requisito_texto(self):
+        if self.requisito is None:
+            return "`Nenhum`"
+
+        return self.requisito.mention
+
+    def criar_embed(
+        self,
+        status="🎬 EM ANDAMENTO"
+    ):
+
         embed = discord.Embed(
             title="🎞️ 『 SORTEIO DO CASSINO 』 🎞️",
             description=(
-                "━━━━━━━━━━━━━━━━━━\n"
-                "🎰 UMA NOVA RODADA COMEÇOU\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "As cortinas se abriram.\n"
-                "A roleta começou a girar.\n"
-                "Agora, a sorte decidirá o próximo vencedor.\n\n"
                 "🎟️ Clique em **Participar** para entrar na rodada.\n"
-                "🎲 Apenas quem cumprir os requisitos poderá concorrer.\n\n"
+                "🎯 Apenas quem cumprir os requisitos poderá concorrer.\n\n"
                 "━━━━━━━━━━━━━━━━━━"
             ),
             color=COR_CUPHEAD
         )
 
-        embed.set_image(url=GIF_SORTEIO)
+        embed.add_field(
+            name="🎁 PRÊMIO",
+            value=f"╰➤ `{self.premio}`",
+            inline=True
+        )
 
-        embed.add_field(name="🎁 PRÊMIO", value=f"╰➤ `{self.premio}`", inline=True)
-        embed.add_field(name="📜 DESCRIÇÃO", value=f"╰➤ `{self.descricao}`", inline=True)
-        embed.add_field(name="👑 GANHADORES", value=f"╰➤ `{self.ganhadores}`", inline=True)
-        embed.add_field(name="🎟️ PARTICIPANTES", value=f"╰➤ `{len(self.participantes)} jogadores`", inline=True)
-        embed.add_field(name="🎯 REQUISITO", value=f"╰➤ `{self.requisito}`", inline=True)
-        embed.add_field(name="⏳ TERMINA EM", value=f"╰➤ `{self.tempo_segundos // 3600} horas`", inline=True)
+        embed.add_field(
+            name="📜 DESCRIÇÃO",
+            value=f"╰➤ `{self.descricao}`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="👑 GANHADORES",
+            value=f"╰➤ `{self.ganhadores}`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🎟️ PARTICIPANTES",
+            value=f"╰➤ `{len(self.participantes)} jogadores`",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🎯 REQUISITO",
+            value=f"╰➤ {self.requisito_texto()}",
+            inline=True
+        )
+
+        embed.add_field(
+            name="⏳ TERMINA EM",
+            value=f"╰➤ `{self.tempo_segundos // 3600} horas`",
+            inline=True
+        )
 
         embed.add_field(
             name="📌 STATUS DA RODADA",
@@ -55,110 +213,142 @@ class SorteioView(discord.ui.View):
             inline=False
         )
 
-        embed.set_footer(text="Família Sant's • Cassino Retrô")
+        embed.set_image(
+            url=GIF_SORTEIO
+        )
+
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
+
         return embed
 
-    async def atualizar_embed(self, interaction: discord.Interaction):
-        await interaction.message.edit(embed=self.criar_embed(), view=self)
+    async def atualizar_embed(self):
 
-    def usuario_tem_requisito(self, member: discord.Member):
-        if self.requisito.lower() in ["nenhum", "não", "nao", "sem requisito"]:
+        if self.mensagem:
+            await self.mensagem.edit(
+                embed=self.criar_embed(),
+                view=self
+            )
+
+    def tem_requisito(
+        self,
+        membro: discord.Member
+    ):
+
+        if self.requisito is None:
             return True
 
-        cargo = discord.utils.get(member.guild.roles, name=self.requisito)
+        return self.requisito in membro.roles
 
-        if cargo is None:
-            return False
+    # 🎟️ PARTICIPAR
+    @discord.ui.button(
+        label="Participar",
+        emoji="🎟️",
+        style=discord.ButtonStyle.danger
+    )
+    async def participar(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
 
-        return cargo in member.roles
-
-    @discord.ui.button(label="Participar", emoji="🎟️", style=discord.ButtonStyle.danger)
-    async def participar(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.finalizado:
             return await interaction.response.send_message(
                 "🎬 Este sorteio já foi finalizado.",
                 ephemeral=True
             )
 
-        if not self.usuario_tem_requisito(interaction.user):
+        if not self.tem_requisito(
+            interaction.user
+        ):
+
             return await interaction.response.send_message(
-                f"❌ Você precisa do cargo `{self.requisito}` para participar deste sorteio.",
+                f"❌ Você precisa do cargo {self.requisito.mention} para participar.",
                 ephemeral=True
             )
 
         if interaction.user in self.participantes:
             return await interaction.response.send_message(
-                "🎟️ Você já está participando desta rodada.",
+                "🎟️ Você já está participando.",
                 ephemeral=True
             )
 
-        self.participantes.append(interaction.user)
+        self.participantes.append(
+            interaction.user
+        )
 
         await interaction.response.send_message(
-            "🎰 Você entrou na rodada do sorteio!",
+            "🎰 Você entrou na rodada!",
             ephemeral=True
         )
 
-        await self.atualizar_embed(interaction)
+        await self.atualizar_embed()
 
-    @discord.ui.button(label="Sair", emoji="🚪", style=discord.ButtonStyle.secondary)
-    async def sair(self, interaction: discord.Interaction, button: discord.ui.Button):
+    # 🚪 SAIR
+    @discord.ui.button(
+        label="Sair",
+        emoji="🚪",
+        style=discord.ButtonStyle.secondary
+    )
+    async def sair(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
         if interaction.user not in self.participantes:
             return await interaction.response.send_message(
-                "🚪 Você não está participando deste sorteio.",
+                "🚪 Você não participa deste sorteio.",
                 ephemeral=True
             )
 
-        self.participantes.remove(interaction.user)
+        self.participantes.remove(
+            interaction.user
+        )
 
         await interaction.response.send_message(
             "🚪 Você saiu da rodada.",
             ephemeral=True
         )
 
-        await self.atualizar_embed(interaction)
+        await self.atualizar_embed()
 
-    @discord.ui.button(label="Reroll", emoji="🎲", style=discord.ButtonStyle.primary)
-    async def reroll(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.manage_messages:
-            return await interaction.response.send_message(
-                "❌ Apenas a equipe pode usar o reroll.",
-                ephemeral=True
-            )
+    # ⚙️ ADMIN
+    @discord.ui.button(
+        label="Admin",
+        emoji="⚙️",
+        style=discord.ButtonStyle.primary
+    )
+    async def admin(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
 
-        if len(self.participantes) < self.ganhadores:
-            return await interaction.response.send_message(
-                "❌ Não há participantes suficientes.",
-                ephemeral=True
-            )
-
-        vencedores = random.sample(self.participantes, self.ganhadores)
-        mencoes = ", ".join(v.mention for v in vencedores)
-
-        await interaction.response.send_message(
-            f"🎲 **REROLL REALIZADO!**\n\n"
-            f"🎁 Prêmio: **{self.premio}**\n"
-            f"👑 Novo vencedor: {mencoes}"
+        cargo_admin = interaction.guild.get_role(
+            CARGOS_ADMIN_SORTEIO
         )
 
-    @discord.ui.button(label="Finalizar", emoji="🏁", style=discord.ButtonStyle.success)
-    async def finalizar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.manage_messages:
+        if cargo_admin not in interaction.user.roles:
             return await interaction.response.send_message(
-                "❌ Apenas a equipe pode finalizar.",
+                "❌ Você não pode acessar este painel.",
                 ephemeral=True
             )
 
-        await interaction.response.defer()
-        await self.finalizar_sorteio(interaction.message)
+        await interaction.response.send_message(
+            "⚙️ Painel administrativo do sorteio",
+            view=AdminSorteioView(self),
+            ephemeral=True
+        )
 
-    @discord.ui.button(label="Cancelar", emoji="❌", style=discord.ButtonStyle.danger)
-    async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.guild_permissions.manage_messages:
-            return await interaction.response.send_message(
-                "❌ Apenas a equipe pode cancelar.",
-                ephemeral=True
-            )
+    async def cancelar_sorteio(
+        self,
+        message: discord.Message
+    ):
+
+        if self.finalizado:
+            return
 
         self.finalizado = True
 
@@ -169,19 +359,31 @@ class SorteioView(discord.ui.View):
             title="❌ 『 SORTEIO CANCELADO 』",
             description=(
                 "━━━━━━━━━━━━━━━━━━\n"
-                "A rodada foi interrompida pela equipe.\n"
+                "A rodada foi cancelada pela equipe.\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
-                f"🎁 Prêmio cancelado:\n`{self.premio}`"
+                f"🎁 **Prêmio:** `{self.premio}`"
             ),
             color=COR_FINALIZADO
         )
 
-        embed.set_image(url=GIF_SORTEIO)
-        embed.set_footer(text="Família Sant's • Cassino Retrô")
+        embed.set_image(
+            url=GIF_SORTEIO
+        )
 
-        await interaction.response.edit_message(embed=embed, view=self)
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
 
-    async def finalizar_sorteio(self, message: discord.Message):
+        await message.edit(
+            embed=embed,
+            view=self
+        )
+
+    async def finalizar_sorteio(
+        self,
+        message: discord.Message
+    ):
+
         if self.finalizado:
             return
 
@@ -191,6 +393,7 @@ class SorteioView(discord.ui.View):
             item.disabled = True
 
         if len(self.participantes) < self.ganhadores:
+
             embed = discord.Embed(
                 title="🎬 『 FIM DA RODADA 』",
                 description=(
@@ -198,19 +401,32 @@ class SorteioView(discord.ui.View):
                     "A rodada foi encerrada.\n"
                     "━━━━━━━━━━━━━━━━━━\n\n"
                     f"🎭 O sorteio **{self.premio}** foi encerrado,\n"
-                    "mas não teve participantes suficientes.\n\n"
-                    "🕰️ Volte na próxima sessão."
+                    "mas não teve participantes suficientes."
                 ),
                 color=COR_FINALIZADO
             )
 
-            embed.set_image(url=GIF_SORTEIO)
-            embed.set_footer(text="Família Sant's • Cassino Retrô")
+            embed.set_image(
+                url=GIF_SORTEIO
+            )
 
-            return await message.edit(embed=embed, view=self)
+            embed.set_footer(
+                text="Família Sant's • Cassino Retrô"
+            )
 
-        vencedores = random.sample(self.participantes, self.ganhadores)
-        mencoes = ", ".join(v.mention for v in vencedores)
+            return await message.edit(
+                embed=embed,
+                view=self
+            )
+
+        vencedores = random.sample(
+            self.participantes,
+            self.ganhadores
+        )
+
+        mencoes = ", ".join(
+            v.mention for v in vencedores
+        )
 
         embed = discord.Embed(
             title="🏆 『 VENCEDOR DEFINIDO 』",
@@ -218,21 +434,37 @@ class SorteioView(discord.ui.View):
                 "━━━━━━━━━━━━━━━━━━\n"
                 "A roleta parou!\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
+
                 f"🎁 **Prêmio:** `{self.premio}`\n\n"
-                f"👑 **Vencedor(es):** {mencoes}\n\n"
+
+                f"👑 **Vencedor(es):**\n"
+                f"{mencoes}\n\n"
+
                 "🎰 Obrigado por participar."
             ),
             color=COR_CUPHEAD
         )
 
-        embed.set_image(url=GIF_SORTEIO)
-        embed.set_footer(text="Família Sant's • Cassino Retrô")
+        embed.set_image(
+            url=GIF_SORTEIO
+        )
 
-        await message.edit(embed=embed, view=self)
+        embed.set_footer(
+            text="Família Sant's • Cassino Retrô"
+        )
+
+        await message.edit(
+            embed=embed,
+            view=self
+        )
 
 
 class Sorteio(commands.Cog):
-    def __init__(self, bot):
+    def __init__(
+        self,
+        bot
+    ):
+
         self.bot = bot
 
     @app_commands.command(
@@ -244,7 +476,7 @@ class Sorteio(commands.Cog):
         descricao="Descrição do prêmio",
         ganhadores="Quantidade de ganhadores",
         horas="Duração em horas",
-        requisito="Nome exato do cargo necessário para participar. Use Nenhum se não tiver requisito."
+        requisito="Cargo necessário para participar"
     )
     async def sorteio(
         self,
@@ -253,25 +485,8 @@ class Sorteio(commands.Cog):
         descricao: str,
         ganhadores: int,
         horas: int,
-        requisito: str = "Nenhum"
+        requisito: discord.Role = None
     ):
-        if not interaction.user.guild_permissions.manage_messages:
-            return await interaction.response.send_message(
-                "❌ Apenas a equipe pode criar sorteios.",
-                ephemeral=True
-            )
-
-        if ganhadores <= 0:
-            return await interaction.response.send_message(
-                "❌ A quantidade de ganhadores precisa ser maior que 0.",
-                ephemeral=True
-            )
-
-        if horas <= 0:
-            return await interaction.response.send_message(
-                "❌ A duração precisa ser maior que 0 horas.",
-                ephemeral=True
-            )
 
         tempo_segundos = horas * 3600
 
@@ -290,11 +505,19 @@ class Sorteio(commands.Cog):
 
         mensagem = await interaction.original_response()
 
-        await asyncio.sleep(tempo_segundos)
+        view.mensagem = mensagem
+
+        await asyncio.sleep(
+            tempo_segundos
+        )
 
         if not view.finalizado:
-            await view.finalizar_sorteio(mensagem)
+            await view.finalizar_sorteio(
+                mensagem
+            )
 
 
 async def setup(bot):
-    await bot.add_cog(Sorteio(bot))
+    await bot.add_cog(
+        Sorteio(bot)
+    )
