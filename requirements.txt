@@ -2,3 +2,5 @@ discord.py
 psycopg2-binary
 Pillow
 requests
+python-dotenv
+asyncpg
