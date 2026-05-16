@@ -9,7 +9,7 @@ from datetime import datetime
 # ==================================================
 
 GUILD_ID = 123456789012345678
-CANAL_LOGS_ID = 123456789012345678
+CANAL_LOGS_ID = 1501594489939300524
 
 COR_ROXA = 0x7B2CFF
 COR_VERMELHA = 0xFF0000
