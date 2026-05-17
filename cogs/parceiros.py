@@ -172,14 +172,12 @@ class Parceiros(commands.Cog):
     async def painel_parceiros(self, ctx):
 
         embed = discord.Embed(
-            title="🎩 GRANDE PALCO DOS PARCEIROS",
+            title="<a:CUPCHILL:1502354528802963538> GRANDE PALCO DOS PARCEIROS",
             description=(
-                "**Bem-vindo ao salão das alianças da Família Sant's!**\n\n"
-                "Aqui ficam os servidores que caminham junto com a nossa comunidade.\n"
-                "Cada parceiro abaixo representa uma nova porta, uma nova aventura "
-                "e um novo palco para conhecer pessoas.\n\n"
-                "🎟️ Escolha uma parceria no menu abaixo.\n"
-                "🎬 As cortinas vão se abrir para o servidor selecionado."
+                "**Bem-vindo ao salão das alianças da **Família Sant's**!!**\n\n"
+                "*Aqui ficam os servidores que caminham junto com a nossa comunidade*.\n"
+                "*Cada parceiro abaixo representa uma nova porta, uma nova aventura*"
+                "*e um novo palco para conhecer pessoas.\n\n*"
             ),
             color=COR_CUPHEAD
         )
