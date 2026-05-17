@@ -21,8 +21,8 @@ COR_VERDE = 0x00FF88
 
 BANNER_WARN = "https://i.imgur.com/7VCFn76.png"
 BANNER_BAN = "https://i.imgur.com/UqFKdTL.png"
-BANNER_UNBAN = "https://i.imgur.com/SEU_BANNER_UNBAN.png"
-BANNER_CLEAR = "https://i.imgur.com/SEU_BANNER_CLEAR.png"
+BANNER_UNBAN = "https://i.imgur.com/IFDHuR3.png"
+BANNER_CLEAR = "https://i.imgur.com/X98wym6.png"
 
 # ==================================================
 # BANCO DE DADOS

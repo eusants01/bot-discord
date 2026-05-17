@@ -23,7 +23,7 @@ COR_DOURADA = discord.Color.from_rgb(180, 120, 0)
 COR_ESCURA = discord.Color.from_rgb(40, 0, 65)
 COR_VERDE = discord.Color.from_rgb(0, 150, 80)
 
-BANNER_TICKET_FECHADO = "https://i.imgur.com/ynK8fwA.png"
+BANNER_TICKET_FECHADO = "https://i.imgur.com/xzTNoyc.png"
 
 
 def limpar_nome(texto: str) -> str:
