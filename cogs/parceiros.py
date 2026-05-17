@@ -177,7 +177,6 @@ class Parceiros(commands.Cog):
                 "**Bem-vindo ao salão das alianças da **Família Sant's**!!**\n\n"
                 "*Aqui ficam os servidores que caminham junto com a nossa comunidade*.\n"
                 "*Cada parceiro abaixo representa uma nova porta, uma nova aventura*"
-                "*e um novo palco para conhecer pessoas.\n\n*"
             ),
             color=COR_CUPHEAD
         )
