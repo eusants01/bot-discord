@@ -7,6 +7,10 @@ import re
 from datetime import datetime, timezone
 
 
+# =========================
+# CONFIGURAÇÕES
+# =========================
+
 CATEGORIA_TICKETS_ID = 1495288098010169574
 CANAL_LOG_ID = 1495272331558391818
 
@@ -17,14 +21,35 @@ CARGOS_ATENDIMENTO_IDS = [
     1480381506064093225,
 ]
 
-COR_ROXA = discord.Color.from_rgb(90, 0, 150)
-COR_VERMELHA = discord.Color.from_rgb(150, 0, 0)
-COR_DOURADA = discord.Color.from_rgb(180, 120, 0)
-COR_ESCURA = discord.Color.from_rgb(40, 0, 65)
-COR_VERDE = discord.Color.from_rgb(0, 150, 80)
+# Tema Cuphead
+COR_CUPHEAD_VERMELHO = discord.Color.from_rgb(160, 45, 35)
+COR_CUPHEAD_AZUL = discord.Color.from_rgb(35, 95, 140)
+COR_CUPHEAD_DOURADO = discord.Color.from_rgb(205, 155, 70)
+COR_CUPHEAD_VERDE = discord.Color.from_rgb(70, 125, 65)
+COR_CUPHEAD_ESCURO = discord.Color.from_rgb(35, 30, 25)
 
+# Troque pelos seus banners Cuphead
+BANNER_PAINEL_TICKETS = "https://i.imgur.com/mf2J8At.png"
 BANNER_TICKET_FECHADO = "https://i.imgur.com/xzTNoyc.png"
 
+IMAGENS_TICKETS = {
+    "duvida": "https://i.imgur.com/4GQjoSb.png",
+    "denuncia": "https://i.imgur.com/Bl79W4Y.png",
+    "cargo_exclusivo": "https://i.imgur.com/UP1k58c.png",
+    "comprar_vaga": "https://i.imgur.com/pB3mL7E.png",
+}
+
+THUMBNAILS_TICKETS = {
+    "duvida": "https://i.imgur.com/AYs4N07.png",
+    "denuncia": "https://i.imgur.com/zkIgP83.png",
+    "cargo_exclusivo": "https://i.imgur.com/4ZnTLm3.png",
+    "comprar_vaga": "https://i.imgur.com/yw1FDpN.png",
+}
+
+
+# =========================
+# FUNÇÕES AUXILIARES
+# =========================
 
 def limpar_nome(texto: str) -> str:
     texto = texto.lower()
@@ -76,55 +101,63 @@ async def gerar_transcricao(channel: discord.TextChannel):
         mensagens.append(f"[{data}] {autor}: {conteudo}")
 
     if not mensagens:
-        mensagens.append("Nenhuma mensagem registrada neste domínio.")
+        mensagens.append("Nenhuma mensagem registrada neste ticket.")
 
     arquivo = BytesIO("\n".join(mensagens).encode("utf-8"))
     arquivo.seek(0)
 
-    nome_arquivo = f"registro-do-dominio-{limpar_nome(channel.name)}.txt"
+    nome_arquivo = f"transcript-{limpar_nome(channel.name)}.txt"
 
     return discord.File(arquivo, filename=nome_arquivo), total_mensagens
 
 
+# =========================
+# BOTÃO DE DOWNLOAD
+# =========================
+
 class BotaoDownload(discord.ui.View):
-    def __init__(self, url):
+    def __init__(self, url: str):
         super().__init__(timeout=None)
 
         self.add_item(
             discord.ui.Button(
-                label="📥 Baixar Registro",
+                label="📥 Baixar Transcript",
                 url=url
             )
         )
 
         self.add_item(
             discord.ui.Button(
-                label="🩸 Domínio Encerrado",
+                label="🎬 Ticket Encerrado",
                 style=discord.ButtonStyle.gray,
                 disabled=True
             )
         )
 
 
+# =========================
+# CONFIRMAR FECHAMENTO
+# =========================
+
 class ConfirmarFechamento(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=60)
 
     @discord.ui.button(
-        label="Confirmar Encerramento",
+        label="Confirmar Fechamento",
         style=discord.ButtonStyle.red,
         emoji="🔒"
     )
     async def confirmar(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not tem_permissao_ticket(interaction.user):
             await interaction.response.send_message(
-                "❌ Você não possui permissão para encerrar este domínio.",
+                "❌ Você não possui permissão para fechar este ticket.",
                 ephemeral=True
             )
             return
 
         await interaction.response.send_message(
-            "🩸 O domínio será encerrado em instantes...",
+            "🎬 O show está chegando ao fim... fechando ticket em instantes.",
             ephemeral=True
         )
 
@@ -141,16 +174,16 @@ class ConfirmarFechamento(discord.ui.View):
             link = msg.attachments[0].url
 
             embed_log = discord.Embed(
-                title="🩸 Domínio Encerrado",
+                title="🎬 Ticket Encerrado — Família Sant's",
                 description=(
-                    "O ritual foi finalizado com sucesso.\n"
-                    "A barreira amaldiçoada foi desfeita e os registros foram selados."
+                    "O atendimento foi finalizado com sucesso.\n"
+                    "O registro do ticket foi salvo nos arquivos do nosso velho estúdio."
                 ),
-                color=COR_ROXA
+                color=COR_CUPHEAD_DOURADO
             )
 
             embed_log.add_field(
-                name="👁️ Responsável",
+                name="👤 Fechado por",
                 value=interaction.user.mention,
                 inline=True
             )
@@ -180,24 +213,24 @@ class ConfirmarFechamento(discord.ui.View):
             )
 
             embed_log.add_field(
-                name="📜 Registro",
-                value="Use o botão abaixo para baixar o transcript.",
+                name="📜 Transcript",
+                value="Use o botão abaixo para baixar o registro completo.",
                 inline=False
             )
 
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
             embed_log.set_image(url=BANNER_TICKET_FECHADO)
-            embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
+            embed_log.set_footer(text="Família Sant's • Sistema de Tickets Cuphead")
 
             await msg.edit(embed=embed_log, view=BotaoDownload(link))
 
         aviso = discord.Embed(
-            title="🌑 Colapso do Domínio",
+            title="🎞️ Fim do Episódio",
             description=(
-                "A energia amaldiçoada está se dissipando...\n"
+                "O ticket foi encerrado.\n"
                 "Este canal será apagado em **5 segundos**."
             ),
-            color=COR_ESCURA
+            color=COR_CUPHEAD_ESCURO
         )
 
         await interaction.channel.send(embed=aviso)
@@ -212,25 +245,29 @@ class ConfirmarFechamento(discord.ui.View):
     )
     async def cancelar(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
-            "🛑 O ritual foi interrompido. O domínio permanece ativo.",
+            "🛑 Fechamento cancelado. O ticket continua aberto.",
             ephemeral=True
         )
 
+
+# =========================
+# BOTÕES DO TICKET
+# =========================
 
 class TicketActionsView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
     @discord.ui.button(
-        label="Assumir Ritual",
+        label="Assumir Atendimento",
         style=discord.ButtonStyle.green,
-        emoji="🩸",
-        custom_id="sants_assumir_ritual"
+        emoji="🎩",
+        custom_id="cuphead_assumir_ticket"
     )
     async def assumir(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not tem_permissao_ticket(interaction.user):
             await interaction.response.send_message(
-                "❌ Apenas a equipe pode assumir este domínio.",
+                "❌ Apenas a equipe pode assumir este atendimento.",
                 ephemeral=True
             )
             return
@@ -244,37 +281,36 @@ class TicketActionsView(discord.ui.View):
             )
             return
 
-        embed = mensagem.embeds[0]
+        embed_antigo = mensagem.embeds[0]
 
         novo_embed = discord.Embed(
-            title=embed.title,
+            title=embed_antigo.title,
             description=(
-                embed.description
-                .replace(
-                    "⏳ **Status do Ritual:** `Aguardando atendimento`",
-                    f"🟢 **Status do Ritual:** `Em atendimento por {interaction.user.display_name}`"
+                embed_antigo.description.replace(
+                    "⏳ **Status:** `Aguardando atendimento`",
+                    f"🟢 **Status:** `Em atendimento por {interaction.user.display_name}`"
                 )
             ),
-            color=COR_VERDE
+            color=COR_CUPHEAD_VERDE
         )
 
-        if embed.thumbnail:
-            novo_embed.set_thumbnail(url=embed.thumbnail.url)
+        if embed_antigo.thumbnail:
+            novo_embed.set_thumbnail(url=embed_antigo.thumbnail.url)
 
-        if embed.image:
-            novo_embed.set_image(url=embed.image.url)
+        if embed_antigo.image:
+            novo_embed.set_image(url=embed_antigo.image.url)
 
         novo_embed.set_footer(
-            text=f"Ritual assumido por {interaction.user.display_name}"
+            text=f"Atendimento assumido por {interaction.user.display_name}"
         )
 
         button.disabled = True
-        button.label = "Ritual Assumido"
+        button.label = "Atendimento Assumido"
 
         await mensagem.edit(embed=novo_embed, view=self)
 
         await interaction.response.send_message(
-            f"🩸 {interaction.user.mention} assumiu este ritual.",
+            f"🎩 {interaction.user.mention} assumiu este atendimento.",
             ephemeral=False
         )
 
@@ -282,7 +318,7 @@ class TicketActionsView(discord.ui.View):
         label="Painel Restrito",
         style=discord.ButtonStyle.blurple,
         emoji="⚙️",
-        custom_id="sants_painel_restrito"
+        custom_id="cuphead_painel_restrito"
     )
     async def painel_admin(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not tem_permissao_ticket(interaction.user):
@@ -293,15 +329,15 @@ class TicketActionsView(discord.ui.View):
             return
 
         embed = discord.Embed(
-            title="⚙️ Painel Restrito",
+            title="⚙️ Painel Restrito do Estúdio",
             description=(
-                "Informações administrativas deste domínio.\n\n"
+                "Informações administrativas deste atendimento.\n\n"
                 f"📁 **Canal:** {interaction.channel.mention}\n"
-                f"👤 **Atendente:** {interaction.user.mention}\n"
+                f"👤 **Acessado por:** {interaction.user.mention}\n"
                 f"🕒 **Criado em:** <t:{int(interaction.channel.created_at.timestamp())}:f>\n\n"
-                "Use os botões principais para assumir, notificar ou encerrar o atendimento."
+                "Use os botões principais para assumir, chamar a equipe ou fechar o ticket."
             ),
-            color=COR_ROXA
+            color=COR_CUPHEAD_AZUL
         )
 
         await interaction.response.send_message(
@@ -310,27 +346,27 @@ class TicketActionsView(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Encerrar Domínio",
+        label="Fechar Ticket",
         style=discord.ButtonStyle.red,
         emoji="🔒",
-        custom_id="sants_encerrar_dominio"
+        custom_id="cuphead_fechar_ticket"
     )
     async def fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not tem_permissao_ticket(interaction.user):
             await interaction.response.send_message(
-                "❌ Você não possui permissão para encerrar este domínio.",
+                "❌ Você não possui permissão para fechar este ticket.",
                 ephemeral=True
             )
             return
 
         embed = discord.Embed(
-            title="🔒 Confirmar Encerramento",
+            title="🔒 Confirmar Fechamento",
             description=(
-                "Tem certeza que deseja encerrar este domínio?\n\n"
-                "Após confirmar, o registro será enviado ao canal de logs "
-                "e este ticket será apagado."
+                "Tem certeza que deseja fechar este ticket?\n\n"
+                "Após confirmar, o transcript será enviado ao canal de logs "
+                "e este canal será apagado."
             ),
-            color=COR_VERMELHA
+            color=COR_CUPHEAD_VERMELHO
         )
 
         await interaction.response.send_message(
@@ -340,15 +376,15 @@ class TicketActionsView(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Invocar Feiticeiro",
+        label="Chamar Equipe",
         style=discord.ButtonStyle.primary,
         emoji="📢",
-        custom_id="sants_invocar_feiticeiro"
+        custom_id="cuphead_chamar_equipe"
     )
     async def notificar(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not tem_permissao_ticket(interaction.user):
             await interaction.response.send_message(
-                "❌ Apenas a equipe pode invocar atendentes.",
+                "❌ Apenas a equipe pode chamar atendentes.",
                 ephemeral=True
             )
             return
@@ -359,12 +395,12 @@ class TicketActionsView(discord.ui.View):
         )
 
         embed = discord.Embed(
-            title="📢 Feiticeiros Invocados",
+            title="📢 Equipe Chamada",
             description=(
                 f"{mencoes_staff}\n\n"
-                "A barreira detectou que este domínio precisa de atenção."
+                "Este ticket precisa de atenção. O palco está aberto para o atendimento!"
             ),
-            color=COR_DOURADA
+            color=COR_CUPHEAD_DOURADO
         )
 
         await interaction.response.send_message(
@@ -373,41 +409,45 @@ class TicketActionsView(discord.ui.View):
         )
 
 
+# =========================
+# MENU DE SELEÇÃO
+# =========================
+
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="Domínio de Dúvidas",
-                description="Tem incertezas? Abra um chamado e obtenha respostas.",
+                label="Dúvidas",
+                description="Tire suas dúvidas com a equipe.",
                 emoji="❓",
                 value="duvida"
             ),
             discord.SelectOption(
-                label="Relatório de Maldição",
-                description="Presenciou algo suspeito? Traga provas da maldição.",
+                label="Denúncias",
+                description="Reporte algo errado com provas.",
                 emoji="🚨",
                 value="denuncia"
             ),
             discord.SelectOption(
-                label="Ritual de Acesso",
-                description="Deseja ingressar na Família Sant's? Tributo: R$80,00.",
+                label="Comprar Vaga",
+                description="Solicite entrada na Família Sant's.",
                 emoji="💰",
                 value="comprar_vaga"
             ),
             discord.SelectOption(
-                label="Arquivo Restrito",
-                description="Solicite seu cargo exclusivo preenchendo o modelo.",
-                emoji="📜",
+                label="Cargo Exclusivo",
+                description="Solicite seu cargo exclusivo.",
+                emoji="🎖️",
                 value="cargo_exclusivo"
             )
         ]
 
         super().__init__(
-            placeholder="Selecione um domínio...",
+            placeholder="Selecione uma categoria do estúdio...",
             min_values=1,
             max_values=1,
             options=options,
-            custom_id="ticket_select_sants"
+            custom_id="ticket_select_cuphead_sants"
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -425,9 +465,9 @@ class TicketSelect(discord.ui.Select):
             return
 
         for channel in guild.text_channels:
-            if channel.topic and str(user.id) in channel.topic:
+            if channel.topic and f"DONO:{user.id}" in channel.topic:
                 await interaction.followup.send(
-                    f"❌ Você já possui um domínio ativo: {channel.mention}",
+                    f"❌ Você já possui um ticket ativo: {channel.mention}",
                     ephemeral=True
                 )
                 return
@@ -437,39 +477,39 @@ class TicketSelect(discord.ui.Select):
         tipos_ticket = {
             "duvida": {
                 "nome": "duvida",
-                "titulo": "❓ Domínio de Dúvidas",
-                "descricao": "Tem incertezas? Abra um chamado e obtenha respostas.",
-                "cor": COR_ROXA,
-                "imagem": "https://i.imgur.com/4GQjoSb.png",
-                "thumbnail": "https://i.imgur.com/AYs4N07.png",
-                "grau": "🟣 Monitorado"
+                "titulo": "❓ Dúvidas — Balcão do Estúdio",
+                "descricao": "Conte sua dúvida e aguarde a equipe.",
+                "cor": COR_CUPHEAD_AZUL,
+                "imagem": IMAGENS_TICKETS["duvida"],
+                "thumbnail": THUMBNAILS_TICKETS["duvida"],
+                "nivel": "🔵 Suporte Geral"
             },
             "denuncia": {
                 "nome": "denuncia",
-                "titulo": "🚨 Relatório de Maldição",
-                "descricao": "Traga provas e denuncie a maldição.",
-                "cor": COR_VERMELHA,
-                "imagem": "https://i.imgur.com/Bl79W4Y.png",
-                "thumbnail": "https://i.imgur.com/zkIgP83.png",
-                "grau": "🔴 Alto Risco"
+                "titulo": "🚨 Denúncia — Alerta no Estúdio",
+                "descricao": "Reporte situações incorretas com provas.",
+                "cor": COR_CUPHEAD_VERMELHO,
+                "imagem": IMAGENS_TICKETS["denuncia"],
+                "thumbnail": THUMBNAILS_TICKETS["denuncia"],
+                "nivel": "🔴 Prioridade Alta"
             },
             "cargo_exclusivo": {
                 "nome": "cargo-exclusivo",
-                "titulo": "📜 Arquivo Restrito",
+                "titulo": "🎖️ Cargo Exclusivo — Camarim Especial",
                 "descricao": "Solicite seu cargo exclusivo preenchendo o modelo.",
-                "cor": COR_ESCURA,
-                "imagem": "https://i.imgur.com/UP1k58c.png",
-                "thumbnail": "https://i.imgur.com/4ZnTLm3.png",
-                "grau": "⚫ Restrito"
+                "cor": COR_CUPHEAD_DOURADO,
+                "imagem": IMAGENS_TICKETS["cargo_exclusivo"],
+                "thumbnail": THUMBNAILS_TICKETS["cargo_exclusivo"],
+                "nivel": "🟡 Solicitação Especial"
             },
             "comprar_vaga": {
-                "nome": "ritual-acesso",
-                "titulo": "💰 Ritual de Acesso",
-                "descricao": "Deseja ingressar na Família Sant's? Tributo necessário: R$80,00.",
-                "cor": COR_DOURADA,
-                "imagem": "https://i.imgur.com/pB3mL7E.png",
-                "thumbnail": "https://i.imgur.com/yw1FDpN.png",
-                "grau": "🟡 Pacto"
+                "nome": "comprar-vaga",
+                "titulo": "💰 Comprar Vaga — Entrada na Família",
+                "descricao": "Solicite informações para entrar na Família Sant's.",
+                "cor": COR_CUPHEAD_VERDE,
+                "imagem": IMAGENS_TICKETS["comprar_vaga"],
+                "thumbnail": THUMBNAILS_TICKETS["comprar_vaga"],
+                "nivel": "🟢 Atendimento Comercial"
             }
         }
 
@@ -509,7 +549,7 @@ class TicketSelect(discord.ui.Select):
             name=nome_canal,
             category=categoria,
             overwrites=overwrites,
-            topic=f"{user.id} | Ticket de {user} | Tipo: {tipo_ticket}"
+            topic=f"DONO:{user.id} | Ticket de {user} | Tipo: {tipo_ticket}"
         )
 
         mencoes_staff = " ".join(
@@ -520,17 +560,18 @@ class TicketSelect(discord.ui.Select):
         embed_ticket = discord.Embed(
             title=info["titulo"],
             description=(
-                f"👁️ Olá {user.mention}\n\n"
-                "🩸 **Seu domínio foi aberto pela barreira da Família Sant's.**\n"
-                "Descreva sua solicitação enquanto aguarda um feiticeiro responsável.\n\n"
-                "📜 **Orientações da Escola Jujutsu:**\n"
-                "• Explique claramente sua solicitação.\n"
-                "• Envie provas/imagens se necessário.\n"
-                "• Evite spam ou menções desnecessárias.\n\n"
-                f"📌 **Categoria:** {info['titulo']}\n"
-                f"☠️ **Nível da Maldição:** `{info['grau']}`\n"
-                "⏳ **Status do Ritual:** `Aguardando atendimento`\n"
-                "🌑 **Barreira:** `Ativa`\n\n"
+                f"🎬 Olá {user.mention}, bem-vindo ao atendimento da **Família Sant's**!\n\n"
+                "Seu ticket foi aberto com sucesso. Agora é só explicar sua solicitação "
+                "com calma enquanto nossa equipe prepara o espetáculo.\n\n"
+                "📜 **Orientações:**\n"
+                "• Explique claramente o motivo do ticket.\n"
+                "• Envie prints, provas ou informações se necessário.\n"
+                "• Evite spam e menções desnecessárias.\n"
+                "• Aguarde a equipe responsável responder.\n\n"
+                f"🎟️ **Categoria:** {info['titulo']}\n"
+                f"⭐ **Tipo:** `{info['nivel']}`\n"
+                "⏳ **Status:** `Aguardando atendimento`\n"
+                "🎞️ **Estúdio:** `Aberto`\n\n"
                 f"{mencoes_staff}"
             ),
             color=info["cor"]
@@ -539,7 +580,7 @@ class TicketSelect(discord.ui.Select):
         embed_ticket.set_thumbnail(url=info["thumbnail"])
         embed_ticket.set_image(url=info["imagem"])
         embed_ticket.set_footer(
-            text="Família Sant's • Aguarde atendimento da equipe"
+            text="Família Sant's • Sistema de Tickets Cuphead"
         )
 
         await canal.send(
@@ -549,7 +590,7 @@ class TicketSelect(discord.ui.Select):
         )
 
         await interaction.followup.send(
-            f"✅ Domínio criado com sucesso: {canal.mention}",
+            f"✅ Ticket criado com sucesso: {canal.mention}",
             ephemeral=True
         )
 
@@ -560,6 +601,10 @@ class TicketView(discord.ui.View):
         self.add_item(TicketSelect())
 
 
+# =========================
+# COG PRINCIPAL
+# =========================
+
 class TicketCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -568,25 +613,27 @@ class TicketCog(commands.Cog):
 
     @app_commands.command(
         name="ticket",
-        description="Enviar painel de ticket"
+        description="Enviar painel de tickets"
     )
     @app_commands.checks.has_permissions(administrator=True)
     async def ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="🩸 Escola Jujutsu — Central de Rituais",
+            title="🎬 Família Sant's — Sistema de Tickets",
             description=(
-                "Canalize sua energia amaldiçoada e escolha o domínio desejado.\n\n"
-                "❓ **Domínio de Dúvidas** — suporte geral.\n"
-                "🚨 **Relatório de Maldição** — denúncias e provas.\n"
-                "💰 **Ritual de Acesso** — ingresso na Família Sant's.\n"
-                "📜 **Arquivo Restrito** — solicitação de cargo exclusivo.\n\n"
-                "Selecione uma opção abaixo para iniciar o atendimento."
+                "Bem-vindo ao balcão oficial de atendimento da **Família Sant's**.\n\n"
+                "Escolha uma categoria abaixo e abra seu ticket.\n"
+                "Nossa equipe irá te atender assim que possível.\n\n"
+                "❓ **Dúvidas** — tire suas dúvidas gerais.\n"
+                "🚨 **Denúncias** — reporte algo errado com provas.\n"
+                "💰 **Comprar Vaga** — solicite entrada na Família.\n"
+                "🎖️ **Cargo Exclusivo** — solicite seu cargo especial.\n\n"
+                "🎞️ Selecione uma opção no menu abaixo para começar."
             ),
-            color=COR_ROXA
+            color=COR_CUPHEAD_DOURADO
         )
 
-        embed.set_image(url="https://i.imgur.com/s3Qvs9x.png")
-        embed.set_footer(text="Família Sant's • Painel oficial de atendimento")
+        embed.set_image(url=BANNER_PAINEL_TICKETS)
+        embed.set_footer(text="Família Sant's • Atendimento oficial")
 
         await interaction.channel.send(
             embed=embed,
@@ -594,7 +641,7 @@ class TicketCog(commands.Cog):
         )
 
         await interaction.response.send_message(
-            "✅ Painel enviado com sucesso.",
+            "✅ Painel de tickets enviado com sucesso.",
             ephemeral=True
         )
 
