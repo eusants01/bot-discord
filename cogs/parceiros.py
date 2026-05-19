@@ -28,12 +28,6 @@ PARCEIROS = [
         "link": "https://discord.gg/ua2mZzBzA5"
     },
     {
-        "nome": "BIDEX",
-        "descricao": "Uma mesa de apostas onde apenas os mais ousados aceitam o desafio.",
-        "emoji": "🔥",
-        "link": "https://discord.gg/HGvEQ8mn7b"
-    },
-    {
         "nome": "Irmandade Roleplay",
         "descricao": "Um teatro vivo de histórias, personagens e grandes interpretações.",
         "emoji": "🎭",
