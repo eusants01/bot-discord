@@ -286,7 +286,7 @@ A sirene tocou. O convite está aberto!
         "emoji": "🎌",
         "categoria": "Comunidade",
         "status": "⭐ Verificado",
-        "link": "https://discord.gg/Q94PvtNCs",
+        "link": "https://discord.gg/vTZWcPShD",
         "banner": None,
         "descricao_curta": "Servidor de jogos, eventos e amizades.",
         "divulgacao": """
