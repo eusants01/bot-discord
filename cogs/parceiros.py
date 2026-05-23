@@ -8,8 +8,8 @@ from discord.ext import commands
 COR_CUPHEAD = 0xB8322A
 COR_DOURADO = 0xD6A84F
 
-BANNER_PARCEIROS = "https://i.imgur.com/aINwFAT.png"
-THUMBNAIL_CUPHEAD = "https://i.imgur.com/aINwFAT.png"
+BANNER_PARCEIROS = "https://cdn.discordapp.com/attachments/961677475191078992/1507537963326902349/content.png?ex=6a1243a3&is=6a10f223&hm=845cc97dfde1435e7a69459d7da66f5ba0f90f37b5d1cd8bf11a58316fc7315e&"
+THUMBNAIL_CUPHEAD = "https://cdn.discordapp.com/attachments/961677475191078992/1507538793564213508/content.png?ex=6a124469&is=6a10f2e9&hm=b88813ac57f1c9df96a115a083c11e7dd4193bae939ace8077750411fa32dc90&"
 
 # ==================================================
 # 🎪 LISTA DE PARCEIROS
