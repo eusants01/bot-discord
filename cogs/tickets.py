@@ -34,21 +34,21 @@ class CONFIG:
     COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 180   
     COOLDOWN_ABRIR_TICKET_SEGUNDOS = 10     
 
-    BANNER_PAINEL          = "https://i.imgur.com/mf2J8At.png"
-    BANNER_FECHADO         = "https://i.imgur.com/xzTNoyc.png"
+    BANNER_PAINEL          = "https://cdn.discordapp.com/attachments/961677475191078992/1508334091190407208/content.png?ex=6a152916&is=6a13d796&hm=aa521ddcfacb82a3e26124e7ef41e86ea175cffa9b5decf602650519d7fd2869&"
+    BANNER_FECHADO         = "https://cdn.discordapp.com/attachments/961677475191078992/1508334620251262976/content.png?ex=6a152994&is=6a13d814&hm=fbfac73eaad884fd2d3f3630b0fd85087cbde0ee881a4c93f403f2e0926313a8&"
 
     IMAGENS = {
-        "duvida":      "https://i.imgur.com/4GQjoSb.png",
-        "denuncia":    "https://i.imgur.com/Bl79W4Y.png",
-        "patrocinio":  "https://i.imgur.com/UP1k58c.png",
-        "outros":      "https://i.imgur.com/pB3mL7E.png",
+        "duvida":      "https://cdn.discordapp.com/attachments/961677475191078992/1508337815467986984/image.png?ex=6a152c8e&is=6a13db0e&hm=3d7d418a5a837bd8a5a3846c9965679a851845110ae479cffe03effaff9c7def&",
+        "denuncia":    "https://cdn.discordapp.com/attachments/961677475191078992/1508337901241499728/image.png?ex=6a152ca3&is=6a13db23&hm=7e9b118ad605a65e7a442f965c64a93c6814165aa1d0a6cb10d0ca73a27f55ef&",
+        "patrocinio":  "https://cdn.discordapp.com/attachments/961677475191078992/1508337978878201916/image.png?ex=6a152cb5&is=6a13db35&hm=bb177fb4ed6a305d105858e8f7595c7ca96a97d19c33f30b9ee8ef5a820f7545&",
+        "outros":      "https://cdn.discordapp.com/attachments/961677475191078992/1508338084796956822/image.png?ex=6a152cce&is=6a13db4e&hm=5f7b7c852f61c221e79e537１fb６２１９ad３２０e５６a３７dffa４efc０１１９３a４f１ea８e３a&",
     }
 
     THUMBNAILS = {
-        "duvida":      "https://i.imgur.com/AYs4N07.png",
-        "denuncia":    "https://i.imgur.com/zkIgP83.png",
-        "patrocinio":  "https://i.imgur.com/4ZnTLm3.png",
-        "outros":      "https://i.imgur.com/yw1FDpN.png",
+        "duvida":      "wwwww",
+        "denuncia":    "wwwww",
+        "patrocinio":  "wwwww",
+        "outros":      "wwwww",
     }
 
     #  Paletas
