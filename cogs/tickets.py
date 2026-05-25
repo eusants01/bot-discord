@@ -45,10 +45,10 @@ class CONFIG:
     }
 
     THUMBNAILS = {
-        "duvida":      "wwwww",
-        "denuncia":    "wwwww",
-        "patrocinio":  "wwwww",
-        "outros":      "wwwww",
+        "duvida":      "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
+        "denuncia":    "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
+        "patrocinio":  "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
+        "outros":      "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
     }
 
     #  Paletas
