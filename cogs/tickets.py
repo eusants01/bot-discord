@@ -27,7 +27,7 @@ class CONFIG:
    
     CARGOS_CHAMAR_STAFF = [
         1507901138396123166, 
-        1234567891011121314,   
+           
     ]
 
    
@@ -809,7 +809,7 @@ class CogTickets(commands.Cog, name="Tickets"):
     @app_commands.checks.has_permissions(administrator=True)
     async def cmd_ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="🎬 Família Sant's — Sistema de Tickets",
+            title="<a:CUPCHILL:1502354528802963538> Família Sant's — Sistema de Atendimeto",
             description=(
                 "Bem-vindo ao balcão oficial de atendimento da **Família Sant's**.\n\n"
                 "Selecione uma categoria abaixo para abrir seu ticket.\n"
