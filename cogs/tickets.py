@@ -17,11 +17,7 @@ class CONFIG:
 
     # ── Cargos de atendimento (podem ver e responder tickets) ──────
     CARGOS_ATENDIMENTO_IDS = [
-        1487560221202321600,
-        1501356975491907664,
-        1500545846427652166,
-        1505759604842434651,
-        1480381506064093225,
+        1507901138396123166
     ]
 
    
