@@ -40,28 +40,6 @@ Venha conhecer esse grande palco parceiro!
     },
 
     {
-        "nome": "Instruções Delta",
-        "emoji": "📜",
-        "categoria": "Informativo",
-        "status": "⭐ Verificado",
-        "link": "https://discord.gg/W5mQvup4T",
-        "banner": None,
-        "descricao_curta": "Manual clássico de regras e contratos.",
-        "divulgacao": """
-📜 **INSTRUÇÕES DELTA**
-
-Um antigo manual de regras, desafios e contratos assinados à moda clássica.
-
-🎩 Organização  
-📌 Informações importantes  
-🎪 Comunidade parceira  
-⭐ Aliança reconhecida
-
-Entre e confira tudo no estilo dos grandes cartazes antigos!
-"""
-    },
-
-    {
         "nome": "Base de Eventos Delta",
         "emoji": "🎪",
         "categoria": "Eventos",
@@ -105,27 +83,6 @@ Entre no palco e crie sua própria aventura!
 """
     },
 
-    {
-        "nome": "Família Ghost",
-        "emoji": "👻",
-        "categoria": "Comunidade",
-        "status": "⭐ Verificado",
-        "link": "https://discord.gg/uJhDsRMV4",
-        "banner": None,
-        "descricao_curta": "Comunidade com clima sombrio e divertido.",
-        "divulgacao": """
-👻 **FAMÍLIA GHOST**
-
-Um salão assombrado onde pactos aparecem entre sombras e risadas antigas.
-
-👻 Comunidade ativa  
-🎮 Jogos  
-🎪 Interações  
-⭐ Parceria oficial
-
-Cuidado ao entrar... o show já começou!
-"""
-    },
 
     {
         "nome": "Gangue anti Bisonhos",
@@ -169,28 +126,7 @@ Uma confeitaria caótica onde alianças são servidas com diversão e movimento.
 
 Pegue seu ingresso e venha conhecer!
 """
-    },
-
-    {
-        "nome": "Konoha Network",
-        "emoji": "🍃",
-        "categoria": "Gaming",
-        "status": "⭐ Verificado",
-        "link": "https://discord.gg/RYsFkXqCS",
-        "banner": None,
-        "descricao_curta": "Comunidade de aventuras e amizade.",
-        "divulgacao": """
-🍃 **KONOHA NETWORK**
-
-Uma vila animada onde aventuras e parcerias caminham lado a lado.
-
-🎮 Jogos  
-🍃 Comunidade  
-🎪 Eventos  
-⭐ Parceria oficial
-
-Entre nessa vila parceira!
-"""
+    
     },
 
     {
@@ -216,24 +152,41 @@ O palco está pronto para a próxima rodada!
     },
 
     {
-        "nome": "Família Yamato",
-        "emoji": "🎲",
+        "nome": "Love Empire",
+        "emoji": "🌸",
         "categoria": "Comunidade",
         "status": "⭐ Verificado",
-        "link": "https://discord.gg/Wk4ZHUUy2",
+        "link": "https://discord.gg/TBj4xjXanG",
         "banner": None,
         "descricao_curta": "Servidor de aventura e diversão.",
         "divulgacao": """
-🎲 **FAMÍLIA YAMATO**
+# ᘏ﹒⌗ [Love Empire](https://discord.gg/TBj4xjXanG)
 
-Uma mesa de dados, sorte e alianças firmadas em clima de aventura.
+┈ ┈ ┈ ┈ ┈ ᶻz -┈ ┈ ┈ ┈ ┈
 
-🎲 Diversão  
-🎮 Jogos  
-🎁 Eventos  
-⭐ Comunidade parceira
+>  ꖛ🗣️: Você procura uma comunidade ativa e acolhedora? te apresento a Love empire!! 
 
-Role os dados e entre nessa jornada!
+>  ꖛ📢: Somos uma comunidade bastante ativa, com vários sorteios diários, eventos, brincadeiras várias outras coisas! venha fazer parte da nossa família ♡.
+
+┈ ┈ ┈ ┈ ┈ ᶻz -┈ ┈ ┈ ┈ ┈
+
+> # ꖛ 📬: ***Aqui nós temos :***
+
+> **「👋」 ・`Chat de apresentαções ;`**
+> **「💬」 ・`Chat  interativo ;`**
+> **「💼」 ・`Vagas Stαff ;`**
+> **「💎」 ・`Beneficíos Vip ;`**
+> **「🚀」 ・`Benefícios Boost ;`**
+> **「🎊」 ・`Sorteios ;`**
+> **「🎶」 ・`Bots de músicas ;`**
+> **「🎮」 ・`Bots de minigames.`**
+
+┈ ┈ ┈ ┈ ┈ ᶻz -┈ ┈ ┈ ┈ ┈
+
+> 🔔| Ping: @
+> 👤| Rep: <@922272392707997736> 
+> 🖼️| [divider](https://cdn.discordapp.com/attachments/1351602984924090388/1353150276638609549/div1.gif?ex=689f1ba6&is=689dca26&hm=59a4b6675f001b89c60e858dcf91bc3e4dd398abb2e0dc5ea576f9cedc63213f&)
+> 🖼️| [Imagem](https://cdn.discordapp.com/attachments/1435075392212963409/1460023626832023582/196_Sem_Titulo_20260111015414.png?ex=69695cf6&is=69680b76&hm=62478402afd94e1df05c51b5a9b9480ea599293b82b9436cc94e91bcb1e33be4&)
 """
     },
 
@@ -286,7 +239,7 @@ A sirene tocou. O convite está aberto!
         "emoji": "🎌",
         "categoria": "Comunidade",
         "status": "⭐ Verificado",
-        "link": "https://discord.gg/vTZWcPShD",
+        "link": "https://discord.gg/yCx3BFW4R",
         "banner": None,
         "descricao_curta": "Servidor de jogos, eventos e amizades.",
         "divulgacao": """
