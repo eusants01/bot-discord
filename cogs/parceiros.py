@@ -153,7 +153,7 @@ O palco está pronto para a próxima rodada!
 
     {
         "nome": "Love Empire",
-        "emoji": "🌸",
+        "emoji": "🏵️",
         "categoria": "Comunidade",
         "status": "⭐ Verificado",
         "link": "https://discord.gg/TBj4xjXanG",
@@ -183,10 +183,6 @@ O palco está pronto para a próxima rodada!
 
 ┈ ┈ ┈ ┈ ┈ ᶻz -┈ ┈ ┈ ┈ ┈
 
-> 🔔| Ping: @
-> 👤| Rep: <@922272392707997736> 
-> 🖼️| [divider](https://cdn.discordapp.com/attachments/1351602984924090388/1353150276638609549/div1.gif?ex=689f1ba6&is=689dca26&hm=59a4b6675f001b89c60e858dcf91bc3e4dd398abb2e0dc5ea576f9cedc63213f&)
-> 🖼️| [Imagem](https://cdn.discordapp.com/attachments/1435075392212963409/1460023626832023582/196_Sem_Titulo_20260111015414.png?ex=69695cf6&is=69680b76&hm=62478402afd94e1df05c51b5a9b9480ea599293b82b9436cc94e91bcb1e33be4&)
 """
     },
 
