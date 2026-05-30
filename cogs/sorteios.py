@@ -291,8 +291,8 @@ class SorteioView(discord.ui.View):
         embed = discord.Embed(
             title="🎰 SORTEIO OFICIAL • CUPHEAD CASINO",
             description=(
-                "☕ **A rodada começou!** A sorte aguarda os corajosos.\n"
-                "<a:Z10_coin:1487490583625728213> <@&1486411238513836052> 3x Entradas\n\n"
+                "👑 Atençao ao Cargos com Beneficios.\n"
+                "<a:Z10_coin:1487490583625728213> <@&1486411238513836052> 3x Entradas\n"
                 "<a:D1_PurpleSpinningPixelHeart:1490559444227194902> <@&1480334522053558465> 2x Entrada\n"
     
             ),
