@@ -18,27 +18,20 @@ COR_ROXO      = 0x9B59B6
 
 BANNERS = {
     # Aparece no embed principal enquanto o sorteio está ativo
-    "ativo":      "https://media.discordapp.net/attachments/961677475191078992/1510103541308588193/FXcgIAAAABklEQVQDAI0tvzo8lbvAAAAAElFTkSuQmCC.png?ex=6a1b9904&is=6a1a4784&hm=5d0d4620adf96d798b7b4bac70b2dc9f10df59dcb676173611f0399e479ee297&=&format=webp&quality=lossless",
+    "ativo":      "https://media.discordapp.net/attachments/961677475191078992/1510111531243933716/RgGXAAAABklEQVQDAEZvdQlgAtWFAAAAAElFTkSuQmCC.png?ex=6a1ba075&is=6a1a4ef5&hm=07e0f157f5e9f534d9e72201ca68dce09a2dcb6f886bc6bc305d89bdde80c8b2&=&format=webp&quality=lossless",
 
     # Aparece quando o sorteio é encerrado com vencedores
-    "vencedor":   "https://media.discordapp.net/attachments/961677475191078992/1510103541044220024/CvwyAubFsAAAAASUVORK5CYII.png?ex=6a1b9904&is=6a1a4784&hm=3826a47aef8d2ecb4c06f5ce81bcd4e7305288fac77210d19a0aee1b5e52a031&=&format=webp&quality=lossless",
+    "vencedor":   "https://media.discordapp.net/attachments/961677475191078992/1510111530731966554/4m1Yc4AAAAGSURBVAMAIhJq0lQ0SxAAAAAASUVORK5CYII.png?ex=6a1ba075&is=6a1a4ef5&hm=e199e8cd1fd4c9d6334564dfc3e9ea68fcd4e2e045d60c3f918fce39b8a47fb1&=&format=webp&quality=lossless",
 
     # Aparece quando o sorteio é cancelado
-    "cancelado":  "https://media.discordapp.net/attachments/961677475191078992/1510103540725448804/tNbpPgAAAAZJREFUAwCNFlGltObhOAAAAABJRU5ErkJggg.png?ex=6a1b9904&is=6a1a4784&hm=0fa1310b80d8269a1edb61408b68d825a5d486d775782d5572535f302c2e9203&=&format=webp&quality=lossless",
+    "cancelado":  "https://media.discordapp.net/attachments/961677475191078992/1510111531595989183/8n20PEAAAABklEQVQDAKLuoNzTHmVcAAAAAElFTkSuQmCC.png?ex=6a1ba075&is=6a1a4ef5&hm=7db8a9a2a649bb9dd53af3c23535159f4a826e0f81948a24df9d15ef1c87743a&=&format=webp&quality=lossless",
 
     # Aparece quando não há participantes suficientes
-    "sem_ganho":  "https://media.discordapp.net/attachments/961677475191078992/1510103540356481044/9SyBi7AAAABklEQVQDAIHevlRy0LTRAAAAAElFTkSuQmCC.png?ex=6a1b9904&is=6a1a4784&hm=f2c74155ec193e059ee15815d99da6b02c9975010f5cf48fb947a90253167812&=&format=webp&quality=lossless",
+    "sem_ganho":  "https://media.discordapp.net/attachments/961677475191078992/1510111531969544222/9nqs7uAAAABklEQVQDAKFdrWaYqa4kAAAAAElFTkSuQmCC.png?ex=6a1ba075&is=6a1a4ef5&hm=07331996899d4e43ad5904c402ab2abded31749295fc251403267abcc86c396e&=&format=webp&quality=lossless",
 
     # Aparece no reroll
-    "reroll":     "https://media.discordapp.net/attachments/961677475191078992/1510103539915952320/eJDoAAAABklEQVQDAMgBt6fnb8mEAAAAAElFTkSuQmCC.png?ex=6a1b9904&is=6a1a4784&hm=c4ccb3f8ba4fbc9b9f663ca344b6a8a08e05e041b2a3831b720356994c17a2de&=&format=webp&quality=lossless",
+    "reroll":     "https://media.discordapp.net/attachments/961677475191078992/1510111532720062645/kudHpAAAAAZJREFUAwBzE3bm4YTgCAAAAABJRU5ErkJggg.png?ex=6a1ba075&is=6a1a4ef5&hm=d6a686124710b250e77b0669a9f75b41e2380f81a164498ed7852809c11a831d&=&format=webp&quality=lossless",
 }
-
-# ══════════════════════════════════════════════
-#       🎟️ CARGOS QUE DÃO ENTRADAS EXTRAS
-# ══════════════════════════════════════════════
-# Formato: ID_DO_CARGO: quantidade_de_entradas_extras
-# Exemplo: membro com cargo VIP ganha 3 entradas (1 normal + 2 extras)
-# Os cargos se acumulam! VIP(+2) + BOOSTER(+1) = 4 entradas totais
 
 CARGOS_BONUS = {
     # 1486411238513836052: 3,   # ⭐ Cargo de Patrocinador da Família Sant's — 3 entradas extras rsrs
@@ -231,10 +224,6 @@ def _sortear_unicos(pool: list[discord.Member], quantidade: int) -> list[discord
     return vencedores
 
 
-# ══════════════════════════════════════════════════════════════════
-#                       VIEW PRINCIPAL
-# ══════════════════════════════════════════════════════════════════
-
 class SorteioView(discord.ui.View):
     def __init__(self, premio, descricao, ganhadores, requisito, fim):
         super().__init__(timeout=None)
@@ -303,10 +292,9 @@ class SorteioView(discord.ui.View):
             title="🎰 SORTEIO OFICIAL • CUPHEAD CASINO",
             description=(
                 "☕ **A rodada começou!** A sorte aguarda os corajosos.\n"
-                "Clique nos botões abaixo para entrar ou sair.\n\n"
-                "🎟️ **Entrar no Sorteio** → garanta sua vaga\n"
-                "🚪 **Sair do Sorteio** → retire sua entrada\n"
-                "⚙️ **Painel Admin** → exclusivo para a equipe"
+                "<a:Z10_coin:1487490583625728213> <@&1486411238513836052> 3x Entradas\n\n"
+                "<a:D1_PurpleSpinningPixelHeart:1490559444227194902> <@&1480334522053558465> 2x Entrada\n"
+    
             ),
             color=COR_CUPHEAD,
             timestamp=datetime.now(timezone.utc)

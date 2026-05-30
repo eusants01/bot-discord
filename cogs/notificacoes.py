@@ -7,7 +7,7 @@ COR_CUPHEAD  = 0xC48A3A
 COR_VERDE    = 0x2ECC71
 COR_VERMELHO = 0x8B3A3A
 
-BANNER_PAINEL = "https://i.imgur.com/GyCDbdH.png"
+BANNER_PAINEL = "https://cdn.discordapp.com/attachments/961677475191078992/1510105651542626445/content.png?ex=6a1b9afb&is=6a1a497b&hm=7d4c589d18aee527f82555d419e7f97baa14b755a7915868833327eb3115fc2a&"
 
 FICHAS = {
     "Sorteios do Cassino": {
