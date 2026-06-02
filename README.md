@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/eusants01/discord-bot/main/assets/banner.png" width="100%">
+  <img src="fee64e75-6a4a-42ed-a152-5b4d6104dc2d.png" width="100%">
 </p>
 
 # 🤖 Discord Bot
