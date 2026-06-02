@@ -98,13 +98,6 @@ Configure o token do bot e execute:
 ```bash
 python main.py
 ```
-
----
-
-## 📸 Demonstração
-
-Adicione aqui imagens do funcionamento dos tickets, sorteios e comandos.
-
 ---
 
 ## 📈 Status do Projeto
