@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="./assets/banner.png" alt="Discord Bot Banner" width="100%">
+  <img src="assets/banner.png" alt="Discord Bot Banner">
 </p>
+
 # 🤖 Discord Bot
 
 Um bot multifuncional para servidores Discord desenvolvido em Python utilizando Discord.py.
