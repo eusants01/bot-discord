@@ -11,13 +11,18 @@ import logging
 logger = logging.getLogger("tickets")
 
 class CONFIG:
-    # ── IDs de canais e categoria ──────────────────────────────────
+   
     CATEGORIA_TICKETS_ID    = 1495288098010169574
     CANAL_LOG_ID            = 1495272331558391818
 
-    # ── Cargos de atendimento (podem ver e responder tickets) ──────
+    # Quem podem atenter as bençãos - Sants e Bruna 💖
     CARGOS_ATENDIMENTO_IDS = [
-        1507901138396123166
+        1487560221202321600,
+        1505759604842434651,
+        1480381506064093225,
+        1500545846427652166,
+        1501356975491907664,
+        1502717285528506536,
     ]
 
    
@@ -27,7 +32,7 @@ class CONFIG:
     ]
 
    
-    COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 180   
+    COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 100
     COOLDOWN_ABRIR_TICKET_SEGUNDOS = 10     
 
     BANNER_PAINEL          = "https://cdn.discordapp.com/attachments/961677475191078992/1508334091190407208/content.png?ex=6a152916&is=6a13d796&hm=aa521ddcfacb82a3e26124e7ef41e86ea175cffa9b5decf602650519d7fd2869&"
@@ -56,7 +61,6 @@ class CONFIG:
     COR_ESCURO    = discord.Color.from_rgb(35,  30,  25)
     COR_CINZA     = discord.Color.from_rgb(80,  80,  80)
 
-    # ── Dados das categorias de ticket
     CATEGORIAS = {
         "duvida": {
             "label":       "Dúvidas",
@@ -97,10 +101,6 @@ class CONFIG:
     }
 
 
-# ─────────────────────────────────────────────────────────────────
-#  UTILITÁRIOS
-# ─────────────────────────────────────────────────────────────────
-
 def slug(texto: str) -> str:
     """Transforma um texto em slug seguro para nome de canal Discord."""
     texto = texto.lower()
@@ -129,11 +129,6 @@ def formatar_duracao(segundos: int) -> str:
     if m: partes.append(f"{m}min")
     if not partes: partes.append(f"{s}s")
     return " ".join(partes)
-
-
-# ─────────────────────────────────────────────────────────────────
-#  GERADOR DE TRANSCRIPT
-# ─────────────────────────────────────────────────────────────────
 
 async def gerar_transcript_txt(channel: discord.TextChannel):
     """Gera o transcript em .txt e retorna (File, total_msgs)."""
@@ -241,11 +236,6 @@ async def gerar_transcript_html(channel: discord.TextChannel) -> discord.File:
     nome = f"transcript-{slug(channel.name)}.html"
     return discord.File(buf, filename=nome)
 
-
-# ─────────────────────────────────────────────────────────────────
-#  ESTADO EM MEMÓRIA (cooldowns, etc.)
-# ─────────────────────────────────────────────────────────────────
-
 class TicketState:
     """Estado compartilhado entre views persistentes."""
     _ultimo_chamar_staff: dict[int, datetime] = {}  # channel_id → datetime
@@ -266,18 +256,13 @@ class TicketState:
     def registrar_chamar_staff(cls, channel_id: int):
         cls._ultimo_chamar_staff[channel_id] = datetime.now(timezone.utc)
 
-
-# ─────────────────────────────────────────────────────────────────
-#  VIEW: CONFIRMAR FECHAMENTO
-# ─────────────────────────────────────────────────────────────────
-
 class ViewConfirmarFechamento(discord.ui.View):
     """Modal de confirmação antes de fechar o ticket."""
 
     def __init__(self):
         super().__init__(timeout=60)
 
-    # ── Confirmar ──────────────────────────────────────────────────
+    
     @discord.ui.button(
         label="Confirmar Fechamento",
         style=discord.ButtonStyle.red,
