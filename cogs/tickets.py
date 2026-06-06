@@ -34,11 +34,9 @@ class CONFIG:
         "outros":     [],  
     }
 
-    
     COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 100
     COOLDOWN_ABRIR_TICKET_SEGUNDOS = 10
 
-    
     BANNER_PAINEL  = "https://cdn.discordapp.com/attachments/961677475191078992/1508334091190407208/content.png"
     BANNER_FECHADO = "https://cdn.discordapp.com/attachments/961677475191078992/1508334620251262976/content.png"
 
@@ -105,7 +103,6 @@ class CONFIG:
 
 
 def slug(texto: str) -> str:
-    """Transforma um texto em slug seguro para nome de canal Discord."""
     texto = texto.lower()
     texto = re.sub(r"[^a-z0-9\-]", "-", texto)
     texto = re.sub(r"-{2,}", "-", texto)
@@ -113,17 +110,12 @@ def slug(texto: str) -> str:
 
 
 def tem_permissao(member: discord.Member) -> bool:
-    """Retorna True se o membro é administrador ou possui cargo de atendimento."""
     if member.guild_permissions.administrator:
         return True
     return any(r.id in CONFIG.CARGOS_ATENDIMENTO_IDS for r in member.roles)
 
 
 def tem_permissao_categoria(member: discord.Member, tipo: str) -> bool:
-    """
-    Retorna True se o membro tem permissão de staff geral OU
-    possui um cargo específico daquela categoria.
-    """
     if tem_permissao(member):
         return True
     cargos_cat = CONFIG.CARGOS_POR_CATEGORIA.get(tipo, [])
@@ -131,7 +123,6 @@ def tem_permissao_categoria(member: discord.Member, tipo: str) -> bool:
 
 
 def formatar_duracao(segundos: int) -> str:
-    """Formata segundos em string legível (ex: 2h 15min)."""
     if segundos < 0:
         segundos = 0
     m, s = divmod(segundos, 60)
@@ -146,13 +137,11 @@ def formatar_duracao(segundos: int) -> str:
 
 
 def _extrair_dono_id(topic: str) -> int | None:
-    """Extrai o ID do dono a partir do tópico do canal."""
     match = re.search(r"DONO:(\d+)", topic)
     return int(match.group(1)) if match else None
 
 
 def _extrair_tipo_ticket(topic: str) -> str | None:
-    """Extrai o tipo/categoria do ticket a partir do tópico do canal."""
     match = re.search(r"Tipo:\s*(\w+)", topic)
     return match.group(1) if match else None
 
@@ -161,14 +150,13 @@ def _encontrar_ticket_do_usuario(
     guild: discord.Guild,
     user_id: int
 ) -> discord.TextChannel | None:
-    """Retorna o canal de ticket aberto do usuário, ou None."""
     for ch in guild.text_channels:
         if ch.topic and f"DONO:{user_id}" in ch.topic:
             return ch
     return None
 
+
 async def gerar_transcript_txt(channel: discord.TextChannel) -> tuple[discord.File, int]:
-    """Gera o transcript em .txt e retorna (File, total_msgs)."""
     linhas = [
         "=" * 64,
         f"  TRANSCRIPT — {channel.name.upper()}",
@@ -201,7 +189,6 @@ async def gerar_transcript_txt(channel: discord.TextChannel) -> tuple[discord.Fi
 
 
 async def gerar_transcript_html(channel: discord.TextChannel) -> discord.File:
-    """Gera o transcript em .html com visual estilo Discord."""
     mensagens_html = []
     async for msg in channel.history(limit=None, oldest_first=True):
         data     = msg.created_at.strftime("%d/%m/%Y %H:%M")
@@ -278,13 +265,11 @@ async def gerar_transcript_html(channel: discord.TextChannel) -> discord.File:
 
 
 class TicketState:
-    """Estado compartilhado entre views persistentes."""
-    _ultimo_chamar_staff: dict[int, datetime] = {}   # channel_id → datetime
-    _tickets_em_fechamento: set[int] = set()          # channel_ids sendo deletados
+    _ultimo_chamar_staff: dict[int, datetime] = {}
+    _tickets_em_fechamento: set[int] = set()
 
     @classmethod
     def pode_chamar_staff(cls, channel_id: int) -> tuple[bool, int]:
-        """Retorna (pode_chamar, segundos_restantes)."""
         ultimo = cls._ultimo_chamar_staff.get(channel_id)
         if ultimo is None:
             return True, 0
@@ -300,10 +285,6 @@ class TicketState:
 
     @classmethod
     def marcar_fechando(cls, channel_id: int) -> bool:
-        """
-        Marca o canal como em processo de fechamento.
-        Retorna False se já estava sendo fechado (evita race condition).
-        """
         if channel_id in cls._tickets_em_fechamento:
             return False
         cls._tickets_em_fechamento.add(channel_id)
@@ -317,20 +298,23 @@ class TicketState:
 async def executar_fechamento(interaction: discord.Interaction):
     """
     Executa o fechamento completo de um ticket.
-    Pode ser chamado por qualquer view/comando.
-    Envia defer antes de chamar esta função.
+    Deve ser chamado APÓS interaction.response.defer().
+
+    BUG CORRIGIDO: o followup ephemeral era enviado DEPOIS de deletar o canal,
+    causando erro 10003 (Unknown Channel) e abortando o fluxo silenciosamente.
+    Agora confirmamos para o usuário ANTES de apagar o canal.
     """
     canal = interaction.channel
 
-    # Evita fechamento duplo
     if not TicketState.marcar_fechando(canal.id):
         await interaction.followup.send(
             "⚠️ Este ticket já está sendo fechado.",
-            ephemeral=True
+            ephemeral=True,
         )
         return
 
     try:
+        
         arquivo_txt,  total_msgs = await gerar_transcript_txt(canal)
         arquivo_html             = await gerar_transcript_html(canal)
 
@@ -390,7 +374,15 @@ async def executar_fechamento(interaction: discord.Interaction):
 
             await msg_html.edit(embed=embed_log, view=view_links)
 
-        # ── Avisa no canal e deleta ────────────────────────────────
+    
+        try:
+            await interaction.followup.send(
+                "✅ Ticket encerrado. O canal será deletado em instantes.",
+                ephemeral=True,
+            )
+        except discord.HTTPException:
+            pass  
+
         embed_aviso = discord.Embed(
             title="🔒 Ticket Encerrado",
             description=(
@@ -410,23 +402,17 @@ async def executar_fechamento(interaction: discord.Interaction):
     finally:
         TicketState.desmarcar_fechando(canal.id)
 
-class ViewConfirmarFechamento(discord.ui.View):
-    """
-    Modal de confirmação antes de fechar o ticket.
 
-    CORREÇÃO: adicionados custom_id em ambos os botões e timeout=None
-    para que a view sobreviva a restarts do bot e o Discord consiga
-    rotear os cliques corretamente mesmo após reconexão.
-    """
+class ViewConfirmarFechamento(discord.ui.View):
 
     def __init__(self):
-        super().__init__(timeout=None)  
+        super().__init__(timeout=None)
 
     @discord.ui.button(
         label="Confirmar Fechamento",
         style=discord.ButtonStyle.red,
         emoji="🔒",
-        custom_id="ticket_v2_confirmar_fechamento",   
+        custom_id="ticket_v2_confirmar_fechamento",
     )
     async def btn_confirmar(
         self,
@@ -445,14 +431,14 @@ class ViewConfirmarFechamento(discord.ui.View):
             )
             return
 
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         await executar_fechamento(interaction)
 
     @discord.ui.button(
         label="Cancelar",
         style=discord.ButtonStyle.gray,
         emoji="✖️",
-        custom_id="ticket_v2_cancelar_fechamento",   
+        custom_id="ticket_v2_cancelar_fechamento",
     )
     async def btn_cancelar(
         self,
@@ -465,17 +451,11 @@ class ViewConfirmarFechamento(discord.ui.View):
         )
 
 
-# ─────────────────────────────────────────────────────────────────
-#  VIEW: AÇÕES DO TICKET (persistente)
-# ─────────────────────────────────────────────────────────────────
-
 class ViewAcoesTicket(discord.ui.View):
-    """Botões principais dentro do canal do ticket."""
 
     def __init__(self):
         super().__init__(timeout=None)
 
-    # ── Assumir atendimento ────────────────────────────────────────
     @discord.ui.button(
         label="Assumir Atendimento",
         style=discord.ButtonStyle.green,
@@ -490,7 +470,6 @@ class ViewAcoesTicket(discord.ui.View):
         canal = interaction.channel
         tipo  = _extrair_tipo_ticket(canal.topic or "")
 
-        # Verifica permissão: staff geral OU cargo específico da categoria
         if not tem_permissao_categoria(interaction.user, tipo or ""):
             await interaction.response.send_message(
                 "❌ Apenas a equipe pode assumir este atendimento.",
@@ -535,7 +514,6 @@ class ViewAcoesTicket(discord.ui.View):
             f"🎩 **{interaction.user.mention}** assumiu este atendimento.",
         )
 
-    # ── Chamar Staff ───────────────────────────────────────────────
     @discord.ui.button(
         label="Chamar Staff",
         style=discord.ButtonStyle.primary,
@@ -562,12 +540,12 @@ class ViewAcoesTicket(discord.ui.View):
 
         TicketState.registrar_chamar_staff(interaction.channel.id)
 
+        
         mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
 
         embed = discord.Embed(
             title="📢 Staff Chamada",
             description=(
-                f"{mencoes}\n\n"
                 f"O usuário **{interaction.user.mention}** precisa de atenção neste ticket.\n"
                 f"📁 Canal: {interaction.channel.mention}"
             ),
@@ -577,11 +555,11 @@ class ViewAcoesTicket(discord.ui.View):
         embed.set_footer(text="Família Sant's • Sistema de Tickets")
 
         await interaction.response.send_message(
+            content=mencoes,
             embed=embed,
             allowed_mentions=discord.AllowedMentions(roles=True),
         )
 
-    # ── Painel Restrito ────────────────────────────────────────────
     @discord.ui.button(
         label="Painel Restrito",
         style=discord.ButtonStyle.secondary,
@@ -603,15 +581,14 @@ class ViewAcoesTicket(discord.ui.View):
             )
             return
 
-        topic       = canal.topic or "Sem tópico definido"
-        dono_id     = _extrair_dono_id(topic)
+        topic        = canal.topic or "Sem tópico definido"
+        dono_id      = _extrair_dono_id(topic)
         dono_mention = f"<@{dono_id}>" if dono_id else "Desconhecido"
 
-        # Cargos com acesso: geral + específicos da categoria
         cargos_acesso = list(CONFIG.CARGOS_ATENDIMENTO_IDS)
         if tipo:
             cargos_acesso += CONFIG.CARGOS_POR_CATEGORIA.get(tipo, [])
-        cargos_acesso = list(dict.fromkeys(cargos_acesso))  # deduplica mantendo ordem
+        cargos_acesso = list(dict.fromkeys(cargos_acesso))
 
         embed = discord.Embed(
             title="⚙️ Painel Restrito",
@@ -645,7 +622,6 @@ class ViewAcoesTicket(discord.ui.View):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # ── Fechar Ticket ──────────────────────────────────────────────
     @discord.ui.button(
         label="Fechar Ticket",
         style=discord.ButtonStyle.red,
@@ -684,13 +660,7 @@ class ViewAcoesTicket(discord.ui.View):
             ephemeral=True,
         )
 
-
-# ─────────────────────────────────────────────────────────────────
-#  SELECT MENU DE CATEGORIAS
-# ─────────────────────────────────────────────────────────────────
-
 class SelectCategoriaTicket(discord.ui.Select):
-    """Menu dropdown com as categorias de ticket."""
 
     def __init__(self):
         opcoes = [
@@ -719,7 +689,6 @@ class SelectCategoriaTicket(discord.ui.Select):
         info     = CONFIG.CATEGORIAS[tipo]
         categoria = guild.get_channel(CONFIG.CATEGORIA_TICKETS_ID)
 
-        # ── Já possui ticket aberto? ───────────────────────────────
         ticket_existente = _encontrar_ticket_do_usuario(guild, user.id)
         if ticket_existente:
             await interaction.followup.send(
@@ -736,7 +705,6 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
-        # ── Permissões do canal ───────────────────────────────────
         overwrites: dict = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(
@@ -758,7 +726,6 @@ class SelectCategoriaTicket(discord.ui.Select):
             ),
         }
 
-        # Staff geral
         for cargo_id in CONFIG.CARGOS_ATENDIMENTO_IDS:
             cargo = guild.get_role(cargo_id)
             if cargo:
@@ -771,7 +738,6 @@ class SelectCategoriaTicket(discord.ui.Select):
                     manage_messages=True,
                 )
 
-        # Cargos específicos desta categoria
         for cargo_id in CONFIG.CARGOS_POR_CATEGORIA.get(tipo, []):
             cargo = guild.get_role(cargo_id)
             if cargo and cargo not in overwrites:
@@ -809,7 +775,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
-        # ── Menções de staff ──────────────────────────────────────
+        # ── Menciona staff no content (ping real) ─────────────────
         mencoes_staff = " ".join(
             f"<@&{cid}>" for cid in CONFIG.CARGOS_ATENDIMENTO_IDS
         )
@@ -829,8 +795,7 @@ class SelectCategoriaTicket(discord.ui.Select):
                 f"⭐ **Nível:** `{info['nivel']}`\n"
                 f"👤 **Solicitante:** {user.mention}\n"
                 f"🕒 **Aberto em:** <t:{int(datetime.now(timezone.utc).timestamp())}:f>\n"
-                f"⏳ **Status:** `Aguardando atendimento`\n\n"
-                f"{mencoes_staff}"
+                f"⏳ **Status:** `Aguardando atendimento`"
             ),
             color=info["cor"],
             timestamp=datetime.now(timezone.utc),
@@ -842,8 +807,9 @@ class SelectCategoriaTicket(discord.ui.Select):
         if imagem:    embed_ticket.set_image(url=imagem)
         embed_ticket.set_footer(text="Família Sant's • Sistema de Tickets")
 
+        
         await canal.send(
-            content=user.mention,
+            content=f"{user.mention} {mencoes_staff}",
             embed=embed_ticket,
             view=ViewAcoesTicket(),
             allowed_mentions=discord.AllowedMentions(users=True, roles=True),
@@ -857,28 +823,21 @@ class SelectCategoriaTicket(discord.ui.Select):
 
 
 class ViewPainelTickets(discord.ui.View):
-    """View com o select de categorias — persistente."""
 
     def __init__(self):
         super().__init__(timeout=None)
         self.add_item(SelectCategoriaTicket())
 
 
-# ─────────────────────────────────────────────────────────────────
-#  COG PRINCIPAL
-# ─────────────────────────────────────────────────────────────────
 
 class CogTickets(commands.Cog, name="Tickets"):
-    """Cog responsável por todo o sistema de tickets."""
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # Registra TODAS as views persistentes (incluindo a de confirmação)
         bot.add_view(ViewPainelTickets())
         bot.add_view(ViewAcoesTicket())
-        bot.add_view(ViewConfirmarFechamento())   # ← estava faltando no original
+        bot.add_view(ViewConfirmarFechamento())
 
-    # ── /ticket — envia o painel ───────────────────────────────────
     @app_commands.command(
         name="ticket",
         description="Envia o painel de tickets no canal atual.",
@@ -921,7 +880,6 @@ class CogTickets(commands.Cog, name="Tickets"):
         else:
             await interaction.response.send_message(msg, ephemeral=True)
 
-    # ── /fechar — fecha o ticket atual ────────────────────────────
     @app_commands.command(
         name="fechar",
         description="Fecha o ticket atual (disponível dentro de um ticket).",
@@ -964,7 +922,6 @@ class CogTickets(commands.Cog, name="Tickets"):
             ephemeral=True,
         )
 
-    # ── /ticket-info — info do ticket atual ───────────────────────
     @app_commands.command(
         name="ticket-info",
         description="Exibe informações do ticket atual.",
@@ -1019,7 +976,6 @@ class CogTickets(commands.Cog, name="Tickets"):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # ── /ticket-fechar-forcado — fecha qualquer ticket (admin) ────
     @app_commands.command(
         name="ticket-fechar-forcado",
         description="[Admin] Força o fechamento do ticket no canal atual.",
@@ -1036,7 +992,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             )
             return
 
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         await executar_fechamento(interaction)
 
     @cmd_fechar_forcado.error
@@ -1050,7 +1006,6 @@ class CogTickets(commands.Cog, name="Tickets"):
             await interaction.followup.send(msg, ephemeral=True)
         else:
             await interaction.response.send_message(msg, ephemeral=True)
-
 
 
 async def setup(bot: commands.Bot):
