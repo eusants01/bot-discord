@@ -102,6 +102,10 @@ class CONFIG:
     }
 
 
+# ─────────────────────────────────────────────────────────────────
+#  HELPERS
+# ─────────────────────────────────────────────────────────────────
+
 def slug(texto: str) -> str:
     texto = texto.lower()
     texto = re.sub(r"[^a-z0-9\-]", "-", texto)
@@ -155,6 +159,10 @@ def _encontrar_ticket_do_usuario(
             return ch
     return None
 
+
+# ─────────────────────────────────────────────────────────────────
+#  TRANSCRIPTS
+# ─────────────────────────────────────────────────────────────────
 
 async def gerar_transcript_txt(channel: discord.TextChannel) -> tuple[discord.File, int]:
     linhas = [
@@ -264,6 +272,10 @@ async def gerar_transcript_html(channel: discord.TextChannel) -> discord.File:
     return discord.File(buf, filename=nome)
 
 
+# ─────────────────────────────────────────────────────────────────
+#  ESTADO COMPARTILHADO
+# ─────────────────────────────────────────────────────────────────
+
 class TicketState:
     _ultimo_chamar_staff: dict[int, datetime] = {}
     _tickets_em_fechamento: set[int] = set()
@@ -295,18 +307,16 @@ class TicketState:
         cls._tickets_em_fechamento.discard(channel_id)
 
 
-async def executar_fechamento(interaction: discord.Interaction):
-    """
-    Executa o fechamento completo de um ticket.
-    Deve ser chamado APÓS interaction.response.defer().
+# ─────────────────────────────────────────────────────────────────
+#  FECHAMENTO
+# ─────────────────────────────────────────────────────────────────
 
-    BUG CORRIGIDO: o followup ephemeral era enviado DEPOIS de deletar o canal,
-    causando erro 10003 (Unknown Channel) e abortando o fluxo silenciosamente.
-    Agora confirmamos para o usuário ANTES de apagar o canal.
-    """
+async def executar_fechamento(interaction: discord.Interaction):
     canal = interaction.channel
+    print(f"[FECHAR] Iniciando: {canal.name} ({canal.id})")
 
     if not TicketState.marcar_fechando(canal.id):
+        print(f"[FECHAR] Canal {canal.id} já está sendo fechado.")
         await interaction.followup.send(
             "⚠️ Este ticket já está sendo fechado.",
             ephemeral=True,
@@ -314,20 +324,25 @@ async def executar_fechamento(interaction: discord.Interaction):
         return
 
     try:
-        
-        arquivo_txt,  total_msgs = await gerar_transcript_txt(canal)
-        arquivo_html             = await gerar_transcript_html(canal)
+        # ── 1. Gera transcripts ───────────────────────────────────
+        print(f"[FECHAR] Gerando transcripts...")
+        arquivo_txt, total_msgs = await gerar_transcript_txt(canal)
+        arquivo_html = await gerar_transcript_html(canal)
+        print(f"[FECHAR] Transcripts gerados. Total msgs: {total_msgs}")
 
+        # ── 2. Envia logs ─────────────────────────────────────────
         log        = interaction.guild.get_channel(CONFIG.CANAL_LOG_ID)
         criado_em  = canal.created_at
         fechado_em = datetime.now(timezone.utc)
         duracao    = formatar_duracao(int((fechado_em - criado_em).total_seconds()))
+        print(f"[FECHAR] Canal de log: {log}")
 
         link_txt = link_html = None
 
         if log:
             msg_txt  = await log.send(file=arquivo_txt)
             msg_html = await log.send(file=arquivo_html)
+            print(f"[FECHAR] Transcripts enviados ao log.")
             link_txt  = msg_txt.attachments[0].url
             link_html = msg_html.attachments[0].url
 
@@ -373,16 +388,20 @@ async def executar_fechamento(interaction: discord.Interaction):
                 ))
 
             await msg_html.edit(embed=embed_log, view=view_links)
+        else:
+            print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
 
-    
+        # ── 3. Confirma para o usuário ANTES de deletar o canal ───
         try:
             await interaction.followup.send(
                 "✅ Ticket encerrado. O canal será deletado em instantes.",
                 ephemeral=True,
             )
-        except discord.HTTPException:
-            pass  
+        except discord.HTTPException as e:
+            print(f"[FECHAR] Não foi possível enviar followup: {e}")
 
+        # ── 4. Avisa no canal e aguarda ───────────────────────────
+        print(f"[FECHAR] Enviando aviso de encerramento no canal...")
         embed_aviso = discord.Embed(
             title="🔒 Ticket Encerrado",
             description=(
@@ -394,14 +413,26 @@ async def executar_fechamento(interaction: discord.Interaction):
         await canal.send(embed=embed_aviso)
         await asyncio.sleep(5)
 
+        # ── 5. Deleta o canal ─────────────────────────────────────
+        print(f"[FECHAR] Deletando canal...")
         try:
             await canal.delete(reason=f"Ticket fechado por {interaction.user}")
+            print(f"[FECHAR] Canal deletado com sucesso.")
         except discord.HTTPException as e:
+            print(f"[FECHAR] Falha ao deletar canal {canal.name}: {e}")
             logger.warning(f"Falha ao deletar canal {canal.name}: {e}")
+
+    except Exception as e:
+        print(f"[FECHAR] ERRO INESPERADO: {e}")
+        logger.error(f"Erro inesperado ao fechar ticket {canal.name}: {e}", exc_info=True)
 
     finally:
         TicketState.desmarcar_fechando(canal.id)
 
+
+# ─────────────────────────────────────────────────────────────────
+#  VIEW: CONFIRMAR FECHAMENTO (persistente)
+# ─────────────────────────────────────────────────────────────────
 
 class ViewConfirmarFechamento(discord.ui.View):
 
@@ -431,6 +462,8 @@ class ViewConfirmarFechamento(discord.ui.View):
             )
             return
 
+        # IMPORTANTE: defer() sem ephemeral=True
+        # Com ephemeral=True o followup falha após o canal ser deletado (erro 10003)
         await interaction.response.defer()
         await executar_fechamento(interaction)
 
@@ -451,11 +484,16 @@ class ViewConfirmarFechamento(discord.ui.View):
         )
 
 
+# ─────────────────────────────────────────────────────────────────
+#  VIEW: AÇÕES DO TICKET (persistente)
+# ─────────────────────────────────────────────────────────────────
+
 class ViewAcoesTicket(discord.ui.View):
 
     def __init__(self):
         super().__init__(timeout=None)
 
+    # ── Assumir atendimento ────────────────────────────────────────
     @discord.ui.button(
         label="Assumir Atendimento",
         style=discord.ButtonStyle.green,
@@ -514,6 +552,7 @@ class ViewAcoesTicket(discord.ui.View):
             f"🎩 **{interaction.user.mention}** assumiu este atendimento.",
         )
 
+    # ── Chamar Staff ───────────────────────────────────────────────
     @discord.ui.button(
         label="Chamar Staff",
         style=discord.ButtonStyle.primary,
@@ -540,7 +579,8 @@ class ViewAcoesTicket(discord.ui.View):
 
         TicketState.registrar_chamar_staff(interaction.channel.id)
 
-        
+        # CORRIGIDO: menções no content, não no embed
+        # Dentro de embeds o Discord não dispara ping de verdade
         mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
 
         embed = discord.Embed(
@@ -560,6 +600,7 @@ class ViewAcoesTicket(discord.ui.View):
             allowed_mentions=discord.AllowedMentions(roles=True),
         )
 
+    # ── Painel Restrito ────────────────────────────────────────────
     @discord.ui.button(
         label="Painel Restrito",
         style=discord.ButtonStyle.secondary,
@@ -622,6 +663,7 @@ class ViewAcoesTicket(discord.ui.View):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    # ── Fechar Ticket ──────────────────────────────────────────────
     @discord.ui.button(
         label="Fechar Ticket",
         style=discord.ButtonStyle.red,
@@ -660,6 +702,11 @@ class ViewAcoesTicket(discord.ui.View):
             ephemeral=True,
         )
 
+
+# ─────────────────────────────────────────────────────────────────
+#  SELECT MENU DE CATEGORIAS
+# ─────────────────────────────────────────────────────────────────
+
 class SelectCategoriaTicket(discord.ui.Select):
 
     def __init__(self):
@@ -689,6 +736,7 @@ class SelectCategoriaTicket(discord.ui.Select):
         info     = CONFIG.CATEGORIAS[tipo]
         categoria = guild.get_channel(CONFIG.CATEGORIA_TICKETS_ID)
 
+        # ── Já possui ticket aberto? ───────────────────────────────
         ticket_existente = _encontrar_ticket_do_usuario(guild, user.id)
         if ticket_existente:
             await interaction.followup.send(
@@ -705,6 +753,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
+        # ── Permissões do canal ───────────────────────────────────
         overwrites: dict = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(
@@ -775,7 +824,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
-        # ── Menciona staff no content (ping real) ─────────────────
+        # CORRIGIDO: menções no content para ping real
         mencoes_staff = " ".join(
             f"<@&{cid}>" for cid in CONFIG.CARGOS_ATENDIMENTO_IDS
         )
@@ -807,7 +856,6 @@ class SelectCategoriaTicket(discord.ui.Select):
         if imagem:    embed_ticket.set_image(url=imagem)
         embed_ticket.set_footer(text="Família Sant's • Sistema de Tickets")
 
-        
         await canal.send(
             content=f"{user.mention} {mencoes_staff}",
             embed=embed_ticket,
@@ -829,6 +877,9 @@ class ViewPainelTickets(discord.ui.View):
         self.add_item(SelectCategoriaTicket())
 
 
+# ─────────────────────────────────────────────────────────────────
+#  COG PRINCIPAL
+# ─────────────────────────────────────────────────────────────────
 
 class CogTickets(commands.Cog, name="Tickets"):
 
@@ -838,6 +889,7 @@ class CogTickets(commands.Cog, name="Tickets"):
         bot.add_view(ViewAcoesTicket())
         bot.add_view(ViewConfirmarFechamento())
 
+    # ── /ticket — envia o painel ───────────────────────────────────
     @app_commands.command(
         name="ticket",
         description="Envia o painel de tickets no canal atual.",
@@ -880,6 +932,7 @@ class CogTickets(commands.Cog, name="Tickets"):
         else:
             await interaction.response.send_message(msg, ephemeral=True)
 
+    # ── /fechar — fecha o ticket atual ────────────────────────────
     @app_commands.command(
         name="fechar",
         description="Fecha o ticket atual (disponível dentro de um ticket).",
@@ -922,6 +975,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             ephemeral=True,
         )
 
+    # ── /ticket-info ──────────────────────────────────────────────
     @app_commands.command(
         name="ticket-info",
         description="Exibe informações do ticket atual.",
@@ -976,6 +1030,7 @@ class CogTickets(commands.Cog, name="Tickets"):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    # ── /ticket-fechar-forcado ────────────────────────────────────
     @app_commands.command(
         name="ticket-fechar-forcado",
         description="[Admin] Força o fechamento do ticket no canal atual.",
