@@ -1,17 +1,18 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from io import BytesIO
-from datetime import datetime, timezone, timedelta
-from collections import defaultdict
+from datetime import datetime, timezone
 import asyncio
 import re
 import logging
+import aiohttp
 
 logger = logging.getLogger("tickets")
 
+
+
 class CONFIG:
-   
+
     CATEGORIA_TICKETS_ID = 1495288098010169574
     CANAL_LOG_ID         = 1495272331558391818
 
@@ -24,14 +25,14 @@ class CONFIG:
     ]
 
     CARGOS_CHAMAR_STAFF: list[int] = [
-        1507901138396123166,
+        1512905705819078929,
     ]
 
     CARGOS_POR_CATEGORIA: dict[str, list[int]] = {
-        "duvida":     [],   
-        "denuncia":   [],   
-        "patrocinio": [1509054988972851252,1502717285528506536],  
-        "outros":     [],  
+        "duvida":     [],
+        "denuncia":   [],
+        "patrocinio": [1509054988972851252, 1502717285528506536],
+        "outros":     [],
     }
 
     COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 100
@@ -102,10 +103,6 @@ class CONFIG:
     }
 
 
-# ─────────────────────────────────────────────────────────────────
-#  HELPERS
-# ─────────────────────────────────────────────────────────────────
-
 def slug(texto: str) -> str:
     texto = texto.lower()
     texto = re.sub(r"[^a-z0-9\-]", "-", texto)
@@ -152,7 +149,7 @@ def _extrair_tipo_ticket(topic: str) -> str | None:
 
 def _encontrar_ticket_do_usuario(
     guild: discord.Guild,
-    user_id: int
+    user_id: int,
 ) -> discord.TextChannel | None:
     for ch in guild.text_channels:
         if ch.topic and f"DONO:{user_id}" in ch.topic:
@@ -160,15 +157,14 @@ def _encontrar_ticket_do_usuario(
     return None
 
 
-# ─────────────────────────────────────────────────────────────────
-#  TRANSCRIPTS
-# ─────────────────────────────────────────────────────────────────
 
-async def gerar_transcript_txt(channel: discord.TextChannel) -> tuple[discord.File, int]:
+async def gerar_transcript_texto(channel: discord.TextChannel) -> tuple[str, int]:
+    """Retorna (conteúdo_txt, total_mensagens)."""
     linhas = [
         "=" * 64,
         f"  TRANSCRIPT — {channel.name.upper()}",
         f"  Gerado em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')} UTC",
+        f"  Família Sant's • Sistema de Tickets",
         "=" * 64,
         "",
     ]
@@ -189,92 +185,27 @@ async def gerar_transcript_txt(channel: discord.TextChannel) -> tuple[discord.Fi
     if total == 0:
         linhas.append("Nenhuma mensagem registrada neste ticket.")
 
-    conteudo = "\n".join(linhas).encode("utf-8")
-    buf = BytesIO(conteudo)
-    buf.seek(0)
-    nome = f"transcript-{slug(channel.name)}.txt"
-    return discord.File(buf, filename=nome), total
+    return "\n".join(linhas), total
 
 
-async def gerar_transcript_html(channel: discord.TextChannel) -> discord.File:
-    mensagens_html = []
-    async for msg in channel.history(limit=None, oldest_first=True):
-        data     = msg.created_at.strftime("%d/%m/%Y %H:%M")
-        avatar   = msg.author.display_avatar.url
-        nome     = discord.utils.escape_mentions(str(msg.author))
-        conteudo = discord.utils.escape_mentions(msg.content) if msg.content else ""
-        conteudo = conteudo.replace("\n", "<br>")
+async def enviar_para_mclogs(conteudo: str) -> str | None:
+    """
+    Envia o conteúdo para mclo.gs e retorna a URL pública.
+    Retorna None se falhar.
+    """
+    url = "https://api.mclo.gs/1/log"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data={"content": conteudo}, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("success"):
+                        return data.get("url")
+                logger.warning(f"mclo.gs retornou status {resp.status}")
+    except Exception as e:
+        logger.error(f"Erro ao enviar para mclo.gs: {e}")
+    return None
 
-        anexos_html = ""
-        for a in msg.attachments:
-            if a.content_type and a.content_type.startswith("image/"):
-                anexos_html += (
-                    f'<img src="{a.url}" '
-                    f'style="max-width:360px;border-radius:6px;margin-top:6px;">'
-                )
-            else:
-                anexos_html += f'<a href="{a.url}" target="_blank">📎 {a.filename}</a>'
-
-        cor_nome = "#5865f2" if not msg.author.bot else "#57f287"
-        mensagens_html.append(f"""
-        <div class="msg">
-          <img class="avatar" src="{avatar}" alt="">
-          <div class="content">
-            <span class="nome" style="color:{cor_nome}">{nome}</span>
-            <span class="ts">{data}</span>
-            <p class="body">{conteudo}</p>
-            {anexos_html}
-          </div>
-        </div>""")
-
-    html = f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Transcript — {channel.name}</title>
-<style>
-  :root {{
-    --bg: #1e1f22; --surface: #2b2d31; --border: #3b3d43;
-    --text: #dbdee1; --muted: #80848e;
-  }}
-  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ background: var(--bg); color: var(--text);
-         font-family: 'Segoe UI', sans-serif; font-size: 15px; padding: 24px; }}
-  header {{ background: var(--surface); border-radius: 10px; padding: 20px 28px;
-            margin-bottom: 24px; border: 1px solid var(--border); }}
-  header h1 {{ font-size: 20px; font-weight: 700; color: #fff; }}
-  header p  {{ color: var(--muted); font-size: 13px; margin-top: 4px; }}
-  .msg {{ display: flex; gap: 14px; padding: 10px 0;
-          border-bottom: 1px solid #2e2e33; }}
-  .msg:last-child {{ border-bottom: none; }}
-  .avatar {{ width: 40px; height: 40px; border-radius: 50%;
-             flex-shrink: 0; margin-top: 2px; }}
-  .nome   {{ font-weight: 600; font-size: 14px; }}
-  .ts     {{ color: var(--muted); font-size: 11px; margin-left: 8px; }}
-  .body   {{ margin-top: 4px; line-height: 1.5; color: var(--text); }}
-  a       {{ color: #00aff4; }}
-  img     {{ display: block; }}
-</style>
-</head>
-<body>
-<header>
-  <h1>📋 Transcript — #{channel.name}</h1>
-  <p>Gerado em {datetime.now(timezone.utc).strftime('%d/%m/%Y às %H:%M UTC')} •
-     Família Sant's Sistema de Tickets</p>
-</header>
-{"".join(mensagens_html) or "<p style='color:var(--muted)'>Nenhuma mensagem registrada.</p>"}
-</body>
-</html>"""
-
-    buf = BytesIO(html.encode("utf-8"))
-    buf.seek(0)
-    nome = f"transcript-{slug(channel.name)}.html"
-    return discord.File(buf, filename=nome)
-
-
-# ─────────────────────────────────────────────────────────────────
-#  ESTADO COMPARTILHADO
-# ─────────────────────────────────────────────────────────────────
 
 class TicketState:
     _ultimo_chamar_staff: dict[int, datetime] = {}
@@ -307,10 +238,6 @@ class TicketState:
         cls._tickets_em_fechamento.discard(channel_id)
 
 
-# ─────────────────────────────────────────────────────────────────
-#  FECHAMENTO
-# ─────────────────────────────────────────────────────────────────
-
 async def executar_fechamento(interaction: discord.Interaction):
     canal = interaction.channel
     print(f"[FECHAR] Iniciando: {canal.name} ({canal.id})")
@@ -324,33 +251,29 @@ async def executar_fechamento(interaction: discord.Interaction):
         return
 
     try:
-        # ── 1. Gera transcripts ───────────────────────────────────
-        print(f"[FECHAR] Gerando transcripts...")
-        arquivo_txt, total_msgs = await gerar_transcript_txt(canal)
-        arquivo_html = await gerar_transcript_html(canal)
-        print(f"[FECHAR] Transcripts gerados. Total msgs: {total_msgs}")
+        print(f"[FECHAR] Gerando transcript...")
+        conteudo_txt, total_msgs = await gerar_transcript_texto(canal)
+        print(f"[FECHAR] Transcript gerado. Total msgs: {total_msgs}")
 
-        # ── 2. Envia logs ─────────────────────────────────────────
+        print(f"[FECHAR] Enviando para mclo.gs...")
+        link_transcript = await enviar_para_mclogs(conteudo_txt)
+        if link_transcript:
+            print(f"[FECHAR] Transcript disponível em: {link_transcript}")
+        else:
+            print(f"[FECHAR] AVISO: falha ao enviar para mclo.gs. Continuando sem link.")
+
         log        = interaction.guild.get_channel(CONFIG.CANAL_LOG_ID)
         criado_em  = canal.created_at
         fechado_em = datetime.now(timezone.utc)
         duracao    = formatar_duracao(int((fechado_em - criado_em).total_seconds()))
         print(f"[FECHAR] Canal de log: {log}")
 
-        link_txt = link_html = None
-
         if log:
-            msg_txt  = await log.send(file=arquivo_txt)
-            msg_html = await log.send(file=arquivo_html)
-            print(f"[FECHAR] Transcripts enviados ao log.")
-            link_txt  = msg_txt.attachments[0].url
-            link_html = msg_html.attachments[0].url
-
             embed_log = discord.Embed(
                 title="🔒 Ticket Encerrado",
                 description=(
-                    "O atendimento foi finalizado e o registro foi salvo.\n"
-                    "Use os botões abaixo para acessar os transcripts."
+                    "O atendimento foi finalizado e o registro foi salvo."
+                    + (f"\n[📋 Clique aqui para ver o transcript]({link_transcript})" if link_transcript else "\n⚠️ Transcript indisponível.")
                 ),
                 color=CONFIG.COR_DOURADO,
                 timestamp=fechado_em,
@@ -373,25 +296,20 @@ async def executar_fechamento(interaction: discord.Interaction):
             embed_log.set_image(url=CONFIG.BANNER_FECHADO)
             embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
 
+            # Botão de link para o transcript (se disponível)
             view_links = discord.ui.View(timeout=None)
-            if link_txt:
+            if link_transcript:
                 view_links.add_item(discord.ui.Button(
-                    label="📄 Transcript .txt",
-                    url=link_txt,
-                    style=discord.ButtonStyle.link,
-                ))
-            if link_html:
-                view_links.add_item(discord.ui.Button(
-                    label="🌐 Transcript .html",
-                    url=link_html,
+                    label="📋 Ver Transcript",
+                    url=link_transcript,
                     style=discord.ButtonStyle.link,
                 ))
 
-            await msg_html.edit(embed=embed_log, view=view_links)
+            await log.send(embed=embed_log, view=view_links if link_transcript else discord.utils.MISSING)
+            print(f"[FECHAR] Log enviado com sucesso.")
         else:
             print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
 
-        # ── 3. Confirma para o usuário ANTES de deletar o canal ───
         try:
             await interaction.followup.send(
                 "✅ Ticket encerrado. O canal será deletado em instantes.",
@@ -400,8 +318,6 @@ async def executar_fechamento(interaction: discord.Interaction):
         except discord.HTTPException as e:
             print(f"[FECHAR] Não foi possível enviar followup: {e}")
 
-        # ── 4. Avisa no canal e aguarda ───────────────────────────
-        print(f"[FECHAR] Enviando aviso de encerramento no canal...")
         embed_aviso = discord.Embed(
             title="🔒 Ticket Encerrado",
             description=(
@@ -413,7 +329,6 @@ async def executar_fechamento(interaction: discord.Interaction):
         await canal.send(embed=embed_aviso)
         await asyncio.sleep(5)
 
-        # ── 5. Deleta o canal ─────────────────────────────────────
         print(f"[FECHAR] Deletando canal...")
         try:
             await canal.delete(reason=f"Ticket fechado por {interaction.user}")
@@ -429,10 +344,6 @@ async def executar_fechamento(interaction: discord.Interaction):
     finally:
         TicketState.desmarcar_fechando(canal.id)
 
-
-# ─────────────────────────────────────────────────────────────────
-#  VIEW: CONFIRMAR FECHAMENTO (persistente)
-# ─────────────────────────────────────────────────────────────────
 
 class ViewConfirmarFechamento(discord.ui.View):
 
@@ -462,8 +373,6 @@ class ViewConfirmarFechamento(discord.ui.View):
             )
             return
 
-        # IMPORTANTE: defer() sem ephemeral=True
-        # Com ephemeral=True o followup falha após o canal ser deletado (erro 10003)
         await interaction.response.defer()
         await executar_fechamento(interaction)
 
@@ -484,16 +393,11 @@ class ViewConfirmarFechamento(discord.ui.View):
         )
 
 
-# ─────────────────────────────────────────────────────────────────
-#  VIEW: AÇÕES DO TICKET (persistente)
-# ─────────────────────────────────────────────────────────────────
-
 class ViewAcoesTicket(discord.ui.View):
 
     def __init__(self):
         super().__init__(timeout=None)
 
-    # ── Assumir atendimento ────────────────────────────────────────
     @discord.ui.button(
         label="Assumir Atendimento",
         style=discord.ButtonStyle.green,
@@ -552,7 +456,6 @@ class ViewAcoesTicket(discord.ui.View):
             f"🎩 **{interaction.user.mention}** assumiu este atendimento.",
         )
 
-    # ── Chamar Staff ───────────────────────────────────────────────
     @discord.ui.button(
         label="Chamar Staff",
         style=discord.ButtonStyle.primary,
@@ -579,8 +482,6 @@ class ViewAcoesTicket(discord.ui.View):
 
         TicketState.registrar_chamar_staff(interaction.channel.id)
 
-        # CORRIGIDO: menções no content, não no embed
-        # Dentro de embeds o Discord não dispara ping de verdade
         mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
 
         embed = discord.Embed(
@@ -600,7 +501,6 @@ class ViewAcoesTicket(discord.ui.View):
             allowed_mentions=discord.AllowedMentions(roles=True),
         )
 
-    # ── Painel Restrito ────────────────────────────────────────────
     @discord.ui.button(
         label="Painel Restrito",
         style=discord.ButtonStyle.secondary,
@@ -663,7 +563,6 @@ class ViewAcoesTicket(discord.ui.View):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # ── Fechar Ticket ──────────────────────────────────────────────
     @discord.ui.button(
         label="Fechar Ticket",
         style=discord.ButtonStyle.red,
@@ -690,7 +589,7 @@ class ViewAcoesTicket(discord.ui.View):
             title="🔒 Confirmar Fechamento",
             description=(
                 "Tem certeza que deseja encerrar este atendimento?\n\n"
-                "• O transcript será salvo automaticamente no canal de logs.\n"
+                "• O transcript será salvo automaticamente.\n"
                 "• Este canal será **permanentemente deletado** após 5 segundos.\n\n"
                 "Esta ação **não pode ser desfeita**."
             ),
@@ -702,10 +601,6 @@ class ViewAcoesTicket(discord.ui.View):
             ephemeral=True,
         )
 
-
-# ─────────────────────────────────────────────────────────────────
-#  SELECT MENU DE CATEGORIAS
-# ─────────────────────────────────────────────────────────────────
 
 class SelectCategoriaTicket(discord.ui.Select):
 
@@ -730,13 +625,12 @@ class SelectCategoriaTicket(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
 
-        guild    = interaction.guild
-        user     = interaction.user
-        tipo     = self.values[0]
-        info     = CONFIG.CATEGORIAS[tipo]
+        guild     = interaction.guild
+        user      = interaction.user
+        tipo      = self.values[0]
+        info      = CONFIG.CATEGORIAS[tipo]
         categoria = guild.get_channel(CONFIG.CATEGORIA_TICKETS_ID)
 
-        # ── Já possui ticket aberto? ───────────────────────────────
         ticket_existente = _encontrar_ticket_do_usuario(guild, user.id)
         if ticket_existente:
             await interaction.followup.send(
@@ -753,7 +647,6 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
-        # ── Permissões do canal ───────────────────────────────────
         overwrites: dict = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             user: discord.PermissionOverwrite(
@@ -799,7 +692,6 @@ class SelectCategoriaTicket(discord.ui.Select):
                     manage_messages=True,
                 )
 
-        # ── Cria o canal ──────────────────────────────────────────
         nome_canal = slug(f"{info['nome_canal']}-{user.name}")
         topic = (
             f"DONO:{user.id} | "
@@ -824,10 +716,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             )
             return
 
-        # CORRIGIDO: menções no content para ping real
-        mencoes_staff = " ".join(
-            f"<@&{cid}>" for cid in CONFIG.CARGOS_ATENDIMENTO_IDS
-        )
+        mencoes_staff = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_ATENDIMENTO_IDS)
 
         embed_ticket = discord.Embed(
             title=info["titulo"],
@@ -877,10 +766,6 @@ class ViewPainelTickets(discord.ui.View):
         self.add_item(SelectCategoriaTicket())
 
 
-# ─────────────────────────────────────────────────────────────────
-#  COG PRINCIPAL
-# ─────────────────────────────────────────────────────────────────
-
 class CogTickets(commands.Cog, name="Tickets"):
 
     def __init__(self, bot: commands.Bot):
@@ -889,7 +774,6 @@ class CogTickets(commands.Cog, name="Tickets"):
         bot.add_view(ViewAcoesTicket())
         bot.add_view(ViewConfirmarFechamento())
 
-    # ── /ticket — envia o painel ───────────────────────────────────
     @app_commands.command(
         name="ticket",
         description="Envia o painel de tickets no canal atual.",
@@ -932,7 +816,6 @@ class CogTickets(commands.Cog, name="Tickets"):
         else:
             await interaction.response.send_message(msg, ephemeral=True)
 
-    # ── /fechar — fecha o ticket atual ────────────────────────────
     @app_commands.command(
         name="fechar",
         description="Fecha o ticket atual (disponível dentro de um ticket).",
@@ -963,7 +846,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             title="🔒 Confirmar Fechamento",
             description=(
                 "Tem certeza que deseja encerrar este atendimento?\n\n"
-                "• O transcript será salvo no canal de logs.\n"
+                "• O transcript será salvo automaticamente.\n"
                 "• Este canal será **permanentemente deletado** após 5 segundos.\n\n"
                 "Esta ação **não pode ser desfeita**."
             ),
@@ -975,7 +858,6 @@ class CogTickets(commands.Cog, name="Tickets"):
             ephemeral=True,
         )
 
-    # ── /ticket-info ──────────────────────────────────────────────
     @app_commands.command(
         name="ticket-info",
         description="Exibe informações do ticket atual.",
@@ -1030,7 +912,6 @@ class CogTickets(commands.Cog, name="Tickets"):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # ── /ticket-fechar-forcado ────────────────────────────────────
     @app_commands.command(
         name="ticket-fechar-forcado",
         description="[Admin] Força o fechamento do ticket no canal atual.",
