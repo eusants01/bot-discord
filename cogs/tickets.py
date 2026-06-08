@@ -407,6 +407,44 @@ class ViewAvaliarAtendimento(discord.ui.View):
         for nota in range(1, 6):
             self.add_item(BotaoAvaliacaoAtendimento(nota))
 
+        self.add_item(BotaoDeletarTicketAdmin())
+
+
+class ViewDeletarTicketAdmin(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(BotaoDeletarTicketAdmin())
+
+
+class BotaoDeletarTicketAdmin(discord.ui.Button):
+
+    def __init__(self):
+        super().__init__(
+            label="Deletar Ticket",
+            emoji="🗑️",
+            style=discord.ButtonStyle.danger,
+            custom_id="ticket_v2_deletar_ticket_admin",
+            row=1,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "❌ Apenas administradores podem deletar este ticket.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.send_message(
+            "🗑️ Ticket deletado imediatamente.",
+            ephemeral=True,
+        )
+        try:
+            await interaction.channel.delete(reason=f"Ticket deletado por {interaction.user}")
+        except discord.HTTPException as e:
+            logger.warning(f"Falha ao deletar ticket: {e}")
+
 
 class BotaoAvaliacaoAtendimento(discord.ui.Button):
 
@@ -692,57 +730,74 @@ async def executar_fechamento(interaction: discord.Interaction):
         else:
             print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
 
-        if not atendente_id:
-            print("[FECHAR] Aviso: ticket fechado sem atendente assumido. A avaliação ficará indisponível.")
-
         try:
             await interaction.followup.send(
-                "✅ Ticket encerrado. Use os botões no canal para liberar avaliação ou deletar o ticket.",
+                "✅ Ticket encerrado. A avaliação foi enviada no canal do ticket.",
                 ephemeral=True,
             )
         except discord.HTTPException as e:
             print(f"[FECHAR] Não foi possível enviar followup: {e}")
 
-        embed_aviso = discord.Embed(
-            title="🔒 Ticket Encerrado",
-            description=(
-                f"Este ticket foi fechado por **{interaction.user.display_name}**.\n\n"
-                "Agora um **administrador** deve escolher uma ação abaixo:\n"
-                "• **Liberar Avaliação** — envia os botões de avaliação para o autor do ticket.\n"
-                "• **Deletar Ticket** — apaga este canal imediatamente.\n\n"
-                "O ticket **não será mais apagado automaticamente em 5 segundos**."
-            ),
-            color=CONFIG.COR_ESCURO,
-            timestamp=fechado_em,
-        )
-        embed_aviso.add_field(
-            name="👤 Autor do ticket",
-            value=f"<@{dono_id}>" if dono_id else "Desconhecido",
-            inline=True,
-        )
-        embed_aviso.add_field(
-            name="🎩 Atendente",
-            value=f"<@{atendente_id}>" if atendente_id else "Não assumido",
-            inline=True,
-        )
-        if link_transcript:
-            embed_aviso.add_field(
-                name="📋 Transcript",
-                value=f"[Clique aqui para abrir]({link_transcript})",
-                inline=False,
+        if dono_id and atendente_id and dono_id != atendente_id:
+            embed_avaliacao = discord.Embed(
+                title="⭐ Avalie o Atendimento",
+                description=(
+                    f"<@{dono_id}>, seu ticket foi encerrado por **{interaction.user.display_name}**.\n\n"
+                    f"**Atendente:** <@{atendente_id}>\n"
+                    f"**Ticket:** `{canal.name}`\n\n"
+                    "Escolha uma nota de **1 a 5 estrelas** para registrar a qualidade do atendimento.\n"
+                    "Após a avaliação, o ticket será deletado automaticamente.\n\n"
+                    "Administradores também podem usar o botão **Deletar Ticket** para apagar o canal imediatamente."
+                ),
+                color=CONFIG.COR_DOURADO,
+                timestamp=fechado_em,
             )
-        embed_aviso.set_footer(text="Família Sant's • Sistema de Tickets")
+            embed_avaliacao.add_field(name="1 ⭐", value="Ruim", inline=True)
+            embed_avaliacao.add_field(name="3 ⭐", value="Regular", inline=True)
+            embed_avaliacao.add_field(name="5 ⭐", value="Excelente", inline=True)
+            if link_transcript:
+                embed_avaliacao.add_field(
+                    name="📋 Transcript",
+                    value=f"[Ver registro do ticket]({link_transcript})",
+                    inline=False,
+                )
+            embed_avaliacao.set_footer(text="Família Sant's • Sistema de Avaliações")
 
-        await canal.send(
-            embed=embed_aviso,
-            view=ViewPosFechamento(
-                ticket_id=canal.id,
-                ticket_nome=canal.name,
-                usuario_id=dono_id,
-                atendente_id=atendente_id,
-                transcript_url=link_transcript,
-            ),
-        )
+            await canal.send(
+                content=f"<@{dono_id}>",
+                embed=embed_avaliacao,
+                view=ViewAvaliarAtendimento(
+                    ticket_id=canal.id,
+                    ticket_nome=canal.name,
+                    usuario_id=dono_id,
+                    atendente_id=atendente_id,
+                    transcript_url=link_transcript,
+                ),
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+        else:
+            print("[FECHAR] Avaliação não enviada: ticket sem atendente assumido ou sem dono válido.")
+            embed_aviso = discord.Embed(
+                title="🔒 Ticket Encerrado",
+                description=(
+                    f"Este ticket foi fechado por **{interaction.user.display_name}**.\n\n"
+                    "Não foi possível enviar avaliação porque o ticket não possui dono válido ou atendente assumido.\n"
+                    "Um administrador pode deletar este canal imediatamente pelo botão abaixo."
+                ),
+                color=CONFIG.COR_ESCURO,
+                timestamp=fechado_em,
+            )
+            embed_aviso.add_field(
+                name="👤 Autor do ticket",
+                value=f"<@{dono_id}>" if dono_id else "Desconhecido",
+                inline=True,
+            )
+            embed_aviso.add_field(
+                name="🎩 Atendente",
+                value=f"<@{atendente_id}>" if atendente_id else "Não assumido",
+                inline=True,
+            )
+            await canal.send(embed=embed_aviso, view=ViewDeletarTicketAdmin())
 
     except Exception as e:
         print(f"[FECHAR] ERRO INESPERADO: {e}")
@@ -769,13 +824,9 @@ class ViewConfirmarFechamento(discord.ui.View):
         button: discord.ui.Button,
     ):
         canal = interaction.channel
-        topic_dono_id = _extrair_dono_id(canal.topic or "")
-        e_dono  = topic_dono_id == interaction.user.id
-        e_staff = tem_permissao(interaction.user)
-
-        if not (e_dono or e_staff):
+        if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
-                "❌ Apenas o dono do ticket ou a equipe pode fechar este atendimento.",
+                "❌ Apenas administradores podem encerrar o atendimento e liberar a avaliação.",
                 ephemeral=True,
             )
             return
@@ -1003,8 +1054,9 @@ class ViewAcoesTicket(discord.ui.View):
             description=(
                 "Tem certeza que deseja encerrar este atendimento?\n\n"
                 "• O transcript será salvo automaticamente.\n"
-                "• Este canal será **permanentemente deletado** após 5 segundos.\n\n"
-                "Esta ação **não pode ser desfeita**."
+                "• O painel de avaliação será enviado no canal.\n"
+                "• O canal só será deletado após a avaliação ou pelo botão de admin.\n\n"
+                "Esta ação encerra o atendimento."
             ),
             color=CONFIG.COR_VERMELHO,
         )
@@ -1261,8 +1313,9 @@ class CogTickets(commands.Cog, name="Tickets"):
             description=(
                 "Tem certeza que deseja encerrar este atendimento?\n\n"
                 "• O transcript será salvo automaticamente.\n"
-                "• Este canal será **permanentemente deletado** após 5 segundos.\n\n"
-                "Esta ação **não pode ser desfeita**."
+                "• O painel de avaliação será enviado no canal.\n"
+                "• O canal só será deletado após a avaliação ou pelo botão de admin.\n\n"
+                "Esta ação encerra o atendimento."
             ),
             color=CONFIG.COR_VERMELHO,
         )
