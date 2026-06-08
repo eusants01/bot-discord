@@ -492,6 +492,131 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
             embed_publico.set_footer(text="Família Sant's • Reputação da Equipe")
             await canal_avaliacoes.send(embed=embed_publico)
 
+        canal_ticket = interaction.channel
+        if isinstance(canal_ticket, discord.TextChannel) and canal_ticket.topic and "DONO:" in canal_ticket.topic:
+            await asyncio.sleep(2)
+            try:
+                await canal_ticket.delete(reason=f"Ticket avaliado por {interaction.user}")
+            except discord.HTTPException as e:
+                logger.warning(f"Falha ao deletar ticket após avaliação: {e}")
+
+
+class ViewPosFechamento(discord.ui.View):
+
+    def __init__(
+        self,
+        *,
+        ticket_id: int,
+        ticket_nome: str,
+        usuario_id: int | None,
+        atendente_id: int | None,
+        transcript_url: str | None,
+    ):
+        super().__init__(timeout=None)
+        self.ticket_id = ticket_id
+        self.ticket_nome = ticket_nome
+        self.usuario_id = usuario_id
+        self.atendente_id = atendente_id
+        self.transcript_url = transcript_url
+
+    @discord.ui.button(
+        label="Liberar Avaliação",
+        style=discord.ButtonStyle.success,
+        emoji="⭐",
+        custom_id="ticket_v2_liberar_avaliacao",
+    )
+    async def btn_liberar_avaliacao(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "❌ Apenas administradores podem liberar a avaliação.",
+                ephemeral=True,
+            )
+            return
+
+        if not self.usuario_id or not self.atendente_id:
+            await interaction.response.send_message(
+                "❌ Não foi possível liberar a avaliação. O ticket precisa ter dono e atendente assumido.",
+                ephemeral=True,
+            )
+            return
+
+        if self.usuario_id == self.atendente_id:
+            await interaction.response.send_message(
+                "❌ O dono do ticket não pode ser o próprio atendente.",
+                ephemeral=True,
+            )
+            return
+
+        embed = discord.Embed(
+            title="⭐ Avaliação de Atendimento",
+            description=(
+                f"<@{self.usuario_id}>, avalie o atendimento recebido.\n\n"
+                f"**Atendente:** <@{self.atendente_id}>\n"
+                f"**Ticket:** `{self.ticket_nome}`\n\n"
+                "Escolha uma nota de **1 a 5 estrelas**. Após a avaliação, este ticket será deletado automaticamente."
+            ),
+            color=CONFIG.COR_DOURADO,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.add_field(name="1 ⭐", value="Ruim", inline=True)
+        embed.add_field(name="3 ⭐", value="Regular", inline=True)
+        embed.add_field(name="5 ⭐", value="Excelente", inline=True)
+        if self.transcript_url:
+            embed.add_field(
+                name="📋 Transcript",
+                value=f"[Ver registro do ticket]({self.transcript_url})",
+                inline=False,
+            )
+        embed.set_footer(text="Família Sant's • Sistema de Avaliações")
+
+        button.disabled = True
+        button.label = "Avaliação Liberada"
+        await interaction.message.edit(view=self)
+
+        await interaction.response.send_message(
+            content=f"<@{self.usuario_id}>",
+            embed=embed,
+            view=ViewAvaliarAtendimento(
+                ticket_id=self.ticket_id,
+                ticket_nome=self.ticket_nome,
+                usuario_id=self.usuario_id,
+                atendente_id=self.atendente_id,
+                transcript_url=self.transcript_url,
+            ),
+            allowed_mentions=discord.AllowedMentions(users=True),
+        )
+
+    @discord.ui.button(
+        label="Deletar Ticket",
+        style=discord.ButtonStyle.danger,
+        emoji="🗑️",
+        custom_id="ticket_v2_deletar_imediato",
+    )
+    async def btn_deletar_ticket(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+    ):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "❌ Apenas administradores podem deletar o ticket.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.send_message(
+            "🗑️ Ticket deletado.",
+            ephemeral=True,
+        )
+        try:
+            await interaction.channel.delete(reason=f"Ticket deletado por {interaction.user}")
+        except discord.HTTPException as e:
+            logger.warning(f"Falha ao deletar ticket: {e}")
+
 
 async def executar_fechamento(interaction: discord.Interaction):
     canal = interaction.channel
@@ -567,62 +692,12 @@ async def executar_fechamento(interaction: discord.Interaction):
         else:
             print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
 
-        if dono_id and atendente_id and dono_id != atendente_id:
-            dono = interaction.guild.get_member(dono_id)
-            if dono:
-                embed_avaliacao = discord.Embed(
-                    title="⭐ Avalie o Atendimento",
-                    description=(
-                        f"Olá {dono.mention}, seu ticket foi encerrado.\n\n"
-                        f"**Atendente:** <@{atendente_id}>\n"
-                        f"**Ticket:** `{canal.name}`\n\n"
-                        "Escolha uma nota de **1 a 5 estrelas** para registrar a qualidade do atendimento."
-                    ),
-                    color=CONFIG.COR_DOURADO,
-                    timestamp=fechado_em,
-                )
-                embed_avaliacao.add_field(name="1 ⭐", value="Ruim", inline=True)
-                embed_avaliacao.add_field(name="3 ⭐", value="Regular", inline=True)
-                embed_avaliacao.add_field(name="5 ⭐", value="Excelente", inline=True)
-                if link_transcript:
-                    embed_avaliacao.add_field(
-                        name="📋 Transcript",
-                        value=f"[Ver registro do ticket]({link_transcript})",
-                        inline=False,
-                    )
-                embed_avaliacao.set_footer(text="Família Sant's • Sistema de Avaliações")
-
-                try:
-                    await dono.send(
-                        embed=embed_avaliacao,
-                        view=ViewAvaliarAtendimento(
-                            ticket_id=canal.id,
-                            ticket_nome=canal.name,
-                            usuario_id=dono_id,
-                            atendente_id=atendente_id,
-                            transcript_url=link_transcript,
-                        ),
-                    )
-                except discord.Forbidden:
-                    canal_avaliacoes = interaction.guild.get_channel(CONFIG.CANAL_AVALIACOES_ID)
-                    if canal_avaliacoes:
-                        await canal_avaliacoes.send(
-                            content=dono.mention,
-                            embed=embed_avaliacao,
-                            view=ViewAvaliarAtendimento(
-                                ticket_id=canal.id,
-                                ticket_nome=canal.name,
-                                usuario_id=dono_id,
-                                atendente_id=atendente_id,
-                                transcript_url=link_transcript,
-                            ),
-                        )
-        else:
-            print("[FECHAR] Avaliação não enviada: ticket sem atendente assumido ou sem dono válido.")
+        if not atendente_id:
+            print("[FECHAR] Aviso: ticket fechado sem atendente assumido. A avaliação ficará indisponível.")
 
         try:
             await interaction.followup.send(
-                "✅ Ticket encerrado. O canal será deletado em instantes.",
+                "✅ Ticket encerrado. Use os botões no canal para liberar avaliação ou deletar o ticket.",
                 ephemeral=True,
             )
         except discord.HTTPException as e:
@@ -631,21 +706,43 @@ async def executar_fechamento(interaction: discord.Interaction):
         embed_aviso = discord.Embed(
             title="🔒 Ticket Encerrado",
             description=(
-                f"Este ticket foi fechado por **{interaction.user.display_name}**.\n"
-                "O canal será deletado em **5 segundos**."
+                f"Este ticket foi fechado por **{interaction.user.display_name}**.\n\n"
+                "Agora um **administrador** deve escolher uma ação abaixo:\n"
+                "• **Liberar Avaliação** — envia os botões de avaliação para o autor do ticket.\n"
+                "• **Deletar Ticket** — apaga este canal imediatamente.\n\n"
+                "O ticket **não será mais apagado automaticamente em 5 segundos**."
             ),
             color=CONFIG.COR_ESCURO,
+            timestamp=fechado_em,
         )
-        await canal.send(embed=embed_aviso)
-        await asyncio.sleep(5)
+        embed_aviso.add_field(
+            name="👤 Autor do ticket",
+            value=f"<@{dono_id}>" if dono_id else "Desconhecido",
+            inline=True,
+        )
+        embed_aviso.add_field(
+            name="🎩 Atendente",
+            value=f"<@{atendente_id}>" if atendente_id else "Não assumido",
+            inline=True,
+        )
+        if link_transcript:
+            embed_aviso.add_field(
+                name="📋 Transcript",
+                value=f"[Clique aqui para abrir]({link_transcript})",
+                inline=False,
+            )
+        embed_aviso.set_footer(text="Família Sant's • Sistema de Tickets")
 
-        print(f"[FECHAR] Deletando canal...")
-        try:
-            await canal.delete(reason=f"Ticket fechado por {interaction.user}")
-            print(f"[FECHAR] Canal deletado com sucesso.")
-        except discord.HTTPException as e:
-            print(f"[FECHAR] Falha ao deletar canal {canal.name}: {e}")
-            logger.warning(f"Falha ao deletar canal {canal.name}: {e}")
+        await canal.send(
+            embed=embed_aviso,
+            view=ViewPosFechamento(
+                ticket_id=canal.id,
+                ticket_nome=canal.name,
+                usuario_id=dono_id,
+                atendente_id=atendente_id,
+                transcript_url=link_transcript,
+            ),
+        )
 
     except Exception as e:
         print(f"[FECHAR] ERRO INESPERADO: {e}")
