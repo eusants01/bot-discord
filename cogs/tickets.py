@@ -6,6 +6,8 @@ import asyncio
 import re
 import logging
 import aiohttp
+import os
+import asyncpg
 
 logger = logging.getLogger("tickets")
 
@@ -15,6 +17,9 @@ class CONFIG:
 
     CATEGORIA_TICKETS_ID = 1495288098010169574
     CANAL_LOG_ID         = 1495272331558391818
+    CANAL_AVALIACOES_ID  = 1513346061887082666
+
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
     CARGOS_ATENDIMENTO_IDS: list[int] = [
         1487560221202321600,
@@ -147,6 +152,148 @@ def _extrair_tipo_ticket(topic: str) -> str | None:
     return match.group(1) if match else None
 
 
+
+
+def _extrair_atendente_id(topic: str) -> int | None:
+    match = re.search(r"ATENDENTE:(\d+)", topic)
+    return int(match.group(1)) if match else None
+
+
+def _marcar_atendente_no_topic(topic: str, staff_id: int) -> str:
+    if "ATENDENTE:" in topic:
+        return re.sub(r"ATENDENTE:\d+", f"ATENDENTE:{staff_id}", topic)
+    return f"{topic} | ATENDENTE:{staff_id}"
+
+
+def _estrelas(nota: int) -> str:
+    nota = max(1, min(5, int(nota)))
+    return "⭐" * nota + "☆" * (5 - nota)
+
+
+def _classificacao_media(media: float) -> str:
+    if media >= 4.8:
+        return "🏆 Atendimento Elite"
+    if media >= 4.5:
+        return "💎 Excelente"
+    if media >= 4.0:
+        return "✅ Muito bom"
+    if media >= 3.0:
+        return "⚠️ Regular"
+    return "🚨 Precisa de atenção"
+
+
+async def _abrir_conexao_postgres() -> asyncpg.Connection:
+    if not CONFIG.DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL não configurada. Adicione no .env: "
+            "DATABASE_URL=postgresql://usuario:senha@localhost:5432/nome_do_banco"
+        )
+    return await asyncpg.connect(CONFIG.DATABASE_URL)
+
+
+async def inicializar_banco_avaliacoes():
+    conn = await _abrir_conexao_postgres()
+    try:
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ticket_avaliacoes (
+                ticket_id BIGINT PRIMARY KEY,
+                ticket_nome TEXT NOT NULL,
+                guild_id BIGINT NOT NULL,
+                usuario_id BIGINT NOT NULL,
+                atendente_id BIGINT NOT NULL,
+                nota INTEGER NOT NULL CHECK(nota BETWEEN 1 AND 5),
+                transcript_url TEXT,
+                criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ticket_avaliacoes_atendente
+                ON ticket_avaliacoes(atendente_id);
+            """
+        )
+    finally:
+        await conn.close()
+
+
+async def salvar_avaliacao_ticket(
+    *,
+    ticket_id: int,
+    ticket_nome: str,
+    guild_id: int,
+    usuario_id: int,
+    atendente_id: int,
+    nota: int,
+    transcript_url: str | None,
+):
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        await conn.execute(
+            """
+            INSERT INTO ticket_avaliacoes
+            (ticket_id, ticket_nome, guild_id, usuario_id, atendente_id, nota, transcript_url, criado_em)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+            ON CONFLICT (ticket_id) DO UPDATE SET
+                ticket_nome = EXCLUDED.ticket_nome,
+                guild_id = EXCLUDED.guild_id,
+                usuario_id = EXCLUDED.usuario_id,
+                atendente_id = EXCLUDED.atendente_id,
+                nota = EXCLUDED.nota,
+                transcript_url = EXCLUDED.transcript_url,
+                criado_em = NOW()
+            """,
+            ticket_id,
+            ticket_nome,
+            guild_id,
+            usuario_id,
+            atendente_id,
+            nota,
+            transcript_url,
+        )
+    finally:
+        await conn.close()
+
+
+async def obter_resumo_atendente(atendente_id: int) -> tuple[float, int]:
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        row = await conn.fetchrow(
+            """
+            SELECT COALESCE(AVG(nota), 0) AS media, COUNT(*) AS total
+            FROM ticket_avaliacoes
+            WHERE atendente_id = $1
+            """,
+            atendente_id,
+        )
+    finally:
+        await conn.close()
+
+    media = float(row["media"] or 0)
+    total = int(row["total"] or 0)
+    return media, total
+
+
+async def obter_ranking_atendentes(limite: int = 10) -> list[tuple[int, float, int]]:
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        rows = await conn.fetch(
+            """
+            SELECT atendente_id, AVG(nota) AS media, COUNT(*) AS total
+            FROM ticket_avaliacoes
+            GROUP BY atendente_id
+            HAVING COUNT(*) > 0
+            ORDER BY media DESC, total DESC
+            LIMIT $1
+            """,
+            limite,
+        )
+    finally:
+        await conn.close()
+
+    return [(int(r["atendente_id"]), float(r["media"]), int(r["total"])) for r in rows]
+
 def _encontrar_ticket_do_usuario(
     guild: discord.Guild,
     user_id: int,
@@ -238,6 +385,114 @@ class TicketState:
         cls._tickets_em_fechamento.discard(channel_id)
 
 
+
+class ViewAvaliarAtendimento(discord.ui.View):
+
+    def __init__(
+        self,
+        *,
+        ticket_id: int,
+        ticket_nome: str,
+        usuario_id: int,
+        atendente_id: int,
+        transcript_url: str | None,
+    ):
+        super().__init__(timeout=None)
+        self.ticket_id = ticket_id
+        self.ticket_nome = ticket_nome
+        self.usuario_id = usuario_id
+        self.atendente_id = atendente_id
+        self.transcript_url = transcript_url
+
+        for nota in range(1, 6):
+            self.add_item(BotaoAvaliacaoAtendimento(nota))
+
+
+class BotaoAvaliacaoAtendimento(discord.ui.Button):
+
+    def __init__(self, nota: int):
+        super().__init__(
+            label=str(nota),
+            emoji="⭐",
+            style=discord.ButtonStyle.secondary if nota < 5 else discord.ButtonStyle.success,
+            custom_id=f"ticket_avaliar_nota_{nota}",
+        )
+        self.nota = nota
+
+    async def callback(self, interaction: discord.Interaction):
+        view: ViewAvaliarAtendimento = self.view
+
+        if interaction.user.id != view.usuario_id:
+            await interaction.response.send_message(
+                "❌ Apenas o autor do ticket pode avaliar este atendimento.",
+                ephemeral=True,
+            )
+            return
+
+        if interaction.user.id == view.atendente_id:
+            await interaction.response.send_message(
+                "❌ Você não pode avaliar o próprio atendimento.",
+                ephemeral=True,
+            )
+            return
+
+        await salvar_avaliacao_ticket(
+            ticket_id=view.ticket_id,
+            ticket_nome=view.ticket_nome,
+            guild_id=interaction.guild.id,
+            usuario_id=view.usuario_id,
+            atendente_id=view.atendente_id,
+            nota=self.nota,
+            transcript_url=view.transcript_url,
+        )
+
+        media, total = await obter_resumo_atendente(view.atendente_id)
+
+        embed = discord.Embed(
+            title="✅ Avaliação registrada",
+            description=(
+                f"Obrigado pelo feedback, {interaction.user.mention}.\n\n"
+                f"**Nota enviada:** `{self.nota}/5` {_estrelas(self.nota)}\n"
+                f"**Atendente:** <@{view.atendente_id}>\n"
+                f"**Média atual:** `{media:.2f}/5`\n"
+                f"**Total de avaliações:** `{total}`"
+            ),
+            color=CONFIG.COR_VERDE,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_footer(text="Família Sant's • Avaliação de Atendimento")
+
+        for item in view.children:
+            item.disabled = True
+        await interaction.message.edit(view=view)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        canal_avaliacoes = interaction.guild.get_channel(CONFIG.CANAL_AVALIACOES_ID)
+        if canal_avaliacoes:
+            embed_publico = discord.Embed(
+                title="⭐ Nova Avaliação de Atendimento",
+                description=(
+                    f"Um atendimento foi avaliado por {interaction.user.mention}.\n\n"
+                    f"**Atendente:** <@{view.atendente_id}>\n"
+                    f"**Nota:** `{self.nota}/5` {_estrelas(self.nota)}\n"
+                    f"**Ticket:** `{view.ticket_nome}`\n"
+                    f"**Classificação atual:** {_classificacao_media(media)}"
+                ),
+                color=CONFIG.COR_DOURADO,
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed_publico.add_field(name="📊 Média do atendente", value=f"`{media:.2f}/5`", inline=True)
+            embed_publico.add_field(name="📋 Avaliações", value=f"`{total}`", inline=True)
+            if view.transcript_url:
+                embed_publico.add_field(
+                    name="📁 Transcript",
+                    value=f"[Clique aqui para abrir]({view.transcript_url})",
+                    inline=False,
+                )
+            embed_publico.set_footer(text="Família Sant's • Reputação da Equipe")
+            await canal_avaliacoes.send(embed=embed_publico)
+
+
 async def executar_fechamento(interaction: discord.Interaction):
     canal = interaction.channel
     print(f"[FECHAR] Iniciando: {canal.name} ({canal.id})")
@@ -266,6 +521,8 @@ async def executar_fechamento(interaction: discord.Interaction):
         criado_em  = canal.created_at
         fechado_em = datetime.now(timezone.utc)
         duracao    = formatar_duracao(int((fechado_em - criado_em).total_seconds()))
+        dono_id    = _extrair_dono_id(canal.topic or "")
+        atendente_id = _extrair_atendente_id(canal.topic or "")
         print(f"[FECHAR] Canal de log: {log}")
 
         if log:
@@ -309,6 +566,59 @@ async def executar_fechamento(interaction: discord.Interaction):
             print(f"[FECHAR] Log enviado com sucesso.")
         else:
             print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
+
+        if dono_id and atendente_id and dono_id != atendente_id:
+            dono = interaction.guild.get_member(dono_id)
+            if dono:
+                embed_avaliacao = discord.Embed(
+                    title="⭐ Avalie o Atendimento",
+                    description=(
+                        f"Olá {dono.mention}, seu ticket foi encerrado.\n\n"
+                        f"**Atendente:** <@{atendente_id}>\n"
+                        f"**Ticket:** `{canal.name}`\n\n"
+                        "Escolha uma nota de **1 a 5 estrelas** para registrar a qualidade do atendimento."
+                    ),
+                    color=CONFIG.COR_DOURADO,
+                    timestamp=fechado_em,
+                )
+                embed_avaliacao.add_field(name="1 ⭐", value="Ruim", inline=True)
+                embed_avaliacao.add_field(name="3 ⭐", value="Regular", inline=True)
+                embed_avaliacao.add_field(name="5 ⭐", value="Excelente", inline=True)
+                if link_transcript:
+                    embed_avaliacao.add_field(
+                        name="📋 Transcript",
+                        value=f"[Ver registro do ticket]({link_transcript})",
+                        inline=False,
+                    )
+                embed_avaliacao.set_footer(text="Família Sant's • Sistema de Avaliações")
+
+                try:
+                    await dono.send(
+                        embed=embed_avaliacao,
+                        view=ViewAvaliarAtendimento(
+                            ticket_id=canal.id,
+                            ticket_nome=canal.name,
+                            usuario_id=dono_id,
+                            atendente_id=atendente_id,
+                            transcript_url=link_transcript,
+                        ),
+                    )
+                except discord.Forbidden:
+                    canal_avaliacoes = interaction.guild.get_channel(CONFIG.CANAL_AVALIACOES_ID)
+                    if canal_avaliacoes:
+                        await canal_avaliacoes.send(
+                            content=dono.mention,
+                            embed=embed_avaliacao,
+                            view=ViewAvaliarAtendimento(
+                                ticket_id=canal.id,
+                                ticket_nome=canal.name,
+                                usuario_id=dono_id,
+                                atendente_id=atendente_id,
+                                transcript_url=link_transcript,
+                            ),
+                        )
+        else:
+            print("[FECHAR] Avaliação não enviada: ticket sem atendente assumido ou sem dono válido.")
 
         try:
             await interaction.followup.send(
@@ -418,6 +728,12 @@ class ViewAcoesTicket(discord.ui.View):
                 ephemeral=True,
             )
             return
+
+        try:
+            novo_topic = _marcar_atendente_no_topic(canal.topic or "", interaction.user.id)
+            await canal.edit(topic=novo_topic, reason=f"Ticket assumido por {interaction.user}")
+        except discord.HTTPException as e:
+            logger.warning(f"Não foi possível marcar atendente no tópico do ticket: {e}")
 
         msg = interaction.message
         if not msg or not msg.embeds:
@@ -770,6 +1086,7 @@ class CogTickets(commands.Cog, name="Tickets"):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        bot.loop.create_task(inicializar_banco_avaliacoes())
         bot.add_view(ViewPainelTickets())
         bot.add_view(ViewAcoesTicket())
         bot.add_view(ViewConfirmarFechamento())
@@ -942,6 +1259,79 @@ class CogTickets(commands.Cog, name="Tickets"):
             await interaction.followup.send(msg, ephemeral=True)
         else:
             await interaction.response.send_message(msg, ephemeral=True)
+
+    @app_commands.command(
+        name="reputacao-atendente",
+        description="Mostra a reputação de atendimento de um membro da equipe.",
+    )
+    async def cmd_reputacao_atendente(
+        self,
+        interaction: discord.Interaction,
+        atendente: discord.Member,
+    ):
+        if not tem_permissao(interaction.user):
+            await interaction.response.send_message(
+                "❌ Apenas a equipe pode consultar reputações de atendimento.",
+                ephemeral=True,
+            )
+            return
+
+        media, total = await obter_resumo_atendente(atendente.id)
+
+        embed = discord.Embed(
+            title="📊 Reputação do Atendente",
+            description=(
+                f"👤 **Atendente:** {atendente.mention}\n"
+                f"⭐ **Média:** `{media:.2f}/5`\n"
+                f"📋 **Avaliações:** `{total}`\n"
+                f"🏷️ **Classificação:** {_classificacao_media(media) if total else 'Sem avaliações ainda'}"
+            ),
+            color=CONFIG.COR_AZUL,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_thumbnail(url=atendente.display_avatar.url)
+        embed.set_footer(text="Família Sant's • Reputação da Equipe")
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(
+        name="ranking-atendentes",
+        description="Mostra o ranking dos atendentes mais bem avaliados.",
+    )
+    async def cmd_ranking_atendentes(self, interaction: discord.Interaction):
+        if not tem_permissao(interaction.user):
+            await interaction.response.send_message(
+                "❌ Apenas a equipe pode consultar o ranking de atendentes.",
+                ephemeral=True,
+            )
+            return
+
+        ranking = await obter_ranking_atendentes(10)
+
+        if not ranking:
+            await interaction.response.send_message(
+                "📭 Ainda não há avaliações registradas.",
+                ephemeral=True,
+            )
+            return
+
+        linhas = []
+        medalhas = ["🥇", "🥈", "🥉"]
+        for pos, (atendente_id, media, total) in enumerate(ranking, start=1):
+            prefixo = medalhas[pos - 1] if pos <= 3 else f"`#{pos}`"
+            linhas.append(
+                f"{prefixo} <@{atendente_id}> — **{media:.2f}/5** • `{total}` avaliações"
+            )
+
+        embed = discord.Embed(
+            title="🏆 Ranking de Atendentes",
+            description="\n".join(linhas),
+            color=CONFIG.COR_DOURADO,
+            timestamp=datetime.now(timezone.utc),
+        )
+        embed.set_footer(text="Família Sant's • Qualidade de Atendimento")
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
