@@ -29,11 +29,11 @@ BANNERS = {
 }
 
 CARGOS_BONUS = {
-     1486411238513836052: 3,   # ⭐ Cargo de Patrocinador da Família Sant's — 3 entradas extras rsrs
-     1480334522053558465: 1,   # 🚀 Cargo de Booster do Servidor - Toma 2 ai
-    # 1111111111111111111: 3,   # 👑 Sem ideia
-    # 2222222222222222222: 1,   # 🎖️ Sem ideia
+     1486411238513836052: 3,   # Cargo de patrocinador do servidor
+     1480334522053558465: 1,   # Cargo de booster do servidor
+     1511436547524792526: 1,   # Cargo VIP do servidor 
 }
+
 
 CARGOS_ADMIN_SORTEIO = [
     1492220245996343377,
