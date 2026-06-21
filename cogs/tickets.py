@@ -1871,9 +1871,9 @@ class CogTickets(commands.Cog, name="Tickets"):
                 "**Segunda a sexta:** 08:00 às 23:00.\n"
                 "**Sábado e Domingo:** 10:00 às 18:00.\n\n"
                 "<:41145star:1518149258241642647> **| AVISOS IMPORTANTES**\n"
-                "• Evite abrir tickets fora do horário de atendimento, isso pode atrasar a resposta.\n"
-                "• Tenha paciência, nossa equipe é dedicada mas pode demorar dependendo da demanda.\n"
-                "• Forneça o máximo de detalhes possível para agilizar o atendimento.\n"
+                "- Evite abrir tickets fora do horário de atendimento.\n"
+                "- Forneça o máximo de detalhes possível para agilizar o atendimento.\n"
+                "-# Membros que abrirem tickets sem motivo serão penalizados.\n"
             ),
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
