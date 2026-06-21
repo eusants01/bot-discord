@@ -43,67 +43,67 @@ class CONFIG:
     COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 100
     COOLDOWN_ABRIR_TICKET_SEGUNDOS = 10
 
-    BANNER_PAINEL  = "https://cdn.discordapp.com/attachments/961677475191078992/1508334091190407208/content.png"
-    BANNER_FECHADO = "https://cdn.discordapp.com/attachments/961677475191078992/1508334620251262976/content.png"
+    BANNER_PAINEL  = "https://cdn.discordapp.com/attachments/961677475191078992/1518142427087507586/content.png?ex=6a38d7d0&is=6a378650&hm=6d086a0284c5cea10502d122fdf4c668dcbd156064ece7bbbafcef017e80b8ef&"
+    BANNER_FECHADO = "https://cdn.discordapp.com/attachments/961677475191078992/1518143942388879450/content.png?ex=6a38d939&is=6a3787b9&hm=56325c5f006840bc4ad1234c7b943879d4a4c90e0656841f90b7757ad6b6e0e5&"
 
     IMAGENS: dict[str, str] = {
-        "duvida":     "https://cdn.discordapp.com/attachments/961677475191078992/1508337815467986984/image.png",
-        "denuncia":   "https://cdn.discordapp.com/attachments/961677475191078992/1508337901241499728/image.png",
-        "patrocinio": "https://cdn.discordapp.com/attachments/961677475191078992/1508337978878201916/image.png",
-        "outros":     "https://cdn.discordapp.com/attachments/961677475191078992/1508338084796956822/image.png",
+        "duvida":     "",
+        "denuncia":   "",
+        "patrocinio": "",
+        "outros":     "",
     }
 
     THUMBNAILS: dict[str, str] = {
-        "duvida":     "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
-        "denuncia":   "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
-        "patrocinio": "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
-        "outros":     "https://media.tenor.com/3Fss9H6cQZwAAAAi/laughing-cuphead.gif",
+        "duvida":     "",
+        "denuncia":   "",
+        "patrocinio": "",
+        "outros":     "",
     }
 
-    COR_VERMELHO = discord.Color.from_rgb(180, 50,  40)
-    COR_AZUL     = discord.Color.from_rgb(40,  105, 160)
-    COR_DOURADO  = discord.Color.from_rgb(215, 165, 75)
-    COR_VERDE    = discord.Color.from_rgb(75,  135, 70)
-    COR_ROXO     = discord.Color.from_rgb(110, 70,  160)
-    COR_ESCURO   = discord.Color.from_rgb(35,  30,  25)
-    COR_CINZA    = discord.Color.from_rgb(80,  80,  80)
-    COR_AMARELO  = discord.Color.from_rgb(220, 165, 30)
+    COR_VERMELHO = discord.Color.from_rgb(200, 60,  90)    
+    COR_AZUL     = discord.Color.from_rgb(88,  101, 242)   
+    COR_DOURADO  = discord.Color.from_rgb(147, 112, 219)  
+    COR_VERDE    = discord.Color.from_rgb(60,  200, 150)   
+    COR_ROXO     = discord.Color.from_rgb(98,  54,  163)   
+    COR_ESCURO   = discord.Color.from_rgb(15,  12,  30)    
+    COR_CINZA    = discord.Color.from_rgb(90,  90,  110)   
+    COR_AMARELO  = discord.Color.from_rgb(230, 190, 70)    
 
     CATEGORIAS: dict[str, dict] = {
         "duvida": {
             "label":       "Dúvidas",
             "description": "Tire suas dúvidas com a equipe.",
-            "emoji":       "<:duvidas:1508327310653263934>",
-            "titulo":      "<:duvidas:1508327310653263934> Dúvidas — Balcão do Estúdio",
+            "emoji":       "🛰️",
+            "titulo":      "🛰️ Dúvidas — Central de Comunicação",
             "nivel":       "🔵 Suporte Geral",
-            "cor":         discord.Color.from_rgb(40, 105, 160),
+            "cor":         discord.Color.from_rgb(88, 101, 242),
             "nome_canal":  "duvida",
         },
         "denuncia": {
             "label":       "Denúncias",
             "description": "Reporte algo irregular com provas.",
-            "emoji":       "<:denuncias:1508327388570980473>",
-            "titulo":      "<:denuncias:1508327388570980473> Denúncia — Alerta no Estúdio",
+            "emoji":       "🚨",
+            "titulo":      "🚨 Denúncia — Alerta de Anomalia",
             "nivel":       "🔴 Prioridade Alta",
-            "cor":         discord.Color.from_rgb(180, 50, 40),
+            "cor":         discord.Color.from_rgb(200, 60, 90),
             "nome_canal":  "denuncia",
         },
         "patrocinio": {
             "label":       "Patrocínios",
             "description": "Parcerias e propostas comerciais.",
-            "emoji":       "<:pat:1508327666485297213>",
-            "titulo":      "<:pat:1508327666485297213> Patrocínio — Sala de Reuniões",
+            "emoji":       "🌌",
+            "titulo":      "🌌 Patrocínio — Embaixada Estelar",
             "nivel":       "🟡 Proposta Comercial",
-            "cor":         discord.Color.from_rgb(215, 165, 75),
+            "cor":         discord.Color.from_rgb(147, 112, 219),
             "nome_canal":  "patrocinio",
         },
         "outros": {
             "label":       "Outros",
             "description": "Assuntos que não se encaixam acima.",
-            "emoji":       "<:outros:1508327748102520852>",
-            "titulo":      "<:outros:1508327748102520852> Outros — Arquivo Geral",
+            "emoji":       "🪐",
+            "titulo":      "🪐 Outros — Setor Desconhecido",
             "nivel":       "⚪ Atendimento Geral",
-            "cor":         discord.Color.from_rgb(80, 80, 80),
+            "cor":         discord.Color.from_rgb(90, 90, 110),
             "nome_canal":  "outros",
         },
     }
@@ -580,7 +580,7 @@ async def gerar_transcript_texto(channel: discord.TextChannel) -> tuple[str, int
         "=" * 64,
         f"  TRANSCRIPT — {channel.name.upper()}",
         f"  Gerado em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')} UTC",
-        f"  Família Sant's • Sistema de Tickets",
+        f"  Nebularis • Sistema de Tickets",
         "=" * 64,
         "",
     ]
@@ -719,7 +719,7 @@ async def _anunciar_patente_se_mudou(bot: commands.Bot, guild: discord.Guild, at
         color=CONFIG.COR_DOURADO,
         timestamp=datetime.now(timezone.utc),
     )
-    embed.set_footer(text="Família Sant's • Caminho do Espadachim")
+    embed.set_footer(text="Nebularis • Caminho do Espadachim")
     try:
         await canal.send(embed=embed)
     except discord.HTTPException:
@@ -786,7 +786,7 @@ class ModalComentarioAvaliacao(discord.ui.Modal, title="Conte como foi seu atend
             color=CONFIG.COR_VERDE,
             timestamp=datetime.now(timezone.utc),
         )
-        embed_confirmacao.set_footer(text="Família Sant's • Avaliação de Atendimento")
+        embed_confirmacao.set_footer(text="Nebularis • Avaliação de Atendimento")
         await interaction.response.send_message(embed=embed_confirmacao, ephemeral=True)
 
         if self.mensagem_origem is not None:
@@ -826,7 +826,7 @@ class ModalComentarioAvaliacao(discord.ui.Modal, title="Conte como foi seu atend
                     value=f"[Clique aqui para abrir]({self.transcript_url})",
                     inline=False,
                 )
-            embed_publico.set_footer(text="Família Sant's • Reputação da Equipe")
+            embed_publico.set_footer(text="Nebularis • Reputação da Equipe")
             try:
                 await canal_avaliacoes.send(embed=embed_publico)
             except discord.HTTPException:
@@ -1010,7 +1010,7 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
             color=CONFIG.COR_VERDE,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_footer(text="Família Sant's • Avaliação de Atendimento")
+        embed.set_footer(text="Nebularis • Avaliação de Atendimento")
 
         for item in view.children:
             item.disabled = True
@@ -1039,7 +1039,7 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
                     value=f"[Clique aqui para abrir]({view.transcript_url})",
                     inline=False,
                 )
-            embed_publico.set_footer(text="Família Sant's • Reputação da Equipe")
+            embed_publico.set_footer(text="Nebularis • Reputação da Equipe")
             await canal_avaliacoes.send(embed=embed_publico)
 
         await _anunciar_patente_se_mudou(interaction.client, interaction.guild, view.atendente_id)
@@ -1158,8 +1158,9 @@ async def executar_fechamento(interaction: discord.Interaction):
             )
             embed_log.add_field(name="📝 Resumo do atendimento", value=resumo[:1024], inline=False)
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
-            embed_log.set_image(url=CONFIG.BANNER_FECHADO)
-            embed_log.set_footer(text="Família Sant's • Sistema de Tickets")
+            if CONFIG.BANNER_FECHADO:
+                embed_log.set_image(url=CONFIG.BANNER_FECHADO)
+            embed_log.set_footer(text="Nebularis • Sistema de Tickets")
 
             view_links = discord.ui.View(timeout=None)
             if link_transcript:
@@ -1202,28 +1203,25 @@ async def executar_fechamento(interaction: discord.Interaction):
             dono_member = interaction.guild.get_member(dono_id)
             if dono_member:
                 embed_dm = discord.Embed(
-                    title="⭐ Avalie seu atendimento — Família Sant's",
+                    title="⭐ Avalie seu atendimento — Nebularis",
                     description=(
                         f"Seu ticket **{canal.name}** foi encerrado.\n\n"
                         f"**Atendente:** <@{atendente_id}>\n"
                         f"**Duração:** `{duracao}`\n\n"
-                        "Escolha uma nota de **1 a 5 estrelas** abaixo. Depois você poderá "
-                        "deixar um comentário opcional sobre o atendimento — isso fica só "
+                        "Escolha uma nota de **1 a 5 estrelas** abaixo (`1` Ruim · `3` Regular · `5` Excelente). "
+                        "Depois você poderá deixar um comentário opcional — isso fica só "
                         "entre você e a equipe."
                     ),
                     color=CONFIG.COR_DOURADO,
                     timestamp=fechado_em,
                 )
-                embed_dm.add_field(name="1 ⭐", value="Ruim", inline=True)
-                embed_dm.add_field(name="3 ⭐", value="Regular", inline=True)
-                embed_dm.add_field(name="5 ⭐", value="Excelente", inline=True)
                 if link_transcript:
                     embed_dm.add_field(
                         name="📋 Transcript",
                         value=f"[Ver registro do ticket]({link_transcript})",
                         inline=False,
                     )
-                embed_dm.set_footer(text="Família Sant's • Sistema de Avaliações")
+                embed_dm.set_footer(text="Nebularis • Sistema de Avaliações")
 
                 try:
                     await dono_member.send(
@@ -1272,23 +1270,20 @@ async def executar_fechamento(interaction: discord.Interaction):
                     f"<@{dono_id}>, seu ticket foi encerrado por **{interaction.user.display_name}**.\n\n"
                     f"**Atendente:** <@{atendente_id}>\n"
                     f"**Ticket:** `{canal.name}`\n\n"
-                    "Escolha uma nota de **1 a 5 estrelas** para registrar a qualidade do atendimento.\n"
+                    "Escolha uma nota de **1 a 5 estrelas** (`1` Ruim · `3` Regular · `5` Excelente). "
                     "Após a avaliação, o ticket será deletado automaticamente.\n\n"
                     "Administradores também podem usar o botão **Deletar Ticket** para apagar o canal imediatamente."
                 ),
                 color=CONFIG.COR_DOURADO,
                 timestamp=fechado_em,
             )
-            embed_avaliacao.add_field(name="1 ⭐", value="Ruim", inline=True)
-            embed_avaliacao.add_field(name="3 ⭐", value="Regular", inline=True)
-            embed_avaliacao.add_field(name="5 ⭐", value="Excelente", inline=True)
             if link_transcript:
                 embed_avaliacao.add_field(
                     name="📋 Transcript",
                     value=f"[Ver registro do ticket]({link_transcript})",
                     inline=False,
                 )
-            embed_avaliacao.set_footer(text="Família Sant's • Sistema de Avaliações")
+            embed_avaliacao.set_footer(text="Nebularis • Sistema de Avaliações")
 
             await canal.send(
                 content=f"<@{dono_id}>",
@@ -1392,7 +1387,7 @@ class ViewAcoesTicket(discord.ui.View):
         if embed_old.image:
             novo_embed.set_image(url=embed_old.image.url)
         novo_embed.set_footer(
-            text=f"Assumido por {interaction.user.display_name} • Família Sant's"
+            text=f"Assumido por {interaction.user.display_name} • Nebularis"
         )
 
         button.disabled = True
@@ -1440,7 +1435,7 @@ class ViewAcoesTicket(discord.ui.View):
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_footer(text="Família Sant's • Sistema de Tickets")
+        embed.set_footer(text="Nebularis • Sistema de Tickets")
 
         await interaction.response.send_message(
             content=mencoes,
@@ -1500,7 +1495,6 @@ class ViewAcoesTicket(discord.ui.View):
             value=f"`{formatar_duracao(int((datetime.now(timezone.utc) - canal.created_at).total_seconds()))}`",
             inline=True,
         )
-        embed.add_field(name="📋 Tópico", value=f"`{topic}`", inline=False)
         embed.add_field(
             name="👥 Equipe com acesso",
             value="\n".join(f"<@&{cid}>" for cid in cargos_acesso) or "Nenhum",
@@ -1627,29 +1621,27 @@ class SelectCategoriaTicket(discord.ui.Select):
         embed_ticket = discord.Embed(
             title=info["titulo"],
             description=(
-                f"🎬 Olá {user.mention}, bem-vindo ao atendimento da **Família Sant's**!\n\n"
-                "Seu ticket foi aberto com sucesso. Descreva sua solicitação com calma "
-                "e aguarde enquanto nossa equipe prepara o atendimento.\n\n"
-                "**📜 Orientações:**\n"
-                "• Explique claramente o motivo do ticket.\n"
-                "• Envie prints, provas ou informações relevantes se necessário.\n"
-                "• Evite spam e menções desnecessárias.\n"
-                "• Aguarde pacientemente a equipe responder.\n\n"
-                f"🎟️ **Categoria:** {info['titulo']}\n"
-                f"⭐ **Nível:** `{info['nivel']}`\n"
-                f"👤 **Solicitante:** {user.mention}\n"
-                f"🕒 **Aberto em:** <t:{int(datetime.now(timezone.utc).timestamp())}:f>\n"
+                f"✨ Olá {user.mention}, bem-vindo ao atendimento da **Nebularis**!\n\n"
+                "Descreva sua solicitação com calma e aguarde enquanto a equipe se prepara.\n"
+                "Envie prints ou provas se for necessário e evite menções desnecessárias.\n\n"
                 f"⏳ **Status:** `Aguardando atendimento`"
             ),
             color=info["cor"],
             timestamp=datetime.now(timezone.utc),
+        )
+        embed_ticket.add_field(name="🛰️ Categoria", value=info["nivel"], inline=True)
+        embed_ticket.add_field(name="👤 Solicitante", value=user.mention, inline=True)
+        embed_ticket.add_field(
+            name="🕒 Aberto em",
+            value=f"<t:{int(datetime.now(timezone.utc).timestamp())}:R>",
+            inline=True,
         )
 
         imagem    = CONFIG.IMAGENS.get(tipo)
         thumbnail = CONFIG.THUMBNAILS.get(tipo)
         if thumbnail: embed_ticket.set_thumbnail(url=thumbnail)
         if imagem:    embed_ticket.set_image(url=imagem)
-        embed_ticket.set_footer(text="Família Sant's • Sistema de Tickets")
+        embed_ticket.set_footer(text="Nebularis • Sistema de Tickets")
 
         msg_painel = await canal.send(
             content=f"{user.mention} {mencoes_staff}",
@@ -1845,7 +1837,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             color=info["cor"],
             timestamp=datetime.now(timezone.utc),
         )
-        embed_reabertura.set_footer(text="Família Sant's • Sistema de Tickets")
+        embed_reabertura.set_footer(text="Nebularis • Sistema de Tickets")
 
         msg_painel = await canal_novo.send(
             content=f"{membro.mention} {mencoes_staff}",
@@ -1873,22 +1865,23 @@ class CogTickets(commands.Cog, name="Tickets"):
     @app_commands.checks.has_permissions(administrator=True)
     async def cmd_ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="<a:CUPCHILL:1502354528802963538> Família Sant's — Sistema de Atendimento",
+            title="🌌 Nebularis — Sistema de Atendimento",
             description=(
-                "Bem-vindo ao balcão oficial de atendimento da **Família Sant's**.\n\n"
+                "Bem-vindo ao balcão oficial de atendimento da **Nebularis**.\n\n"
                 "Selecione uma categoria abaixo para abrir seu ticket.\n"
                 "Nossa equipe irá atendê-lo assim que possível.\n\n"
-                "<:duvidas:1508327310653263934> **Dúvidas** — tire suas dúvidas gerais com a equipe.\n"
-                "<:denuncias:1508327388570980473> **Denúncias** — reporte irregularidades com provas.\n"
-                "<:pat:1508327666485297213> **Patrocínios** — parcerias e propostas comerciais.\n"
-                "<:outros:1508327748102520852> **Outros** — assuntos que não se encaixam acima.\n\n"
-                "🎞️ Use o menu abaixo para começar."
+                "🛰️ **Dúvidas** — tire suas dúvidas gerais com a equipe.\n"
+                "🚨 **Denúncias** — reporte irregularidades com provas.\n"
+                "🌌 **Patrocínios** — parcerias e propostas comerciais.\n"
+                "🪐 **Outros** — assuntos que não se encaixam acima.\n\n"
+                "✨ Use o menu abaixo para começar."
             ),
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_image(url=CONFIG.BANNER_PAINEL)
-        embed.set_footer(text="Família Sant's • Atendimento oficial")
+        if CONFIG.BANNER_PAINEL:
+            embed.set_image(url=CONFIG.BANNER_PAINEL)
+        embed.set_footer(text="Nebularis • Atendimento oficial")
 
         await interaction.channel.send(embed=embed, view=ViewPainelTickets())
         await interaction.response.send_message(
@@ -2078,7 +2071,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             embed.add_field(name="💬 Últimos comentários", value=texto_comentarios[:1024], inline=False)
 
         embed.set_thumbnail(url=atendente.display_avatar.url)
-        embed.set_footer(text="Família Sant's • Reputação da Equipe")
+        embed.set_footer(text="Nebularis • Reputação da Equipe")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -2114,7 +2107,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             ),
             color=CONFIG.COR_DOURADO,
         )
-        embed.set_footer(text="Família Sant's • Caminho do Espadachim")
+        embed.set_footer(text="Nebularis • Caminho do Espadachim")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
@@ -2155,7 +2148,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_footer(text="Família Sant's • Qualidade de Atendimento")
+        embed.set_footer(text="Nebularis • Qualidade de Atendimento")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
