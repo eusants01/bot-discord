@@ -9,10 +9,6 @@ from utils.db import criar_tabelas
 
 load_dotenv()
 
-# ==================================================
-# 🎰 CONFIGURAÇÕES DO CASSINO CUPHEAD
-# ==================================================
-
 GUILD_ID = 1480334256763961465
 
 COR_CUPHEAD = 0xC48A3A
@@ -27,25 +23,22 @@ bot = commands.Bot(
     intents=intents
 )
 
-# Evita duplicar eventos após reconnect
 bot.iniciado = False
 
-
-# ==================================================
-# 🎭 STATUS ROTATIVO CUPHEAD
-# ==================================================
-
 status_list = [
-    "🎰 Cassino Retrô aberto...",
-    "☕ Cuphead está apostando tudo...",
-    "🎲 A roleta está girando...",
-    "👑 Apenas os sortudos vencem...",
-    "💰 Fazendo apostas no cassino...",
-    "🔥 O diabo está observando...",
+    "🌌 Explorando novos universos...",
+    "🪐 Sistemas orbitando normalmente...",
+    "📡 Recebendo sinais da galáxia...",
+    "✨ Sincronizando estrelas...",
+    "💜 Desenvolvido por Sant's",
+    "⚡ Núcleo Nebularis ativo...",
+    "🚀 Preparando novas funcionalidades...",
+    "🛰️ Monitorando o servidor...",
+    "💫 Expandindo o universo...",
 ]
 
 
-@tasks.loop(seconds=15)
+@tasks.loop(seconds=5)
 async def trocar_status():
     status = status_list[
         trocar_status.current_loop % len(status_list)
@@ -55,11 +48,6 @@ async def trocar_status():
         status=discord.Status.online,
         activity=discord.Game(name=status)
     )
-
-
-# ==================================================
-# 📦 CARREGADOR DE COGS
-# ==================================================
 
 async def carregar_cog(nome: str):
     try:
@@ -72,11 +60,6 @@ async def carregar_cog(nome: str):
             f"❌ Erro ao carregar {nome}: "
             f"{type(e).__name__}: {e}"
         )
-
-
-# ==================================================
-# 🎬 BOT ONLINE
-# ==================================================
 
 @bot.event
 async def on_ready():
@@ -93,7 +76,6 @@ async def on_ready():
 
     guild = discord.Object(id=GUILD_ID)
 
-    # Lista comandos antes do sync
     comandos = [
         cmd.name
         for cmd in bot.tree.get_commands()
@@ -116,25 +98,15 @@ async def on_ready():
 
     print("=" * 50)
 
-    # Status rotativo
     if not trocar_status.is_running():
         trocar_status.start()
         print("🎭 Status rotativo iniciado")
-
-
-# ==================================================
-# 🚀 MAIN
-# ==================================================
 
 async def main():
 
     async with bot:
 
         print("\n🎬 Iniciando Cassino Cuphead...\n")
-
-        # ==================================================
-        # 🗄️ POSTGRESQL
-        # ==================================================
 
         try:
             await conectar_db()
@@ -151,10 +123,6 @@ async def main():
 
             return
 
-        # ==================================================
-        # 🏆 CONQUISTAS ANTIGAS, PORÉM DESATIVDAS ATÉ ENTÃO.
-        # ==================================================
-
         try:
             criar_tabelas()
 
@@ -167,10 +135,6 @@ async def main():
                 f"{type(e).__name__}: {e}"
             )
 
-        # ==================================================
-        # 📦 COGS
-        # ==================================================
-
         cogs = [
             "cogs.tickets",
             "cogs.parceiros",
@@ -179,9 +143,6 @@ async def main():
             "cogs.moderacao",
         ]
 
-        # Caso ainda use conquistas:
-        # cogs.append("cogs.conquistas")
-
         print("\n📦 Carregando sistemas...\n")
 
         for cog in cogs:
@@ -189,10 +150,6 @@ async def main():
 
         print("\n✅ Todos os sistemas foram carregados")
         print("=" * 50)
-
-        # ==================================================
-        # 🔑 TOKEN
-        # ==================================================
 
         token = os.getenv("DISCORD_TOKEN")
 
@@ -206,10 +163,6 @@ async def main():
 
         await bot.start(token)
 
-
-# ==================================================
-# 🎯 START
-# ==================================================
 
 if __name__ == "__main__":
     asyncio.run(main())
