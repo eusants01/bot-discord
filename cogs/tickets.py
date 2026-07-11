@@ -15,22 +15,18 @@ logger = logging.getLogger("tickets")
 
 class CONFIG:
 
-    CATEGORIA_TICKETS_ID = 1495288098010169574
-    CANAL_LOG_ID         = 1495272331558391818
-    CANAL_AVALIACOES_ID  = 1513346061887082666
+    CATEGORIA_TICKETS_ID = 1525269670859374723
+    CANAL_LOG_ID         = 1525644381313306714
+    CANAL_AVALIACOES_ID  = 1525643925489062029
 
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     CARGOS_ATENDIMENTO_IDS: list[int] = [
-        1487560221202321600,
-        1505759604842434651,
-        1480381506064093225,
-        1500545846427652166,
-        1501356975491907664,
+        1525281649284349962,
     ]
 
     CARGOS_CHAMAR_STAFF: list[int] = [
-        1512905705819078929,
+        1525281649284349962,
     ]
 
     CARGOS_POR_CATEGORIA: dict[str, list[int]] = {
@@ -43,7 +39,7 @@ class CONFIG:
     COOLDOWN_CHAMAR_STAFF_SEGUNDOS = 100
     COOLDOWN_ABRIR_TICKET_SEGUNDOS = 10
 
-    BANNER_PAINEL  = "https://cdn.discordapp.com/attachments/961677475191078992/1518142427087507586/content.png?ex=6a38d7d0&is=6a378650&hm=6d086a0284c5cea10502d122fdf4c668dcbd156064ece7bbbafcef017e80b8ef&"
+    BANNER_PAINEL  = "https://cdn.discordapp.com/attachments/961677475191078992/1525639971480797255/content.png?ex=6a541e72&is=6a52ccf2&hm=13773293d43c75670a5d1423b47677bfd9f233872305a1988890e39c300fc7e3&"
     BANNER_FECHADO = "https://cdn.discordapp.com/attachments/961677475191078992/1518143942388879450/content.png?ex=6a38d939&is=6a3787b9&hm=56325c5f006840bc4ad1234c7b943879d4a4c90e0656841f90b7757ad6b6e0e5&"
 
     IMAGENS: dict[str, str] = {
@@ -59,51 +55,50 @@ class CONFIG:
         "patrocinio": "",
         "outros":     "",
     }
-
-    COR_VERMELHO = discord.Color.from_rgb(200, 60,  90)    
-    COR_AZUL     = discord.Color.from_rgb(88,  101, 242)   
-    COR_DOURADO  = discord.Color.from_rgb(147, 112, 219)  
-    COR_VERDE    = discord.Color.from_rgb(60,  200, 150)   
-    COR_ROXO     = discord.Color.from_rgb(98,  54,  163)   
-    COR_ESCURO   = discord.Color.from_rgb(15,  12,  30)    
-    COR_CINZA    = discord.Color.from_rgb(90,  90,  110)   
-    COR_AMARELO  = discord.Color.from_rgb(230, 190, 70)    
+    COR_VERMELHO = discord.Color.from_rgb(210, 60,  75)    #  alertas / denúncias / SLA crítico
+    COR_AZUL     = discord.Color.from_rgb(64,  156, 255)   #  gelo elétrico — cor de assinatura
+    COR_DOURADO  = discord.Color.from_rgb(120, 210, 255)   #  cristal de gelo (destaques, avaliações)
+    COR_VERDE    = discord.Color.from_rgb(72,  219, 176)   #  em atendimento / sucesso
+    COR_ROXO     = discord.Color.from_rgb(122, 108, 230)   #  aurora boreal (staff / notas internas)
+    COR_ESCURO   = discord.Color.from_rgb(9,   14,  34)    #  noite polar (avisos neutros)
+    COR_CINZA    = discord.Color.from_rgb(88,  108, 140)   #  neutro / concluído
+    COR_AMARELO  = discord.Color.from_rgb(255, 196, 90)    #  aviso de SLA
 
     CATEGORIAS: dict[str, dict] = {
         "duvida": {
             "label":       "Dúvidas",
             "description": "Tire suas dúvidas com a equipe.",
-            "emoji":       "🛰️",
-            "titulo":      "🛰️ Dúvidas — Central de Comunicação",
+            "emoji":       "❄️",
+            "titulo":      "❄️ Dúvidas — Posto de Orientação",
             "nivel":       "🔵 Suporte Geral",
-            "cor":         discord.Color.from_rgb(88, 101, 242),
+            "cor":         discord.Color.from_rgb(64, 156, 255),
             "nome_canal":  "duvida",
         },
         "denuncia": {
             "label":       "Denúncias",
             "description": "Reporte algo irregular com provas.",
             "emoji":       "🚨",
-            "titulo":      "🚨 Denúncia — Alerta de Anomalia",
+            "titulo":      "🚨 Denúncia — Alerta na Nevasca",
             "nivel":       "🔴 Prioridade Alta",
-            "cor":         discord.Color.from_rgb(200, 60, 90),
+            "cor":         discord.Color.from_rgb(210, 60, 75),
             "nome_canal":  "denuncia",
         },
         "patrocinio": {
             "label":       "Patrocínios",
             "description": "Parcerias e propostas comerciais.",
             "emoji":       "🌌",
-            "titulo":      "🌌 Patrocínio — Embaixada Estelar",
+            "titulo":      "🌌 Patrocínio — Embaixada da Aurora",
             "nivel":       "🟡 Proposta Comercial",
-            "cor":         discord.Color.from_rgb(147, 112, 219),
+            "cor":         discord.Color.from_rgb(122, 108, 230),
             "nome_canal":  "patrocinio",
         },
         "outros": {
             "label":       "Outros",
             "description": "Assuntos que não se encaixam acima.",
-            "emoji":       "🪐",
-            "titulo":      "🪐 Outros — Setor Desconhecido",
+            "emoji":       "🐺",
+            "titulo":      "🐺 Outros — Toca da Matilha",
             "nivel":       "⚪ Atendimento Geral",
-            "cor":         discord.Color.from_rgb(90, 90, 110),
+            "cor":         discord.Color.from_rgb(88, 108, 140),
             "nome_canal":  "outros",
         },
     }
@@ -112,23 +107,26 @@ class CONFIG:
     SLA_CRITICO_MINUTOS = 25  
 
     CARGOS_PATENTES: dict[str, int] = {
-        "Ronin Errante":     0,
-        "Samurai":           0,
-        "Samurai de Elite":  0,
-        "Mestre da Lâmina":  0,
-        "Lenda de Musashi":  0,
+        "Lobo Errante":       0,
+        "Batedor de Gelo":    0,
+        "Guardião Glacial":   0,
+        "Alfa da Matilha":    0,
+        "Lenda de FrostNova": 0,
     }
     CANAL_ANUNCIO_PATENTES_ID = CANAL_AVALIACOES_ID
 
     REABERTURA_JANELA_HORAS = 24
 
+    INATIVIDADE_AVISO_HORAS      = 5
+    INATIVIDADE_FECHAMENTO_HORAS = 2
+
 
 PATENTE_EMOJI: dict[str, str] = {
-    "Ronin Errante":    "🗡️",
-    "Samurai":          "⚔️",
-    "Samurai de Elite":  "🎴",
-    "Mestre da Lâmina":  "🌸",
-    "Lenda de Musashi":  "🐉",
+    "Lobo Errante":       "🐾",
+    "Batedor de Gelo":    "❄️",
+    "Guardião Glacial":   "🛡️",
+    "Alfa da Matilha":    "🐺",
+    "Lenda de FrostNova": "🌌",
 }
 
 
@@ -210,18 +208,18 @@ def _classificacao_media(media: float) -> str:
 
 
 def calcular_patente(media: float, total: int) -> str:
-    """NOVO: calcula a patente do atendente com base na média e volume de avaliações."""
+    """Calcula a patente do atendente com base na média e volume de avaliações."""
     if total < 5:
-        return "Ronin Errante"
+        return "Lobo Errante"
     if media >= 4.9 and total >= 20:
-        return "Lenda de Musashi"
+        return "Lenda de FrostNova"
     if media >= 4.7:
-        return "Mestre da Lâmina"
+        return "Alfa da Matilha"
     if media >= 4.2:
-        return "Samurai de Elite"
+        return "Guardião Glacial"
     if media >= 3.5:
-        return "Samurai"
-    return "Ronin Errante"
+        return "Batedor de Gelo"
+    return "Lobo Errante"
 
 
 async def _abrir_conexao_postgres() -> asyncpg.Connection:
@@ -257,7 +255,7 @@ async def inicializar_banco_avaliacoes():
             -- NOVO: patente atual de cada atendente (para detectar mudança de patente)
             CREATE TABLE IF NOT EXISTS atendentes_patentes (
                 atendente_id  BIGINT PRIMARY KEY,
-                patente_atual TEXT NOT NULL DEFAULT 'Ronin Errante',
+                patente_atual TEXT NOT NULL DEFAULT 'Lobo Errante',
                 atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
 
@@ -271,10 +269,78 @@ async def inicializar_banco_avaliacoes():
                 transcript_url TEXT,
                 fechado_em     TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
+
+            CREATE TABLE IF NOT EXISTS ticket_notas_internas (
+                id          BIGSERIAL PRIMARY KEY,
+                channel_id  BIGINT NOT NULL,
+                autor_id    BIGINT NOT NULL,
+                conteudo    TEXT NOT NULL,
+                criado_em   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ticket_notas_channel
+                ON ticket_notas_internas(channel_id, criado_em DESC);
+
+            CREATE TABLE IF NOT EXISTS ticket_timeline (
+                id          BIGSERIAL PRIMARY KEY,
+                channel_id  BIGINT NOT NULL,
+                autor_id    BIGINT,
+                evento      TEXT NOT NULL,
+                criado_em   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ticket_timeline_channel
+                ON ticket_timeline(channel_id, criado_em ASC);
+
+            -- NOVO: tempo de primeira resposta (criação do ticket -> "Assumir"), por atendente
+            CREATE TABLE IF NOT EXISTS ticket_tempo_resposta (
+                channel_id    BIGINT PRIMARY KEY,
+                atendente_id  BIGINT NOT NULL,
+                segundos      INTEGER NOT NULL,
+                criado_em     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ticket_tempo_resposta_atendente
+                ON ticket_tempo_resposta(atendente_id);
             """
         )
     finally:
         await conn.close()
+
+
+async def salvar_tempo_resposta(channel_id: int, atendente_id: int, segundos: int):
+    """NOVO: registra quanto tempo levou até um atendente assumir o ticket pela primeira vez."""
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        await conn.execute(
+            """
+            INSERT INTO ticket_tempo_resposta (channel_id, atendente_id, segundos, criado_em)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (channel_id) DO NOTHING
+            """,
+            channel_id,
+            atendente_id,
+            max(0, segundos),
+        )
+    finally:
+        await conn.close()
+
+
+async def obter_tempo_resposta_medio(atendente_id: int) -> int | None:
+    """NOVO: tempo médio (em segundos) de primeira resposta de um atendente. None se não há dados."""
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        row = await conn.fetchrow(
+            "SELECT AVG(segundos) AS media FROM ticket_tempo_resposta WHERE atendente_id = $1",
+            atendente_id,
+        )
+    finally:
+        await conn.close()
+    if not row or row["media"] is None:
+        return None
+    return int(row["media"])
 
 
 async def salvar_avaliacao_ticket(
@@ -391,7 +457,7 @@ async def obter_patente_atual_db(atendente_id: int) -> str:
         )
     finally:
         await conn.close()
-    return row["patente_atual"] if row else "Ronin Errante"
+    return row["patente_atual"] if row else "Lobo Errante"
 
 
 async def atualizar_patente_db(atendente_id: int, nova_patente: str):
@@ -580,7 +646,7 @@ async def gerar_transcript_texto(channel: discord.TextChannel) -> tuple[str, int
         "=" * 64,
         f"  TRANSCRIPT — {channel.name.upper()}",
         f"  Gerado em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')} UTC",
-        f"  Nebularis • Sistema de Tickets",
+        f"  FrostNova • Sistema de Tickets",
         "=" * 64,
         "",
     ]
@@ -672,6 +738,9 @@ class TicketState:
     _ultimo_chamar_staff: dict[int, datetime] = {}
     _tickets_em_fechamento: set[int] = set()
 
+    _inatividade_avisado: set[int] = set()
+    _ultima_msg_vista: dict[int, int] = {}
+
     @classmethod
     def pode_chamar_staff(cls, channel_id: int) -> tuple[bool, int]:
         ultimo = cls._ultimo_chamar_staff.get(channel_id)
@@ -709,17 +778,17 @@ async def _anunciar_patente_se_mudou(bot: commands.Bot, guild: discord.Guild, at
     if not canal:
         return
 
-    emoji = PATENTE_EMOJI.get(nova_patente, "🗡️")
+    emoji = PATENTE_EMOJI.get(nova_patente, "🐾")
     embed = discord.Embed(
         title=f"{emoji} Nova Patente Conquistada!",
         description=(
             f"<@{atendente_id}> avançou para a patente **{nova_patente}** "
-            "com base na qualidade do seu atendimento. Parabéns, guerreiro(a)! 🎴"
+            "com base na qualidade do seu atendimento. Uivem por essa conquista! 🐺"
         ),
         color=CONFIG.COR_DOURADO,
         timestamp=datetime.now(timezone.utc),
     )
-    embed.set_footer(text="Nebularis • Caminho do Espadachim")
+    embed.set_footer(text="FrostNova • Trilha da Matilha")
     try:
         await canal.send(embed=embed)
     except discord.HTTPException:
@@ -786,7 +855,7 @@ class ModalComentarioAvaliacao(discord.ui.Modal, title="Conte como foi seu atend
             color=CONFIG.COR_VERDE,
             timestamp=datetime.now(timezone.utc),
         )
-        embed_confirmacao.set_footer(text="Nebularis • Avaliação de Atendimento")
+        embed_confirmacao.set_footer(text="FrostNova • Avaliação de Atendimento")
         await interaction.response.send_message(embed=embed_confirmacao, ephemeral=True)
 
         if self.mensagem_origem is not None:
@@ -826,7 +895,7 @@ class ModalComentarioAvaliacao(discord.ui.Modal, title="Conte como foi seu atend
                     value=f"[Clique aqui para abrir]({self.transcript_url})",
                     inline=False,
                 )
-            embed_publico.set_footer(text="Nebularis • Reputação da Equipe")
+            embed_publico.set_footer(text="FrostNova • Reputação da Equipe")
             try:
                 await canal_avaliacoes.send(embed=embed_publico)
             except discord.HTTPException:
@@ -1010,7 +1079,7 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
             color=CONFIG.COR_VERDE,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_footer(text="Nebularis • Avaliação de Atendimento")
+        embed.set_footer(text="FrostNova • Avaliação de Atendimento")
 
         for item in view.children:
             item.disabled = True
@@ -1039,7 +1108,7 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
                     value=f"[Clique aqui para abrir]({view.transcript_url})",
                     inline=False,
                 )
-            embed_publico.set_footer(text="Nebularis • Reputação da Equipe")
+            embed_publico.set_footer(text="FrostNova • Reputação da Equipe")
             await canal_avaliacoes.send(embed=embed_publico)
 
         await _anunciar_patente_se_mudou(interaction.client, interaction.guild, view.atendente_id)
@@ -1109,6 +1178,7 @@ async def executar_fechamento(interaction: discord.Interaction):
         return
 
     try:
+        await definir_status_ticket(canal, "concluido", autor_id=interaction.user.id, evento=f"Ticket encerrado por {interaction.user.mention}.")
         print(f"[FECHAR] Gerando transcript...")
         conteudo_txt, total_msgs = await gerar_transcript_texto(canal)
         print(f"[FECHAR] Transcript gerado. Total msgs: {total_msgs}")
@@ -1160,7 +1230,7 @@ async def executar_fechamento(interaction: discord.Interaction):
             embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
             if CONFIG.BANNER_FECHADO:
                 embed_log.set_image(url=CONFIG.BANNER_FECHADO)
-            embed_log.set_footer(text="Nebularis • Sistema de Tickets")
+            embed_log.set_footer(text="FrostNova • Sistema de Tickets")
 
             view_links = discord.ui.View(timeout=None)
             if link_transcript:
@@ -1183,7 +1253,6 @@ async def executar_fechamento(interaction: discord.Interaction):
         except discord.HTTPException as e:
             print(f"[FECHAR] Não foi possível enviar followup: {e}")
 
-        # NOVO: registra o fechamento para permitir reabertura automática via DM
         if dono_id:
             try:
                 await registrar_ticket_fechado(
@@ -1203,7 +1272,7 @@ async def executar_fechamento(interaction: discord.Interaction):
             dono_member = interaction.guild.get_member(dono_id)
             if dono_member:
                 embed_dm = discord.Embed(
-                    title="⭐ Avalie seu atendimento — Nebularis",
+                    title="⭐ Avalie seu atendimento — FrostNova",
                     description=(
                         f"Seu ticket **{canal.name}** foi encerrado.\n\n"
                         f"**Atendente:** <@{atendente_id}>\n"
@@ -1221,7 +1290,7 @@ async def executar_fechamento(interaction: discord.Interaction):
                         value=f"[Ver registro do ticket]({link_transcript})",
                         inline=False,
                     )
-                embed_dm.set_footer(text="Nebularis • Sistema de Avaliações")
+                embed_dm.set_footer(text="FrostNova • Sistema de Avaliações")
 
                 try:
                     await dono_member.send(
@@ -1283,7 +1352,7 @@ async def executar_fechamento(interaction: discord.Interaction):
                     value=f"[Ver registro do ticket]({link_transcript})",
                     inline=False,
                 )
-            embed_avaliacao.set_footer(text="Nebularis • Sistema de Avaliações")
+            embed_avaliacao.set_footer(text="FrostNova • Sistema de Avaliações")
 
             await canal.send(
                 content=f"<@{dono_id}>",
@@ -1329,220 +1398,618 @@ async def executar_fechamento(interaction: discord.Interaction):
         TicketState.desmarcar_fechando(canal.id)
 
 
-class ViewAcoesTicket(discord.ui.View):
 
-    def __init__(self):
-        super().__init__(timeout=None)
 
-    @discord.ui.button(
-        label="Assumir Atendimento",
-        style=discord.ButtonStyle.green,
-        emoji="🎩",
-        custom_id="ticket_v2_assumir",
-    )
-    async def btn_assumir(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ):
-        canal = interaction.channel
-        tipo  = _extrair_tipo_ticket(canal.topic or "")
+async def fechar_ticket_por_inatividade(bot: commands.Bot, canal: discord.TextChannel):
+    """
+    NOVO: encerra automaticamente um ticket abandonado pelo usuário, seguindo o mesmo
+    fluxo de transcript + log + histórico de reabertura do fechamento manual, mas
+    sem depender de uma interação (é chamado pela task de monitoramento).
+    """
+    if not TicketState.marcar_fechando(canal.id):
+        return
 
-        if not tem_permissao_categoria(interaction.user, tipo or ""):
-            await interaction.response.send_message(
-                "❌ Apenas a equipe pode assumir este atendimento.",
-                ephemeral=True,
+    try:
+        topic = canal.topic or ""
+        dono_id = _extrair_dono_id(topic)
+        atendente_id = _extrair_atendente_id(topic)
+        tipo_ticket = _extrair_tipo_ticket(topic)
+
+        conteudo_txt, total_msgs = await gerar_transcript_texto(canal)
+        link_transcript = await enviar_para_mclogs(conteudo_txt)
+        resumo = await gerar_resumo_ticket(conteudo_txt, tipo_ticket)
+
+        criado_em = canal.created_at
+        fechado_em = datetime.now(timezone.utc)
+        duracao = formatar_duracao(int((fechado_em - criado_em).total_seconds()))
+
+        log = canal.guild.get_channel(CONFIG.CANAL_LOG_ID)
+        if log:
+            embed_log = discord.Embed(
+                title="❄️ Ticket Encerrado por Inatividade",
+                description=(
+                    "O solicitante não respondeu dentro do prazo e o atendimento foi arquivado "
+                    "automaticamente."
+                    + (f"\n[📋 Clique aqui para ver o transcript]({link_transcript})" if link_transcript else "\n⚠️ Transcript indisponível.")
+                ),
+                color=CONFIG.COR_CINZA,
+                timestamp=fechado_em,
             )
-            return
+            embed_log.add_field(name="👤 Dono", value=f"<@{dono_id}>" if dono_id else "Desconhecido", inline=True)
+            embed_log.add_field(name="📁 Canal", value=f"`{canal.name}`", inline=True)
+            embed_log.add_field(name="⏳ Duração", value=f"`{duracao}`", inline=True)
+            embed_log.add_field(name="💬 Mensagens", value=f"`{total_msgs}`", inline=True)
+            embed_log.add_field(name="📝 Resumo do atendimento", value=resumo[:1024], inline=False)
+            embed_log.set_footer(text="FrostNova • Sistema de Tickets")
+            try:
+                await log.send(embed=embed_log)
+            except discord.HTTPException:
+                pass
+
+        if dono_id:
+            try:
+                await registrar_ticket_fechado(
+                    usuario_id=dono_id,
+                    guild_id=canal.guild.id,
+                    tipo=tipo_ticket,
+                    atendente_id=atendente_id,
+                    ticket_nome=canal.name,
+                    transcript_url=link_transcript,
+                )
+            except Exception as e:
+                logger.warning(f"Falha ao registrar histórico de fechamento por inatividade: {e}")
 
         try:
-            novo_topic = _marcar_atendente_no_topic(canal.topic or "", interaction.user.id)
-            await canal.edit(topic=novo_topic, reason=f"Ticket assumido por {interaction.user}")
+            await canal.delete(reason="Ticket encerrado automaticamente por inatividade")
         except discord.HTTPException as e:
-            logger.warning(f"Não foi possível marcar atendente no tópico do ticket: {e}")
+            logger.warning(f"Falha ao deletar ticket inativo: {e}")
 
-        msg = interaction.message
-        if not msg or not msg.embeds:
-            await interaction.response.send_message(
-                "❌ Embed do ticket não encontrado.",
-                ephemeral=True,
-            )
-            return
+    except Exception as e:
+        logger.error(f"Erro ao encerrar ticket por inatividade ({canal.name}): {e}", exc_info=True)
+    finally:
+        TicketState.desmarcar_fechando(canal.id)
 
-        embed_old = msg.embeds[0]
+STATUS_TICKET = {
+    "aguardando": {
+        "titulo": "Aguardando equipe",
+        "barra": "🟦⬜⬜⬜",
+        "emoji": "⏳",
+        "cor": CONFIG.COR_AZUL,
+    },
+    "atendimento": {
+        "titulo": "Em atendimento",
+        "barra": "🟦🟦⬜⬜",
+        "emoji": "🟢",
+        "cor": CONFIG.COR_VERDE,
+    },
+    "finalizando": {
+        "titulo": "Finalizando",
+        "barra": "🟦🟦🟦⬜",
+        "emoji": "🧊",
+        "cor": CONFIG.COR_DOURADO,
+    },
+    "concluido": {
+        "titulo": "Concluído",
+        "barra": "🟦🟦🟦🟦",
+        "emoji": "✅",
+        "cor": CONFIG.COR_CINZA,
+    },
+}
 
-        nova_descricao = re.sub(
-            r"⏳ \*\*Status:\*\* `.+?`",
-            f"🟢 **Status:** `Em atendimento por {interaction.user.display_name}`",
-            embed_old.description or "",
+
+def _substituir_marcador_topic(topic: str, chave: str, valor: str) -> str:
+    padrao = rf"{re.escape(chave)}:[^|]+"
+    novo = f"{chave}:{valor}"
+    if re.search(padrao, topic):
+        return re.sub(padrao, novo, topic)
+    return f"{topic} | {novo}"
+
+
+def _extrair_status_ticket(topic: str) -> str:
+    match = re.search(r"STATUS:([a-z_]+)", topic or "")
+    return match.group(1) if match else "aguardando"
+
+
+async def registrar_timeline(channel_id: int, evento: str, autor_id: int | None = None):
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        await conn.execute(
+            """
+            INSERT INTO ticket_timeline (channel_id, autor_id, evento, criado_em)
+            VALUES ($1, $2, $3, NOW())
+            """,
+            channel_id,
+            autor_id,
+            evento[:500],
         )
+    finally:
+        await conn.close()
 
-        novo_embed = discord.Embed(
-            title=embed_old.title,
-            description=nova_descricao,
-            color=CONFIG.COR_VERDE,
+
+async def obter_timeline(channel_id: int, limite: int = 12) -> list[dict]:
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        rows = await conn.fetch(
+            """
+            SELECT autor_id, evento, criado_em
+            FROM ticket_timeline
+            WHERE channel_id = $1
+            ORDER BY criado_em DESC
+            LIMIT $2
+            """,
+            channel_id,
+            limite,
         )
-        if embed_old.thumbnail:
-            novo_embed.set_thumbnail(url=embed_old.thumbnail.url)
-        if embed_old.image:
-            novo_embed.set_image(url=embed_old.image.url)
-        novo_embed.set_footer(
-            text=f"Assumido por {interaction.user.display_name} • Nebularis"
+    finally:
+        await conn.close()
+    return [dict(r) for r in reversed(rows)]
+
+
+async def salvar_nota_interna(channel_id: int, autor_id: int, conteudo: str):
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        await conn.execute(
+            """
+            INSERT INTO ticket_notas_internas (channel_id, autor_id, conteudo, criado_em)
+            VALUES ($1, $2, $3, NOW())
+            """,
+            channel_id,
+            autor_id,
+            conteudo[:1500],
         )
+    finally:
+        await conn.close()
 
-        button.disabled = True
-        button.label    = "Em Atendimento"
-        await msg.edit(embed=novo_embed, view=self)
 
-        await interaction.response.send_message(
-            f"🎩 **{interaction.user.mention}** assumiu este atendimento.",
+async def obter_notas_internas(channel_id: int, limite: int = 10) -> list[dict]:
+    await inicializar_banco_avaliacoes()
+    conn = await _abrir_conexao_postgres()
+    try:
+        rows = await conn.fetch(
+            """
+            SELECT autor_id, conteudo, criado_em
+            FROM ticket_notas_internas
+            WHERE channel_id = $1
+            ORDER BY criado_em DESC
+            LIMIT $2
+            """,
+            channel_id,
+            limite,
         )
+    finally:
+        await conn.close()
+    return [dict(r) for r in rows]
 
-    @discord.ui.button(
-        label="Chamar Staff",
-        style=discord.ButtonStyle.primary,
-        emoji="📢",
-        custom_id="ticket_v2_chamar_staff",
+
+async def atualizar_painel_principal(
+    canal: discord.TextChannel,
+    *,
+    status: str | None = None,
+    atendente: discord.Member | None = None,
+):
+    topic = canal.topic or ""
+    msg_id = _extrair_msg_id(topic)
+    if not msg_id:
+        return
+
+    status = status or _extrair_status_ticket(topic)
+    dados = STATUS_TICKET.get(status, STATUS_TICKET["aguardando"])
+    tipo = _extrair_tipo_ticket(topic) or "outros"
+    info = CONFIG.CATEGORIAS.get(tipo, CONFIG.CATEGORIAS["outros"])
+    dono_id = _extrair_dono_id(topic)
+    atendente_id = atendente.id if atendente else _extrair_atendente_id(topic)
+
+    media = 0.0
+    total = 0
+    membro_atendente = atendente
+    if atendente_id:
+        membro_atendente = membro_atendente or canal.guild.get_member(atendente_id)
+        try:
+            media, total = await obter_resumo_atendente(atendente_id)
+        except Exception:
+            pass
+
+    timeline = await obter_timeline(canal.id, limite=6)
+    linhas_timeline = []
+    for item in timeline:
+        ts = int(item["criado_em"].timestamp())
+        linhas_timeline.append(f"<t:{ts}:t> • {item['evento']}")
+
+    embed = discord.Embed(
+        title=info["titulo"],
+        description=(
+            f"❄️ Bem-vindo à Central de Atendimento da **FrostNova**.\n"
+            "Explique sua solicitação com detalhes e envie provas quando necessário.\n\n"
+            f"{dados['emoji']} **Status:** `{dados['titulo']}`\n"
+            f"{dados['barra']}"
+        ),
+        color=dados["cor"],
+        timestamp=datetime.now(timezone.utc),
     )
-    async def btn_chamar_staff(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ):
-        pode, restante = TicketState.pode_chamar_staff(interaction.channel.id)
+    embed.add_field(name="🏷️ Categoria", value=info["nivel"], inline=True)
+    embed.add_field(name="👤 Solicitante", value=f"<@{dono_id}>" if dono_id else "Desconhecido", inline=True)
+    embed.add_field(name="🕒 Aberto", value=f"<t:{int(canal.created_at.timestamp())}:R>", inline=True)
 
-        if not pode:
-            mins = restante // 60
-            segs = restante % 60
-            tempo_fmt = f"{mins}min {segs}s" if mins else f"{segs}s"
-            await interaction.response.send_message(
-                f"⏳ A staff já foi chamada recentemente. "
-                f"Aguarde **{tempo_fmt}** para chamar novamente.",
-                ephemeral=True,
-            )
-            return
-
-        TicketState.registrar_chamar_staff(interaction.channel.id)
-
-        mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
-
-        embed = discord.Embed(
-            title="📢 Staff Chamada",
-            description=(
-                f"O usuário **{interaction.user.mention}** precisa de atenção neste ticket.\n"
-                f"📁 Canal: {interaction.channel.mention}"
-            ),
-            color=CONFIG.COR_DOURADO,
-            timestamp=datetime.now(timezone.utc),
+    if atendente_id:
+        cargo = membro_atendente.top_role.mention if membro_atendente else "Equipe FrostNova"
+        reputacao = f"`{media:.2f}/5` • `{total}` avaliações" if total else "Sem avaliações"
+        embed.add_field(
+            name="🧑‍💼 Atendente responsável",
+            value=f"<@{atendente_id}>\n{cargo}\n⭐ {reputacao}",
+            inline=False,
         )
-        embed.set_footer(text="Nebularis • Sistema de Tickets")
-
-        await interaction.response.send_message(
-            content=mencoes,
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions(roles=True),
+    else:
+        embed.add_field(
+            name="🧑‍💼 Atendente responsável",
+            value="`Aguardando um membro da equipe assumir.`",
+            inline=False,
         )
 
-    @discord.ui.button(
-        label="Painel Restrito",
-        style=discord.ButtonStyle.secondary,
-        emoji="⚙️",
-        custom_id="ticket_v2_painel",
+    embed.add_field(
+        name="📜 Histórico recente",
+        value="\n".join(linhas_timeline) if linhas_timeline else "`Nenhum evento registrado.`",
+        inline=False,
     )
-    async def btn_painel(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ):
-        canal = interaction.channel
-        tipo  = _extrair_tipo_ticket(canal.topic or "")
 
-        if not tem_permissao_categoria(interaction.user, tipo or ""):
-            await interaction.response.send_message(
-                "❌ Acesso negado. Este painel é exclusivo para a equipe.",
-                ephemeral=True,
-            )
+    imagem = CONFIG.IMAGENS.get(tipo)
+    thumbnail = CONFIG.THUMBNAILS.get(tipo)
+    if thumbnail:
+        embed.set_thumbnail(url=thumbnail)
+    if imagem:
+        embed.set_image(url=imagem)
+    embed.set_footer(text="FrostNova • Onde o frio desperta novas lendas")
+
+    try:
+        msg = await canal.fetch_message(msg_id)
+        await msg.edit(embed=embed, view=ViewAcoesTicket())
+    except (discord.NotFound, discord.HTTPException):
+        pass
+
+
+async def definir_status_ticket(
+    canal: discord.TextChannel,
+    status: str,
+    *,
+    autor_id: int | None = None,
+    evento: str | None = None,
+):
+    if status not in STATUS_TICKET:
+        raise ValueError(f"Status inválido: {status}")
+    topic = _substituir_marcador_topic(canal.topic or "", "STATUS", status)
+    try:
+        await canal.edit(topic=topic, reason="Atualização de status do ticket")
+    except discord.HTTPException:
+        pass
+    if evento:
+        await registrar_timeline(canal.id, evento, autor_id)
+    await atualizar_painel_principal(canal, status=status)
+
+
+class ModalAdicionarInformacoes(discord.ui.Modal, title="Adicionar informações ao ticket"):
+    informacoes = discord.ui.TextInput(
+        label="Novas informações",
+        style=discord.TextStyle.paragraph,
+        placeholder="Descreva detalhes adicionais, links, provas ou contexto...",
+        min_length=5,
+        max_length=1500,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        dono_id = _extrair_dono_id(interaction.channel.topic or "")
+        if interaction.user.id != dono_id and not tem_permissao(interaction.user):
+            await interaction.response.send_message("❌ Você não pode editar este ticket.", ephemeral=True)
             return
-
-        topic        = canal.topic or "Sem tópico definido"
-        dono_id      = _extrair_dono_id(topic)
-        dono_mention = f"<@{dono_id}>" if dono_id else "Desconhecido"
-
-        cargos_acesso = list(CONFIG.CARGOS_ATENDIMENTO_IDS)
-        if tipo:
-            cargos_acesso += CONFIG.CARGOS_POR_CATEGORIA.get(tipo, [])
-        cargos_acesso = list(dict.fromkeys(cargos_acesso))
-
         embed = discord.Embed(
-            title="⚙️ Painel Restrito",
+            title="📝 Informações adicionadas",
+            description=self.informacoes.value,
             color=CONFIG.COR_AZUL,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.add_field(name="📁 Canal",  value=canal.mention,  inline=True)
-        embed.add_field(name="👤 Dono",   value=dono_mention,   inline=True)
-        embed.add_field(
-            name="🏷️ Categoria",
-            value=f"`{tipo or 'desconhecida'}`",
-            inline=True,
-        )
-        embed.add_field(
-            name="🕒 Aberto em",
-            value=f"<t:{int(canal.created_at.timestamp())}:f>",
-            inline=True,
-        )
-        embed.add_field(
-            name="⏳ Duração",
-            value=f"`{formatar_duracao(int((datetime.now(timezone.utc) - canal.created_at).total_seconds()))}`",
-            inline=True,
-        )
-        embed.add_field(
-            name="👥 Equipe com acesso",
-            value="\n".join(f"<@&{cid}>" for cid in cargos_acesso) or "Nenhum",
-            inline=False,
-        )
-        embed.set_footer(text=f"Acessado por {interaction.user.display_name}")
+        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        await registrar_timeline(interaction.channel.id, f"{interaction.user.mention} adicionou novas informações.", interaction.user.id)
+        await interaction.response.send_message(embed=embed)
+        await atualizar_painel_principal(interaction.channel)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @discord.ui.button(
-        label="Fechar Ticket",
-        style=discord.ButtonStyle.red,
-        emoji="🔒",
-        custom_id="ticket_v2_fechar",
+class ModalNotaInterna(discord.ui.Modal, title="Adicionar nota interna"):
+    nota = discord.ui.TextInput(
+        label="Nota exclusiva da equipe",
+        style=discord.TextStyle.paragraph,
+        placeholder="Registre contexto importante para outros atendentes...",
+        min_length=3,
+        max_length=1500,
     )
-    async def btn_fechar(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ):
-        topic_dono_id = _extrair_dono_id(interaction.channel.topic or "")
-        e_dono  = topic_dono_id == interaction.user.id
-        e_staff = tem_permissao(interaction.user)
 
-        if not (e_dono or e_staff):
-            await interaction.response.send_message(
-                "❌ Apenas o dono do ticket ou a equipe pode fechar este atendimento.",
-                ephemeral=True,
-            )
+    async def on_submit(self, interaction: discord.Interaction):
+        tipo = _extrair_tipo_ticket(interaction.channel.topic or "") or ""
+        if not tem_permissao_categoria(interaction.user, tipo):
+            await interaction.response.send_message("❌ Recurso exclusivo da equipe.", ephemeral=True)
+            return
+        await salvar_nota_interna(interaction.channel.id, interaction.user.id, self.nota.value)
+        await registrar_timeline(interaction.channel.id, f"Nota interna adicionada por {interaction.user.mention}.", interaction.user.id)
+        await interaction.response.send_message("✅ Nota interna salva.", ephemeral=True)
+
+
+class SelectAlterarCategoria(discord.ui.Select):
+    def __init__(self):
+        super().__init__(
+            placeholder="Escolha a nova categoria...",
+            min_values=1,
+            max_values=1,
+            options=[
+                discord.SelectOption(
+                    label=dados["label"],
+                    description=dados["description"],
+                    emoji=dados["emoji"],
+                    value=chave,
+                )
+                for chave, dados in CONFIG.CATEGORIAS.items()
+            ],
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        canal = interaction.channel
+        tipo_atual = _extrair_tipo_ticket(canal.topic or "") or ""
+        dono_id = _extrair_dono_id(canal.topic or "")
+        if interaction.user.id != dono_id and not tem_permissao_categoria(interaction.user, tipo_atual):
+            await interaction.response.send_message("❌ Você não pode alterar esta categoria.", ephemeral=True)
             return
 
+        novo_tipo = self.values[0]
+        info = CONFIG.CATEGORIAS[novo_tipo]
+        topic = re.sub(r"Tipo:\s*\w+", f"Tipo: {novo_tipo}", canal.topic or "")
+        novo_nome = slug(f"{info['nome_canal']}-{interaction.user.name if interaction.user.id == dono_id else canal.name.split('-', 1)[-1]}")
+        try:
+            await canal.edit(name=novo_nome, topic=topic, reason=f"Categoria alterada por {interaction.user}")
+        except discord.HTTPException:
+            await canal.edit(topic=topic, reason=f"Categoria alterada por {interaction.user}")
+
+        await registrar_timeline(canal.id, f"Categoria alterada para **{info['label']}** por {interaction.user.mention}.", interaction.user.id)
+        await interaction.response.edit_message(content=f"✅ Categoria alterada para **{info['label']}**.", view=None)
+        await atualizar_painel_principal(canal)
+
+
+class ViewAlterarCategoria(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=180)
+        self.add_item(SelectAlterarCategoria())
+
+
+class SelectTransferirAtendente(discord.ui.UserSelect):
+    def __init__(self):
+        super().__init__(placeholder="Selecione o novo atendente...", min_values=1, max_values=1)
+
+    async def callback(self, interaction: discord.Interaction):
+        canal = interaction.channel
+        tipo = _extrair_tipo_ticket(canal.topic or "") or ""
+        if not tem_permissao_categoria(interaction.user, tipo):
+            await interaction.response.send_message("❌ Recurso exclusivo da equipe.", ephemeral=True)
+            return
+
+        novo = self.values[0]
+        if not isinstance(novo, discord.Member) or not tem_permissao_categoria(novo, tipo):
+            await interaction.response.send_message("❌ Selecione um membro autorizado da equipe.", ephemeral=True)
+            return
+
+        topic = _marcar_atendente_no_topic(canal.topic or "", novo.id)
+        topic = _substituir_marcador_topic(topic, "STATUS", "atendimento")
+        await canal.edit(topic=topic, reason=f"Atendimento transferido por {interaction.user}")
+        await registrar_timeline(canal.id, f"Atendimento transferido para {novo.mention} por {interaction.user.mention}.", interaction.user.id)
+        await interaction.response.edit_message(content=f"✅ Atendimento transferido para {novo.mention}.", view=None)
+        await atualizar_painel_principal(canal, status="atendimento", atendente=novo)
+
+
+class ViewTransferirAtendente(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=180)
+        self.add_item(SelectTransferirAtendente())
+
+
+class SelectAcoesUsuario(discord.ui.Select):
+    def __init__(self):
+        super().__init__(
+            placeholder="Escolha uma ação do seu ticket...",
+            min_values=1,
+            max_values=1,
+            options=[
+                discord.SelectOption(label="Adicionar informações", emoji="📝", value="informacoes", description="Envie mais detalhes ou provas."),
+                discord.SelectOption(label="Alterar categoria", emoji="🏷️", value="categoria", description="Mova o ticket para outro setor."),
+                discord.SelectOption(label="Chamar a equipe", emoji="📢", value="chamar", description="Solicite atenção da staff."),
+                discord.SelectOption(label="Marcar como resolvido", emoji="✅", value="resolvido", description="Informe que sua solicitação foi solucionada."),
+                discord.SelectOption(label="Ver histórico", emoji="📜", value="timeline", description="Veja as etapas registradas."),
+            ],
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        canal = interaction.channel
+        dono_id = _extrair_dono_id(canal.topic or "")
+        if interaction.user.id != dono_id and not tem_permissao(interaction.user):
+            await interaction.response.send_message("❌ Este painel pertence ao autor do ticket.", ephemeral=True)
+            return
+
+        acao = self.values[0]
+        if acao == "informacoes":
+            await interaction.response.send_modal(ModalAdicionarInformacoes())
+        elif acao == "categoria":
+            await interaction.response.send_message("🏷️ Selecione a nova categoria:", view=ViewAlterarCategoria(), ephemeral=True)
+        elif acao == "chamar":
+            pode, restante = TicketState.pode_chamar_staff(canal.id)
+            if not pode:
+                await interaction.response.send_message(f"⏳ Aguarde `{restante}s` antes de chamar novamente.", ephemeral=True)
+                return
+            TicketState.registrar_chamar_staff(canal.id)
+            mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
+            await registrar_timeline(canal.id, f"Equipe chamada por {interaction.user.mention}.", interaction.user.id)
+            await interaction.response.send_message(
+                content=mencoes,
+                embed=discord.Embed(title="📢 Solicitação de atendimento", description=f"{interaction.user.mention} chamou a equipe.", color=CONFIG.COR_DOURADO),
+                allowed_mentions=discord.AllowedMentions(roles=True),
+            )
+            await atualizar_painel_principal(canal)
+        elif acao == "resolvido":
+            await definir_status_ticket(canal, "finalizando", autor_id=interaction.user.id, evento=f"{interaction.user.mention} marcou a solicitação como resolvida.")
+            await interaction.response.send_message("✅ A equipe foi informada. O ticket está pronto para finalização.", ephemeral=True)
+        elif acao == "timeline":
+            eventos = await obter_timeline(canal.id, limite=12)
+            texto = "\n".join(f"<t:{int(e['criado_em'].timestamp())}:t> • {e['evento']}" for e in eventos) or "Nenhum evento registrado."
+            await interaction.response.send_message(embed=discord.Embed(title="📜 Histórico do Ticket", description=texto[:4000], color=CONFIG.COR_AZUL), ephemeral=True)
+
+
+class ViewAcoesUsuario(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=180)
+        self.add_item(SelectAcoesUsuario())
+
+
+class SelectPainelStaff(discord.ui.Select):
+    def __init__(self):
+        super().__init__(
+            placeholder="Escolha uma ferramenta da equipe...",
+            min_values=1,
+            max_values=1,
+            options=[
+                discord.SelectOption(label="Transferir atendimento", emoji="🔄", value="transferir"),
+                discord.SelectOption(label="Adicionar nota interna", emoji="📝", value="nota"),
+                discord.SelectOption(label="Ver notas internas", emoji="📚", value="ver_notas"),
+                discord.SelectOption(label="Alterar categoria", emoji="🏷️", value="categoria"),
+                discord.SelectOption(label="Gerar resumo da conversa", emoji="✨", value="resumo"),
+                discord.SelectOption(label="Marcar como finalizando", emoji="🧊", value="finalizando"),
+                discord.SelectOption(label="Ver informações completas", emoji="📋", value="info"),
+            ],
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        canal = interaction.channel
+        tipo = _extrair_tipo_ticket(canal.topic or "") or ""
+        if not tem_permissao_categoria(interaction.user, tipo):
+            await interaction.response.send_message("❌ Acesso exclusivo da equipe.", ephemeral=True)
+            return
+
+        acao = self.values[0]
+        if acao == "transferir":
+            await interaction.response.send_message("🔄 Selecione o novo atendente:", view=ViewTransferirAtendente(), ephemeral=True)
+        elif acao == "nota":
+            await interaction.response.send_modal(ModalNotaInterna())
+        elif acao == "ver_notas":
+            notas = await obter_notas_internas(canal.id)
+            texto = "\n\n".join(
+                f"<t:{int(n['criado_em'].timestamp())}:d> • <@{n['autor_id']}>\n> {n['conteudo']}"
+                for n in notas
+            ) or "Nenhuma nota interna registrada."
+            await interaction.response.send_message(embed=discord.Embed(title="📚 Notas Internas", description=texto[:4000], color=CONFIG.COR_ROXO), ephemeral=True)
+        elif acao == "categoria":
+            await interaction.response.send_message("🏷️ Selecione a nova categoria:", view=ViewAlterarCategoria(), ephemeral=True)
+        elif acao == "resumo":
+            await interaction.response.defer(ephemeral=True, thinking=True)
+            conteudo, total = await gerar_transcript_texto(canal)
+            resumo = await gerar_resumo_ticket(conteudo, tipo)
+            await registrar_timeline(canal.id, f"Resumo da conversa gerado por {interaction.user.mention}.", interaction.user.id)
+            await interaction.followup.send(embed=discord.Embed(title="✨ Resumo da Conversa", description=f"{resumo}\n\n`{total} mensagens analisadas`", color=CONFIG.COR_DOURADO), ephemeral=True)
+        elif acao == "finalizando":
+            await definir_status_ticket(canal, "finalizando", autor_id=interaction.user.id, evento=f"{interaction.user.mention} iniciou a finalização do atendimento.")
+            await interaction.response.send_message("🧊 Ticket marcado como finalizando.", ephemeral=True)
+        elif acao == "info":
+            dono_id = _extrair_dono_id(canal.topic or "")
+            atendente_id = _extrair_atendente_id(canal.topic or "")
+            eventos = await obter_timeline(canal.id, 6)
+            embed = discord.Embed(title="⚙️ Painel Restrito FrostNova", color=CONFIG.COR_AZUL, timestamp=datetime.now(timezone.utc))
+            embed.add_field(name="📁 Canal", value=canal.mention, inline=True)
+            embed.add_field(name="👤 Dono", value=f"<@{dono_id}>" if dono_id else "Desconhecido", inline=True)
+            embed.add_field(name="🧑‍💼 Atendente", value=f"<@{atendente_id}>" if atendente_id else "Não assumido", inline=True)
+            embed.add_field(name="🏷️ Categoria", value=f"`{tipo}`", inline=True)
+            embed.add_field(name="⏳ Duração", value=f"`{formatar_duracao(int((datetime.now(timezone.utc)-canal.created_at).total_seconds()))}`", inline=True)
+            embed.add_field(name="📊 Status", value=f"`{STATUS_TICKET[_extrair_status_ticket(canal.topic or '')]['titulo']}`", inline=True)
+            if eventos:
+                embed.add_field(name="📜 Eventos recentes", value="\n".join(e['evento'] for e in eventos)[:1024], inline=False)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class ViewPainelStaff(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=180)
+        self.add_item(SelectPainelStaff())
+
+
+class ViewAcoesTicket(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Assumir", style=discord.ButtonStyle.success, emoji="🧑‍💼", custom_id="frostnova_ticket_assumir", row=0)
+    async def btn_assumir(self, interaction: discord.Interaction, button: discord.ui.Button):
+        canal = interaction.channel
+        tipo = _extrair_tipo_ticket(canal.topic or "") or ""
+        if not tem_permissao_categoria(interaction.user, tipo):
+            await interaction.response.send_message("❌ Apenas a equipe pode assumir este atendimento.", ephemeral=True)
+            return
+
+        atual = _extrair_atendente_id(canal.topic or "")
+        if atual and atual != interaction.user.id and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(f"⚠️ Este ticket já está sob responsabilidade de <@{atual}>. Use **Transferir atendimento**.", ephemeral=True)
+            return
+
+        primeira_resposta = atual is None
+        topic = _marcar_atendente_no_topic(canal.topic or "", interaction.user.id)
+        topic = _substituir_marcador_topic(topic, "STATUS", "atendimento")
+        await canal.edit(topic=topic, reason=f"Ticket assumido por {interaction.user}")
+        segundos_espera = int((datetime.now(timezone.utc) - canal.created_at).total_seconds())
+        tempo = formatar_duracao(segundos_espera)
+        await registrar_timeline(canal.id, f"Atendimento assumido por {interaction.user.mention} após **{tempo}**.", interaction.user.id)
+        if primeira_resposta:
+            await salvar_tempo_resposta(canal.id, interaction.user.id, segundos_espera)
+        await atualizar_painel_principal(canal, status="atendimento", atendente=interaction.user)
+        await interaction.response.send_message(f"🧑‍💼 {interaction.user.mention} assumiu este atendimento.")
+
+    @discord.ui.button(label="Minhas ações", style=discord.ButtonStyle.primary, emoji="⚡", custom_id="frostnova_ticket_acoes_usuario", row=0)
+    async def btn_acoes_usuario(self, interaction: discord.Interaction, button: discord.ui.Button):
+        dono_id = _extrair_dono_id(interaction.channel.topic or "")
+        if interaction.user.id != dono_id and not tem_permissao(interaction.user):
+            await interaction.response.send_message("❌ Este painel pertence ao autor do ticket.", ephemeral=True)
+            return
+        await interaction.response.send_message("⚡ Escolha uma ação:", view=ViewAcoesUsuario(), ephemeral=True)
+
+    @discord.ui.button(label="Painel Staff", style=discord.ButtonStyle.secondary, emoji="⚙️", custom_id="frostnova_ticket_painel_staff", row=0)
+    async def btn_painel_staff(self, interaction: discord.Interaction, button: discord.ui.Button):
+        tipo = _extrair_tipo_ticket(interaction.channel.topic or "") or ""
+        if not tem_permissao_categoria(interaction.user, tipo):
+            await interaction.response.send_message("❌ Acesso exclusivo da equipe.", ephemeral=True)
+            return
+        await interaction.response.send_message("⚙️ Selecione uma ferramenta:", view=ViewPainelStaff(), ephemeral=True)
+
+    @discord.ui.button(label="Chamar Staff", style=discord.ButtonStyle.primary, emoji="📢", custom_id="frostnova_ticket_chamar_staff", row=1)
+    async def btn_chamar_staff(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pode, restante = TicketState.pode_chamar_staff(interaction.channel.id)
+        if not pode:
+            await interaction.response.send_message(f"⏳ Aguarde **{restante}s** para chamar novamente.", ephemeral=True)
+            return
+        TicketState.registrar_chamar_staff(interaction.channel.id)
+        mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
+        await registrar_timeline(interaction.channel.id, f"Equipe chamada por {interaction.user.mention}.", interaction.user.id)
+        await interaction.response.send_message(
+            content=mencoes,
+            embed=discord.Embed(title="📢 Staff chamada", description=f"{interaction.user.mention} solicitou atenção neste ticket.", color=CONFIG.COR_DOURADO),
+            allowed_mentions=discord.AllowedMentions(roles=True),
+        )
+        await atualizar_painel_principal(interaction.channel)
+
+    @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="frostnova_ticket_fechar", row=1)
+    async def btn_fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
+        dono_id = _extrair_dono_id(interaction.channel.topic or "")
+        if interaction.user.id != dono_id and not tem_permissao(interaction.user):
+            await interaction.response.send_message("❌ Apenas o dono ou a equipe pode fechar este ticket.", ephemeral=True)
+            return
         embed = discord.Embed(
-            title="🔒 Confirmar Fechamento",
+            title="🔒 Confirmar fechamento",
             description=(
-                "Tem certeza que deseja encerrar este atendimento?\n\n"
-                "• O transcript será salvo automaticamente.\n"
-                "• Um resumo automático do ticket será gerado para o log.\n"
-                "• Você receberá um painel de avaliação privado por DM.\n"
-                "• O canal só será removido após a avaliação ou pelo botão de admin.\n\n"
-                "Esta ação encerra o atendimento."
+                "O transcript e o resumo serão registrados.\n"
+                "O autor receberá a avaliação por DM quando possível.\n\n"
+                "Deseja realmente encerrar o atendimento?"
             ),
             color=CONFIG.COR_VERMELHO,
         )
-        await interaction.response.send_message(
-            embed=embed,
-            view=ViewConfirmarFechamento(),
-            ephemeral=True,
-        )
+        await interaction.response.send_message(embed=embed, view=ViewConfirmarFechamento(), ephemeral=True)
 
 
 class SelectCategoriaTicket(discord.ui.Select):
@@ -1597,7 +2064,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             f"DONO:{user.id} | "
             f"Ticket de {user} | "
             f"Tipo: {tipo} | "
-            f"Aberto em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} UTC"
+            f"Aberto em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} UTC | STATUS:aguardando"
         )
 
         try:
@@ -1621,7 +2088,7 @@ class SelectCategoriaTicket(discord.ui.Select):
         embed_ticket = discord.Embed(
             title=info["titulo"],
             description=(
-                f"✨ Olá {user.mention}, bem-vindo ao atendimento da **Nebularis**!\n\n"
+                f"✨ Olá {user.mention}, bem-vindo ao atendimento da **FrostNova**!\n\n"
                 "Descreva sua solicitação com calma e aguarde enquanto a equipe se prepara.\n"
                 "Envie prints ou provas se for necessário e evite menções desnecessárias.\n\n"
                 f"⏳ **Status:** `Aguardando atendimento`"
@@ -1629,7 +2096,7 @@ class SelectCategoriaTicket(discord.ui.Select):
             color=info["cor"],
             timestamp=datetime.now(timezone.utc),
         )
-        embed_ticket.add_field(name="🛰️ Categoria", value=info["nivel"], inline=True)
+        embed_ticket.add_field(name="🏷️ Categoria", value=info["nivel"], inline=True)
         embed_ticket.add_field(name="👤 Solicitante", value=user.mention, inline=True)
         embed_ticket.add_field(
             name="🕒 Aberto em",
@@ -1641,7 +2108,7 @@ class SelectCategoriaTicket(discord.ui.Select):
         thumbnail = CONFIG.THUMBNAILS.get(tipo)
         if thumbnail: embed_ticket.set_thumbnail(url=thumbnail)
         if imagem:    embed_ticket.set_image(url=imagem)
-        embed_ticket.set_footer(text="Nebularis • Sistema de Tickets")
+        embed_ticket.set_footer(text="FrostNova • Sistema de Tickets")
 
         msg_painel = await canal.send(
             content=f"{user.mention} {mencoes_staff}",
@@ -1650,11 +2117,13 @@ class SelectCategoriaTicket(discord.ui.Select):
             allowed_mentions=discord.AllowedMentions(users=True, roles=True),
         )
 
-        # NOVO: guarda o ID da mensagem do painel no tópico — usado pelo monitor de SLA
         try:
             await canal.edit(topic=f"{topic} | MSGID:{msg_painel.id}")
         except discord.HTTPException as e:
             logger.warning(f"Não foi possível salvar MSGID no tópico: {e}")
+
+        await registrar_timeline(canal.id, f"Ticket criado por {user.mention} na categoria **{info['label']}**.", user.id)
+        await atualizar_painel_principal(canal, status="aguardando")
 
         await interaction.followup.send(
             f"✅ Ticket criado com sucesso! Acesse: {canal.mention}",
@@ -1679,9 +2148,11 @@ class CogTickets(commands.Cog, name="Tickets"):
         bot.add_view(ViewAcoesTicket())
         bot.add_view(ViewConfirmarFechamento())
         self.monitorar_sla.start()
+        self.monitorar_inatividade.start()
 
     def cog_unload(self):
         self.monitorar_sla.cancel()
+        self.monitorar_inatividade.cancel()
 
     @tasks.loop(minutes=2)
     async def monitorar_sla(self):
@@ -1706,6 +2177,65 @@ class CogTickets(commands.Cog, name="Tickets"):
 
     @monitorar_sla.before_loop
     async def before_monitorar_sla(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(minutes=15)
+    async def monitorar_inatividade(self):
+        """NOVO: avisa e depois encerra automaticamente tickets abandonados pelo solicitante."""
+        agora = datetime.now(timezone.utc)
+
+        for guild in self.bot.guilds:
+            categoria = guild.get_channel(CONFIG.CATEGORIA_TICKETS_ID)
+            if not categoria or not isinstance(categoria, discord.CategoryChannel):
+                continue
+
+            for canal in categoria.text_channels:
+                topic = canal.topic or ""
+                if "DONO:" not in topic or _extrair_status_ticket(topic) == "concluido":
+                    continue
+
+                try:
+                    ultima_msg = [m async for m in canal.history(limit=1)]
+                except discord.HTTPException:
+                    continue
+                if not ultima_msg:
+                    continue
+                ultima_msg = ultima_msg[0]
+
+                if TicketState._ultima_msg_vista.get(canal.id) != ultima_msg.id:
+                    TicketState._ultima_msg_vista[canal.id] = ultima_msg.id
+                    TicketState._inatividade_avisado.discard(canal.id)
+
+                horas_inativo = (agora - ultima_msg.created_at).total_seconds() / 3600
+
+                if horas_inativo >= CONFIG.INATIVIDADE_FECHAMENTO_HORAS:
+                    TicketState._inatividade_avisado.discard(canal.id)
+                    TicketState._ultima_msg_vista.pop(canal.id, None)
+                    await fechar_ticket_por_inatividade(self.bot, canal)
+                elif horas_inativo >= CONFIG.INATIVIDADE_AVISO_HORAS and canal.id not in TicketState._inatividade_avisado:
+                    TicketState._inatividade_avisado.add(canal.id)
+                    dono_id = _extrair_dono_id(topic)
+                    restante = int(CONFIG.INATIVIDADE_FECHAMENTO_HORAS - horas_inativo)
+                    try:
+                        await canal.send(
+                            content=f"<@{dono_id}>" if dono_id else None,
+                            embed=discord.Embed(
+                                title="🧊 Ticket congelando por inatividade",
+                                description=(
+                                    "Não vimos nenhuma mensagem por aqui há um tempo.\n"
+                                    f"Se não houver resposta em cerca de `{max(restante, 1)}h`, este ticket "
+                                    "será encerrado automaticamente."
+                                ),
+                                color=CONFIG.COR_AMARELO,
+                            ),
+                            allowed_mentions=discord.AllowedMentions(users=True),
+                        )
+                        await registrar_timeline(canal.id, "⚠️ Aviso de inatividade enviado.")
+                    except discord.HTTPException:
+                        pass
+
+    @monitorar_inatividade.before_loop
+    async def before_monitorar_inatividade(self):
         await self.bot.wait_until_ready()
 
     async def _escalar_sla(self, canal: discord.TextChannel, topic: str, critico: bool):
@@ -1809,7 +2339,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             f"DONO:{membro.id} | "
             f"Ticket reaberto de {membro} | "
             f"Tipo: {tipo} | "
-            f"Aberto em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} UTC"
+            f"Aberto em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')} UTC | STATUS:aguardando"
         )
 
         try:
@@ -1837,7 +2367,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             color=info["cor"],
             timestamp=datetime.now(timezone.utc),
         )
-        embed_reabertura.set_footer(text="Nebularis • Sistema de Tickets")
+        embed_reabertura.set_footer(text="FrostNova • Sistema de Tickets")
 
         msg_painel = await canal_novo.send(
             content=f"{membro.mention} {mencoes_staff}",
@@ -1865,7 +2395,7 @@ class CogTickets(commands.Cog, name="Tickets"):
     @app_commands.checks.has_permissions(administrator=True)
     async def cmd_ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="**Nebularis — Sistema de Atendimento**",
+            title="**FrostNova — Sistema de Atendimento**",
             description=(
                 "<:35721purplechance:1518149219645657201> **| HORÁRIO DE FUNCIONAMENTO**\n"
                 "**Segunda a sexta:** 08:00 às 23:00.\n"
@@ -1880,7 +2410,7 @@ class CogTickets(commands.Cog, name="Tickets"):
         )
         if CONFIG.BANNER_PAINEL:
             embed.set_image(url=CONFIG.BANNER_PAINEL)
-        embed.set_footer(text="Nebularis • Atendimento oficial")
+        embed.set_footer(text="FrostNova • Atendimento oficial")
 
         await interaction.channel.send(embed=embed, view=ViewPainelTickets())
         await interaction.response.send_message(
@@ -2047,7 +2577,8 @@ class CogTickets(commands.Cog, name="Tickets"):
 
         media, total = await obter_resumo_atendente(atendente.id)
         patente = await obter_patente_atual_db(atendente.id)
-        emoji_patente = PATENTE_EMOJI.get(patente, "🗡️")
+        emoji_patente = PATENTE_EMOJI.get(patente, "🐾")
+        tempo_medio = await obter_tempo_resposta_medio(atendente.id)
 
         embed = discord.Embed(
             title="📊 Reputação do Atendente",
@@ -2056,6 +2587,7 @@ class CogTickets(commands.Cog, name="Tickets"):
                 f"{emoji_patente} **Patente:** `{patente}`\n"
                 f"⭐ **Média:** `{media:.2f}/5`\n"
                 f"📋 **Avaliações:** `{total}`\n"
+                f"⏱️ **Tempo médio de 1ª resposta:** `{formatar_duracao(tempo_medio) if tempo_medio is not None else 'Sem dados'}`\n"
                 f"🏷️ **Classificação:** {_classificacao_media(media) if total else 'Sem avaliações ainda'}"
             ),
             color=CONFIG.COR_AZUL,
@@ -2070,7 +2602,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             embed.add_field(name="💬 Últimos comentários", value=texto_comentarios[:1024], inline=False)
 
         embed.set_thumbnail(url=atendente.display_avatar.url)
-        embed.set_footer(text="Nebularis • Reputação da Equipe")
+        embed.set_footer(text="FrostNova • Reputação da Equipe")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -2088,25 +2620,27 @@ class CogTickets(commands.Cog, name="Tickets"):
 
         media, total = await obter_resumo_atendente(interaction.user.id)
         patente = await obter_patente_atual_db(interaction.user.id)
-        emoji_patente = PATENTE_EMOJI.get(patente, "🗡️")
+        emoji_patente = PATENTE_EMOJI.get(patente, "🐾")
+        tempo_medio = await obter_tempo_resposta_medio(interaction.user.id)
 
         proxima_info = ""
         if total < 5:
-            proxima_info = f"Faltam `{5 - total}` avaliações para sair de Aprendiz."
-        elif patente != "Lenda de Musashi":
+            proxima_info = f"Faltam `{5 - total}` avaliações para sair de Lobo Errante."
+        elif patente != "Lenda de FrostNova":
             proxima_info = "Continue mantendo a qualidade do atendimento para evoluir."
 
         embed = discord.Embed(
             title=f"{emoji_patente} Sua Patente: {patente}",
             description=(
                 f"⭐ **Média:** `{media:.2f}/5`\n"
-                f"📋 **Avaliações:** `{total}`\n\n"
+                f"📋 **Avaliações:** `{total}`\n"
+                f"⏱️ **Tempo médio de 1ª resposta:** `{formatar_duracao(tempo_medio) if tempo_medio is not None else 'Sem dados'}`\n\n"
                 f"{_classificacao_media(media) if total else 'Continue atendendo para evoluir sua patente!'}\n\n"
                 f"{proxima_info}"
             ),
             color=CONFIG.COR_DOURADO,
         )
-        embed.set_footer(text="Nebularis • Caminho do Espadachim")
+        embed.set_footer(text="FrostNova • Trilha da Matilha")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
@@ -2135,7 +2669,7 @@ class CogTickets(commands.Cog, name="Tickets"):
         for pos, (atendente_id, media, total) in enumerate(ranking, start=1):
             prefixo = medalhas[pos - 1] if pos <= 3 else f"`#{pos}`"
             patente = calcular_patente(media, total)
-            emoji_patente = PATENTE_EMOJI.get(patente, "🗡️")
+            emoji_patente = PATENTE_EMOJI.get(patente, "🐾")
             linhas.append(
                 f"{prefixo} <@{atendente_id}> {emoji_patente} `{patente}` — "
                 f"**{media:.2f}/5** • `{total}` avaliações"
@@ -2147,7 +2681,7 @@ class CogTickets(commands.Cog, name="Tickets"):
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
         )
-        embed.set_footer(text="Nebularis • Qualidade de Atendimento")
+        embed.set_footer(text="FrostNova • Qualidade de Atendimento")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
