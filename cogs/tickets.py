@@ -2397,13 +2397,13 @@ class CogTickets(commands.Cog, name="Tickets"):
         embed = discord.Embed(
             title="**FrostNova — Sistema de Atendimento**",
             description=(
-                "<:35721purplechance:1518149219645657201> **| HORÁRIO DE FUNCIONAMENTO**\n"
-                "**Segunda a sexta:** 08:00 às 23:00.\n"
-                "**Sábado e Domingo:** 10:00 às 18:00.\n\n"
-                "<:41145star:1518149258241642647> **| AVISOS IMPORTANTES**\n"
-                "- Evite abrir tickets fora do horário de atendimento.\n"
-                "- Forneça o máximo de detalhes possível para agilizar o atendimento.\n"
-                "-# Membros que abrirem tickets sem motivo serão penalizados.\n"
+                "<a:26451timersand:1525657846807658657> | **HORÁRIO DE FUNCIONAMENTO**\n"
+                "> Segunda a sexta: 08:00 às 22:00.\n"
+                "> Sábado e Domingo: 09:00 às 18:00.\n\n"
+                "<a:8017warning:1525658717943628006> | **AVISOS IMPORTANTES**\n"
+                "> Evite abrir tickets fora do horário de atendimento.\n"
+                "> Forneça o máximo de detalhes possível para agilizar o atendimento.\n"
+                "> Membros que abrirem tickets sem motivo serão penalizados.\n"
             ),
             color=CONFIG.COR_DOURADO,
             timestamp=datetime.now(timezone.utc),
