@@ -2046,7 +2046,7 @@ class ViewAcoesTicket(discord.ui.View):
         await interaction.response.send_message("⚙️ Selecione uma ferramenta:", view=ViewPainelStaff(), ephemeral=True)
 
 
-    @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="frostnova_ticket_fechar_v3", row=1)
+    @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="frostnova_ticket_fechar", row=1)
     async def btn_fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
         dono_id = _extrair_dono_id(interaction.channel.topic or "")
         if interaction.user.id != dono_id and not tem_permissao(interaction.user):
