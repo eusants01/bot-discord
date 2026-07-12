@@ -2395,14 +2395,15 @@ class CogTickets(commands.Cog, name="Tickets"):
     @app_commands.checks.has_permissions(administrator=True)
     async def cmd_ticket(self, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="## Sistema de Atendimento do Servidor",
+            title="Sistema de Atendimento do Servidor",
             description=(
                 "<a:26451timersand:1525657846807658657> | **HORÁRIO DE FUNCIONAMENTO**\n"
                 "> - Segunda a sexta: 08:00 às 22:00.\n"
                 "> - Sábado e Domingo: 09:00 às 18:00.\n\n"
                 "<a:8017warning:1525658717943628006> | **AVISOS IMPORTANTES**\n"
                 "> - Evite abrir tickets fora do horário de atendimento.\n"
-                "> - Membros que abrirem tickets sem motivo serão penalizados.\n"
+                "> - Esteja ciente das nossas [regras](https://discord.com/channels/1480334256763961465/1525268820565164233/1525279902570647674) antes de abrir um ticket.\n"
+                "> - Não envie mensagens desnecessárias ou spam, caso contrário o ticket poderá ser encerrado.\n"
                 
                     ),
             color=CONFIG.COR_DOURADO,
