@@ -1125,7 +1125,7 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
 class ViewConfirmarFechamento(discord.ui.View):
 
     def __init__(self):
-        super().__init__(timeout=120)
+        super().__init__(timeout=None)
 
     @discord.ui.button(
         label="Confirmar Fechamento",
@@ -2195,7 +2195,7 @@ class CogTickets(commands.Cog, name="Tickets"):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        bot.loop.create_task(inicializar_banco_avaliacoes())
+        asyncio.create_task(inicializar_banco_avaliacoes())
         bot.add_view(ViewPainelTickets())
         bot.add_view(ViewAcoesTicket())
         bot.add_view(ViewConfirmarFechamento())
