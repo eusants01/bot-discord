@@ -1125,278 +1125,318 @@ class BotaoAvaliacaoAtendimento(discord.ui.Button):
 class ViewConfirmarFechamento(discord.ui.View):
 
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=120)
 
     @discord.ui.button(
         label="Confirmar Fechamento",
         style=discord.ButtonStyle.red,
         emoji="🔒",
-        custom_id="ticket_v2_confirmar_fechamento",
+        custom_id="ticket_v3_confirmar_fechamento_imediato",
     )
     async def btn_confirmar(
         self,
         interaction: discord.Interaction,
         button: discord.ui.Button,
     ):
-        if not interaction.user.guild_permissions.administrator:
+        canal = interaction.channel
+        if not isinstance(canal, discord.TextChannel):
             await interaction.response.send_message(
-                "❌ Apenas administradores podem encerrar o atendimento e liberar a avaliação.",
+                "❌ Este botão só pode ser usado dentro de um ticket.",
                 ephemeral=True,
             )
             return
 
-        await interaction.response.defer()
+        dono_id = _extrair_dono_id(canal.topic or "")
+        autorizado = (
+            interaction.user.id == dono_id
+            or tem_permissao(interaction.user)
+        )
+
+        if not autorizado:
+            await interaction.response.send_message(
+                "❌ Apenas o autor do ticket ou a equipe pode encerrá-lo.",
+                ephemeral=True,
+            )
+            return
+
+        for item in self.children:
+            item.disabled = True
+
+        await interaction.response.edit_message(
+            content="🔒 Encerrando o ticket...",
+            embed=None,
+            view=self,
+        )
         await executar_fechamento(interaction)
 
     @discord.ui.button(
         label="Cancelar",
         style=discord.ButtonStyle.gray,
         emoji="✖️",
-        custom_id="ticket_v2_cancelar_fechamento",
+        custom_id="ticket_v3_cancelar_fechamento",
     )
     async def btn_cancelar(
         self,
         interaction: discord.Interaction,
         button: discord.ui.Button,
     ):
-        await interaction.response.send_message(
-            "✅ Fechamento cancelado. O ticket continua aberto.",
-            ephemeral=True,
+        for item in self.children:
+            item.disabled = True
+
+        await interaction.response.edit_message(
+            content="✅ Fechamento cancelado. O ticket continua aberto.",
+            embed=None,
+            view=self,
         )
 
 
 async def executar_fechamento(interaction: discord.Interaction):
-    canal = interaction.channel
-    print(f"[FECHAR] Iniciando: {canal.name} ({canal.id})")
+    """
+    Fecha o canal logo após capturar o transcript local.
 
-    if not TicketState.marcar_fechando(canal.id):
-        print(f"[FECHAR] Canal {canal.id} já está sendo fechado.")
-        await interaction.followup.send(
-            "⚠️ Este ticket já está sendo fechado.",
-            ephemeral=True,
-        )
+    Operações lentas — upload do transcript, resumo, banco, log e DM —
+    são executadas somente depois que o canal já foi removido.
+    """
+    canal = interaction.channel
+
+    if not isinstance(canal, discord.TextChannel):
         return
 
-    try:
-        await definir_status_ticket(canal, "concluido", autor_id=interaction.user.id, evento=f"Ticket encerrado por {interaction.user.mention}.")
-        print(f"[FECHAR] Gerando transcript...")
-        conteudo_txt, total_msgs = await gerar_transcript_texto(canal)
-        print(f"[FECHAR] Transcript gerado. Total msgs: {total_msgs}")
-
-        print(f"[FECHAR] Enviando para mclo.gs...")
-        link_transcript = await enviar_para_mclogs(conteudo_txt)
-        if link_transcript:
-            print(f"[FECHAR] Transcript disponível em: {link_transcript}")
-        else:
-            print(f"[FECHAR] AVISO: falha ao enviar para mclo.gs. Continuando sem link.")
-
-        tipo_ticket = _extrair_tipo_ticket(canal.topic or "")
-        print(f"[FECHAR] Gerando resumo automático...")
-        resumo = await gerar_resumo_ticket(conteudo_txt, tipo_ticket)
-
-        log        = interaction.guild.get_channel(CONFIG.CANAL_LOG_ID)
-        criado_em  = canal.created_at
-        fechado_em = datetime.now(timezone.utc)
-        duracao    = formatar_duracao(int((fechado_em - criado_em).total_seconds()))
-        dono_id    = _extrair_dono_id(canal.topic or "")
-        atendente_id = _extrair_atendente_id(canal.topic or "")
-        print(f"[FECHAR] Canal de log: {log}")
-
-        if log:
-            embed_log = discord.Embed(
-                title="🔒 Ticket Encerrado",
-                description=(
-                    "O atendimento foi finalizado e o registro foi salvo."
-                    + (f"\n[📋 Clique aqui para ver o transcript]({link_transcript})" if link_transcript else "\n⚠️ Transcript indisponível.")
-                ),
-                color=CONFIG.COR_DOURADO,
-                timestamp=fechado_em,
-            )
-            embed_log.add_field(name="👤 Fechado por", value=interaction.user.mention, inline=True)
-            embed_log.add_field(name="📁 Canal",       value=f"`{canal.name}`",        inline=True)
-            embed_log.add_field(name="⏳ Duração",     value=f"`{duracao}`",            inline=True)
-            embed_log.add_field(name="💬 Mensagens",   value=f"`{total_msgs}`",         inline=True)
-            embed_log.add_field(
-                name="🕒 Aberto em",
-                value=f"<t:{int(criado_em.timestamp())}:f>",
-                inline=True,
-            )
-            embed_log.add_field(
-                name="🔒 Fechado em",
-                value=f"<t:{int(fechado_em.timestamp())}:f>",
-                inline=True,
-            )
-            embed_log.add_field(name="📝 Resumo do atendimento", value=resumo[:1024], inline=False)
-            embed_log.set_thumbnail(url=interaction.user.display_avatar.url)
-            if CONFIG.BANNER_FECHADO:
-                embed_log.set_image(url=CONFIG.BANNER_FECHADO)
-            embed_log.set_footer(text="FrostNova • Sistema de Tickets")
-
-            view_links = discord.ui.View(timeout=None)
-            if link_transcript:
-                view_links.add_item(discord.ui.Button(
-                    label="📋 Ver Transcript",
-                    url=link_transcript,
-                    style=discord.ButtonStyle.link,
-                ))
-
-            await log.send(embed=embed_log, view=view_links if link_transcript else discord.utils.MISSING)
-            print(f"[FECHAR] Log enviado com sucesso.")
-        else:
-            print(f"[FECHAR] AVISO: canal de log não encontrado! Verifique CANAL_LOG_ID.")
-
+    if not TicketState.marcar_fechando(canal.id):
         try:
             await interaction.followup.send(
-                "✅ Ticket encerrado.",
+                "⚠️ Este ticket já está sendo fechado.",
                 ephemeral=True,
             )
-        except discord.HTTPException as e:
-            print(f"[FECHAR] Não foi possível enviar followup: {e}")
+        except discord.HTTPException:
+            pass
+        return
+
+    guild = interaction.guild
+    fechador = interaction.user
+    topic = canal.topic or ""
+
+    ticket_id = canal.id
+    ticket_nome = canal.name
+    criado_em = canal.created_at
+    fechado_em = datetime.now(timezone.utc)
+    dono_id = _extrair_dono_id(topic)
+    atendente_id = _extrair_atendente_id(topic)
+    tipo_ticket = _extrair_tipo_ticket(topic)
+    duracao = formatar_duracao(
+        int((fechado_em - criado_em).total_seconds())
+    )
+
+    try:
+        # O histórico precisa ser lido antes da exclusão do canal.
+        conteudo_txt, total_msgs = await gerar_transcript_texto(canal)
+
+        # A exclusão acontece antes de qualquer API externa ou consulta demorada.
+        try:
+            await canal.delete(
+                reason=f"Ticket fechado por {fechador} ({fechador.id})"
+            )
+        except discord.Forbidden:
+            TicketState.desmarcar_fechando(ticket_id)
+            try:
+                await interaction.followup.send(
+                    "❌ Não consegui deletar o canal. Conceda ao bot a permissão "
+                    "**Gerenciar Canais** e deixe o cargo do bot acima dos cargos envolvidos.",
+                    ephemeral=True,
+                )
+            except discord.HTTPException:
+                pass
+            return
+        except discord.HTTPException as erro:
+            TicketState.desmarcar_fechando(ticket_id)
+            logger.error(
+                "Falha HTTP ao deletar o ticket %s: %s",
+                ticket_id,
+                erro,
+            )
+            try:
+                await interaction.followup.send(
+                    f"❌ O Discord recusou a exclusão do canal: `{erro}`",
+                    ephemeral=True,
+                )
+            except discord.HTTPException:
+                pass
+            return
+
+        logger.info(
+            "Ticket %s deletado. Iniciando processamento posterior.",
+            ticket_id,
+        )
+
+        # Daqui em diante, falhas não impedem o fechamento.
+        link_transcript = await enviar_para_mclogs(conteudo_txt)
+        resumo = await gerar_resumo_ticket(conteudo_txt, tipo_ticket)
 
         if dono_id:
             try:
                 await registrar_ticket_fechado(
                     usuario_id=dono_id,
-                    guild_id=interaction.guild.id,
+                    guild_id=guild.id,
                     tipo=tipo_ticket,
                     atendente_id=atendente_id,
-                    ticket_nome=canal.name,
+                    ticket_nome=ticket_nome,
                     transcript_url=link_transcript,
                 )
-            except Exception as e:
-                logger.warning(f"Falha ao registrar histórico de fechamento: {e}")
+            except Exception as erro:
+                logger.warning(
+                    "Falha ao registrar o ticket fechado %s: %s",
+                    ticket_id,
+                    erro,
+                )
 
-        dm_enviada = False
+        log = guild.get_channel(CONFIG.CANAL_LOG_ID)
+        if log:
+            embed_log = discord.Embed(
+                title="🔒 Ticket Encerrado",
+                description=(
+                    "O canal foi removido e o registro do atendimento foi salvo."
+                    + (
+                        f"\n[📋 Abrir transcript]({link_transcript})"
+                        if link_transcript
+                        else "\n⚠️ O transcript externo não ficou disponível."
+                    )
+                ),
+                color=CONFIG.COR_DOURADO,
+                timestamp=fechado_em,
+            )
+            embed_log.add_field(
+                name="👤 Fechado por",
+                value=fechador.mention,
+                inline=True,
+            )
+            embed_log.add_field(
+                name="📁 Ticket",
+                value=f"`{ticket_nome}`",
+                inline=True,
+            )
+            embed_log.add_field(
+                name="🏷️ Categoria",
+                value=f"`{tipo_ticket or 'desconhecida'}`",
+                inline=True,
+            )
+            embed_log.add_field(
+                name="⏳ Duração",
+                value=f"`{duracao}`",
+                inline=True,
+            )
+            embed_log.add_field(
+                name="💬 Mensagens",
+                value=f"`{total_msgs}`",
+                inline=True,
+            )
+            embed_log.add_field(
+                name="🧑‍💼 Atendente",
+                value=f"<@{atendente_id}>" if atendente_id else "Não assumido",
+                inline=True,
+            )
+            embed_log.add_field(
+                name="📝 Resumo",
+                value=resumo[:1024],
+                inline=False,
+            )
 
+            if CONFIG.BANNER_FECHADO:
+                embed_log.set_image(url=CONFIG.BANNER_FECHADO)
+
+            embed_log.set_footer(text="FrostNova • Sistema de Tickets")
+
+            view_log = discord.ui.View(timeout=None)
+            if link_transcript:
+                view_log.add_item(
+                    discord.ui.Button(
+                        label="Ver Transcript",
+                        emoji="📋",
+                        url=link_transcript,
+                    )
+                )
+
+            try:
+                await log.send(
+                    embed=embed_log,
+                    view=view_log if link_transcript else discord.utils.MISSING,
+                )
+            except discord.HTTPException as erro:
+                logger.warning(
+                    "Não foi possível enviar o log do ticket %s: %s",
+                    ticket_id,
+                    erro,
+                )
+
+        # A avaliação é enviada por DM. O canal já não existe neste ponto.
         if dono_id and atendente_id and dono_id != atendente_id:
-            dono_member = interaction.guild.get_member(dono_id)
+            dono_member = guild.get_member(dono_id)
+
             if dono_member:
                 embed_dm = discord.Embed(
                     title="⭐ Avalie seu atendimento — FrostNova",
                     description=(
-                        f"Seu ticket **{canal.name}** foi encerrado.\n\n"
+                        f"Seu ticket **{ticket_nome}** foi encerrado.\n\n"
                         f"**Atendente:** <@{atendente_id}>\n"
                         f"**Duração:** `{duracao}`\n\n"
-                        "Escolha uma nota de **1 a 5 estrelas** abaixo (`1` Ruim · `3` Regular · `5` Excelente). "
-                        "Depois você poderá deixar um comentário opcional — isso fica só "
-                        "entre você e a equipe."
+                        "Escolha uma nota de **1 a 5 estrelas**. "
+                        "Depois, você poderá deixar um comentário opcional."
                     ),
                     color=CONFIG.COR_DOURADO,
                     timestamp=fechado_em,
                 )
+
                 if link_transcript:
                     embed_dm.add_field(
                         name="📋 Transcript",
-                        value=f"[Ver registro do ticket]({link_transcript})",
+                        value=f"[Ver registro do atendimento]({link_transcript})",
                         inline=False,
                     )
-                embed_dm.set_footer(text="FrostNova • Sistema de Avaliações")
+
+                embed_dm.set_footer(
+                    text="FrostNova • Sistema de Avaliações"
+                )
 
                 try:
                     await dono_member.send(
                         embed=embed_dm,
                         view=ViewAvaliarAtendimentoDM(
                             bot=interaction.client,
-                            ticket_id=canal.id,
-                            ticket_nome=canal.name,
+                            ticket_id=ticket_id,
+                            ticket_nome=ticket_nome,
                             usuario_id=dono_id,
                             atendente_id=atendente_id,
                             transcript_url=link_transcript,
-                            guild_id=interaction.guild.id,
+                            guild_id=guild.id,
                         ),
                     )
-                    dm_enviada = True
-                    print(f"[FECHAR] Painel de avaliação enviado via DM para {dono_member}.")
                 except discord.Forbidden:
-                    print(f"[FECHAR] DM fechada para {dono_member}, usando fallback no canal.")
-                except discord.HTTPException as e:
-                    print(f"[FECHAR] Erro ao enviar DM: {e}")
+                    logger.info(
+                        "A DM do usuário %s está fechada; avaliação não enviada.",
+                        dono_id,
+                    )
+                except discord.HTTPException as erro:
+                    logger.warning(
+                        "Erro ao enviar avaliação do ticket %s: %s",
+                        ticket_id,
+                        erro,
+                    )
 
-        if dm_enviada:
-            embed_dm_aviso = discord.Embed(
-                title="📬 Avaliação enviada na DM",
-                description=(
-                    f"{interaction.user.mention} encerrou este ticket.\n\n"
-                    f"Enviamos um painel de avaliação privado para <@{dono_id}> "
-                    "responder com nota e comentário.\n\n"
-                    "Este canal será removido automaticamente em instantes. "
-                    "Um administrador também pode deletá-lo agora pelo botão abaixo."
-                ),
-                color=CONFIG.COR_DOURADO,
+    except Exception as erro:
+        logger.error(
+            "Erro inesperado ao fechar o ticket %s: %s",
+            getattr(canal, "id", "desconhecido"),
+            erro,
+            exc_info=True,
+        )
+        try:
+            await interaction.followup.send(
+                f"❌ Ocorreu um erro ao fechar o ticket: `{erro}`",
+                ephemeral=True,
             )
-            await canal.send(embed=embed_dm_aviso, view=ViewDeletarTicketAdmin())
-            await asyncio.sleep(45)
-            try:
-                await canal.delete(reason="Avaliação enviada por DM — ticket encerrado")
-            except discord.HTTPException:
-                pass
-
-        elif dono_id and atendente_id and dono_id != atendente_id:
-            # Fallback: dono não pôde receber DM -> avaliação tradicional no canal
-            embed_avaliacao = discord.Embed(
-                title="⭐ Avalie o Atendimento",
-                description=(
-                    f"<@{dono_id}>, seu ticket foi encerrado por **{interaction.user.display_name}**.\n\n"
-                    f"**Atendente:** <@{atendente_id}>\n"
-                    f"**Ticket:** `{canal.name}`\n\n"
-                    "Escolha uma nota de **1 a 5 estrelas** (`1` Ruim · `3` Regular · `5` Excelente). "
-                    "Após a avaliação, o ticket será deletado automaticamente.\n\n"
-                    "Administradores também podem usar o botão **Deletar Ticket** para apagar o canal imediatamente."
-                ),
-                color=CONFIG.COR_DOURADO,
-                timestamp=fechado_em,
-            )
-            if link_transcript:
-                embed_avaliacao.add_field(
-                    name="📋 Transcript",
-                    value=f"[Ver registro do ticket]({link_transcript})",
-                    inline=False,
-                )
-            embed_avaliacao.set_footer(text="FrostNova • Sistema de Avaliações")
-
-            await canal.send(
-                content=f"<@{dono_id}>",
-                embed=embed_avaliacao,
-                view=ViewAvaliarAtendimento(
-                    ticket_id=canal.id,
-                    ticket_nome=canal.name,
-                    usuario_id=dono_id,
-                    atendente_id=atendente_id,
-                    transcript_url=link_transcript,
-                ),
-                allowed_mentions=discord.AllowedMentions(users=True),
-            )
-        else:
-            print("[FECHAR] Avaliação não enviada: ticket sem atendente assumido ou sem dono válido.")
-            embed_aviso = discord.Embed(
-                title="🔒 Ticket Encerrado",
-                description=(
-                    f"Este ticket foi fechado por **{interaction.user.display_name}**.\n\n"
-                    "Não foi possível enviar avaliação porque o ticket não possui dono válido ou atendente assumido.\n"
-                    "Um administrador pode deletar este canal imediatamente pelo botão abaixo."
-                ),
-                color=CONFIG.COR_ESCURO,
-                timestamp=fechado_em,
-            )
-            embed_aviso.add_field(
-                name="👤 Autor do ticket",
-                value=f"<@{dono_id}>" if dono_id else "Desconhecido",
-                inline=True,
-            )
-            embed_aviso.add_field(
-                name="🎩 Atendente",
-                value=f"<@{atendente_id}>" if atendente_id else "Não assumido",
-                inline=True,
-            )
-            await canal.send(embed=embed_aviso, view=ViewDeletarTicketAdmin())
-
-    except Exception as e:
-        print(f"[FECHAR] ERRO INESPERADO: {e}")
-        logger.error(f"Erro inesperado ao fechar ticket {canal.name}: {e}", exc_info=True)
-
+        except discord.HTTPException:
+            pass
     finally:
-        TicketState.desmarcar_fechando(canal.id)
-
+        TicketState.desmarcar_fechando(ticket_id)
 
 
 
@@ -1590,6 +1630,7 @@ async def atualizar_painel_principal(
     status: str | None = None,
     atendente: discord.Member | None = None,
 ):
+    """Atualiza o painel público do ticket com uma apresentação compacta."""
     topic = canal.topic or ""
     msg_id = _extrair_msg_id(topic)
     if not msg_id:
@@ -1602,55 +1643,61 @@ async def atualizar_painel_principal(
     dono_id = _extrair_dono_id(topic)
     atendente_id = atendente.id if atendente else _extrair_atendente_id(topic)
 
+    membro_atendente = atendente
     media = 0.0
     total = 0
-    membro_atendente = atendente
+
     if atendente_id:
         membro_atendente = membro_atendente or canal.guild.get_member(atendente_id)
         try:
             media, total = await obter_resumo_atendente(atendente_id)
-        except Exception:
-            pass
-
-    timeline = await obter_timeline(canal.id, limite=6)
-    linhas_timeline = []
-    for item in timeline:
-        ts = int(item["criado_em"].timestamp())
-        linhas_timeline.append(f"<t:{ts}:t> • {item['evento']}")
+        except Exception as erro:
+            logger.warning("Não foi possível carregar a reputação do atendente: %s", erro)
 
     embed = discord.Embed(
         title=info["titulo"],
         description=(
-            f"❄️ Bem-vindo à Central de Atendimento da **FrostNova**.\n"
-            "Explique sua solicitação com detalhes e envie provas quando necessário.\n\n"
-            f"{dados['emoji']} **Status:** `{dados['titulo']}`\n"
+            f"Olá, <@{dono_id}>! Descreva sua solicitação com clareza e "
+            "envie provas ou anexos quando necessário.\n\n"
+            f"{dados['emoji']} **{dados['titulo']}**\n"
             f"{dados['barra']}"
         ),
         color=dados["cor"],
         timestamp=datetime.now(timezone.utc),
     )
-    embed.add_field(name="🏷️ Categoria", value=info["nivel"], inline=True)
-    embed.add_field(name="👤 Solicitante", value=f"<@{dono_id}>" if dono_id else "Desconhecido", inline=True)
-    embed.add_field(name="🕒 Aberto", value=f"<t:{int(canal.created_at.timestamp())}:R>", inline=True)
+
+    embed.add_field(
+        name="🏷️ Categoria",
+        value=info["nivel"],
+        inline=True,
+    )
+    embed.add_field(
+        name="🕒 Aberto",
+        value=f"<t:{int(canal.created_at.timestamp())}:R>",
+        inline=True,
+    )
 
     if atendente_id:
-        cargo = membro_atendente.top_role.mention if membro_atendente else "Equipe FrostNova"
-        reputacao = f"`{media:.2f}/5` • `{total}` avaliações" if total else "Sem avaliações"
+        nome_atendente = membro_atendente.mention if membro_atendente else f"<@{atendente_id}>"
+        reputacao = f"⭐ `{media:.2f}/5` • `{total}` avaliações" if total else "⭐ Ainda sem avaliações"
         embed.add_field(
-            name="🧑‍💼 Atendente responsável",
-            value=f"<@{atendente_id}>\n{cargo}\n⭐ {reputacao}",
+            name="🧑‍💼 Atendimento",
+            value=f"{nome_atendente}\n{reputacao}",
             inline=False,
         )
     else:
         embed.add_field(
-            name="🧑‍💼 Atendente responsável",
-            value="`Aguardando um membro da equipe assumir.`",
+            name="🧑‍💼 Atendimento",
+            value="Aguardando um membro da equipe assumir.",
             inline=False,
         )
 
     embed.add_field(
-        name="📜 Histórico recente",
-        value="\n".join(linhas_timeline) if linhas_timeline else "`Nenhum evento registrado.`",
+        name="💡 Orientação",
+        value=(
+            "Use **Minhas ações** para adicionar informações, alterar a categoria "
+            "ou chamar a equipe."
+        ),
         inline=False,
     )
 
@@ -1660,13 +1707,16 @@ async def atualizar_painel_principal(
         embed.set_thumbnail(url=thumbnail)
     if imagem:
         embed.set_image(url=imagem)
-    embed.set_footer(text="FrostNova • Onde o frio desperta novas lendas")
+
+    embed.set_footer(text="FrostNova • Central de Atendimento")
 
     try:
         msg = await canal.fetch_message(msg_id)
         await msg.edit(embed=embed, view=ViewAcoesTicket())
-    except (discord.NotFound, discord.HTTPException):
-        pass
+    except discord.NotFound:
+        logger.warning("Mensagem principal do ticket %s não foi encontrada.", canal.id)
+    except discord.HTTPException as erro:
+        logger.warning("Falha ao atualizar o painel do ticket %s: %s", canal.id, erro)
 
 
 async def definir_status_ticket(
@@ -1819,7 +1869,6 @@ class SelectAcoesUsuario(discord.ui.Select):
                 discord.SelectOption(label="Alterar categoria", emoji="🏷️", value="categoria", description="Mova o ticket para outro setor."),
                 discord.SelectOption(label="Chamar a equipe", emoji="📢", value="chamar", description="Solicite atenção da staff."),
                 discord.SelectOption(label="Marcar como resolvido", emoji="✅", value="resolvido", description="Informe que sua solicitação foi solucionada."),
-                discord.SelectOption(label="Ver histórico", emoji="📜", value="timeline", description="Veja as etapas registradas."),
             ],
         )
 
@@ -1852,10 +1901,6 @@ class SelectAcoesUsuario(discord.ui.Select):
         elif acao == "resolvido":
             await definir_status_ticket(canal, "finalizando", autor_id=interaction.user.id, evento=f"{interaction.user.mention} marcou a solicitação como resolvida.")
             await interaction.response.send_message("✅ A equipe foi informada. O ticket está pronto para finalização.", ephemeral=True)
-        elif acao == "timeline":
-            eventos = await obter_timeline(canal.id, limite=12)
-            texto = "\n".join(f"<t:{int(e['criado_em'].timestamp())}:t> • {e['evento']}" for e in eventos) or "Nenhum evento registrado."
-            await interaction.response.send_message(embed=discord.Embed(title="📜 Histórico do Ticket", description=texto[:4000], color=CONFIG.COR_AZUL), ephemeral=True)
 
 
 class ViewAcoesUsuario(discord.ui.View):
@@ -1877,6 +1922,7 @@ class SelectPainelStaff(discord.ui.Select):
                 discord.SelectOption(label="Alterar categoria", emoji="🏷️", value="categoria"),
                 discord.SelectOption(label="Gerar resumo da conversa", emoji="✨", value="resumo"),
                 discord.SelectOption(label="Marcar como finalizando", emoji="🧊", value="finalizando"),
+                discord.SelectOption(label="Ver histórico do ticket", emoji="📜", value="historico"),
                 discord.SelectOption(label="Ver informações completas", emoji="📋", value="info"),
             ],
         )
@@ -1911,6 +1957,27 @@ class SelectPainelStaff(discord.ui.Select):
         elif acao == "finalizando":
             await definir_status_ticket(canal, "finalizando", autor_id=interaction.user.id, evento=f"{interaction.user.mention} iniciou a finalização do atendimento.")
             await interaction.response.send_message("🧊 Ticket marcado como finalizando.", ephemeral=True)
+        elif acao == "historico":
+            eventos = await obter_timeline(canal.id, limite=20)
+            texto_historico = "\n".join(
+                f"<t:{int(item['criado_em'].timestamp())}:f> • {item['evento']}"
+                for item in eventos
+            ) or "Nenhum evento registrado."
+
+            embed_historico = discord.Embed(
+                title="📜 Histórico Administrativo do Ticket",
+                description=texto_historico[:4000],
+                color=CONFIG.COR_ROXO,
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed_historico.set_footer(
+                text=f"Visualização restrita • Solicitado por {interaction.user.display_name}"
+            )
+            await interaction.response.send_message(
+                embed=embed_historico,
+                ephemeral=True,
+            )
+
         elif acao == "info":
             dono_id = _extrair_dono_id(canal.topic or "")
             atendente_id = _extrair_atendente_id(canal.topic or "")
@@ -1978,23 +2045,8 @@ class ViewAcoesTicket(discord.ui.View):
             return
         await interaction.response.send_message("⚙️ Selecione uma ferramenta:", view=ViewPainelStaff(), ephemeral=True)
 
-    @discord.ui.button(label="Chamar Staff", style=discord.ButtonStyle.primary, emoji="📢", custom_id="frostnova_ticket_chamar_staff", row=1)
-    async def btn_chamar_staff(self, interaction: discord.Interaction, button: discord.ui.Button):
-        pode, restante = TicketState.pode_chamar_staff(interaction.channel.id)
-        if not pode:
-            await interaction.response.send_message(f"⏳ Aguarde **{restante}s** para chamar novamente.", ephemeral=True)
-            return
-        TicketState.registrar_chamar_staff(interaction.channel.id)
-        mencoes = " ".join(f"<@&{cid}>" for cid in CONFIG.CARGOS_CHAMAR_STAFF)
-        await registrar_timeline(interaction.channel.id, f"Equipe chamada por {interaction.user.mention}.", interaction.user.id)
-        await interaction.response.send_message(
-            content=mencoes,
-            embed=discord.Embed(title="📢 Staff chamada", description=f"{interaction.user.mention} solicitou atenção neste ticket.", color=CONFIG.COR_DOURADO),
-            allowed_mentions=discord.AllowedMentions(roles=True),
-        )
-        await atualizar_painel_principal(interaction.channel)
 
-    @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="frostnova_ticket_fechar", row=1)
+    @discord.ui.button(label="Fechar Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="frostnova_ticket_fechar_v3", row=1)
     async def btn_fechar(self, interaction: discord.Interaction, button: discord.ui.Button):
         dono_id = _extrair_dono_id(interaction.channel.topic or "")
         if interaction.user.id != dono_id and not tem_permissao(interaction.user):
@@ -2464,7 +2516,7 @@ class CogTickets(commands.Cog, name="Tickets"):
                 "• O transcript será salvo automaticamente.\n"
                 "• Um resumo automático do ticket será gerado para o log.\n"
                 "• Você receberá um painel de avaliação privado por DM.\n"
-                "• O canal só será removido após a avaliação ou pelo botão de admin.\n\n"
+                "• O canal será removido imediatamente após a captura do transcript.\n\n"
                 "Esta ação encerra o atendimento."
             ),
             color=CONFIG.COR_VERMELHO,
