@@ -137,7 +137,7 @@ async def main():
 
         cogs = [
             "cogs.tickets",
-            "cogs.parceiros",
+            "cogs.enquetes",
             "cogs.notificacoes",
             "cogs.sorteios",
             "cogs.moderacao",
